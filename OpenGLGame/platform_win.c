@@ -27,6 +27,7 @@ internal void FatalError( const wchar_t* message );
 internal void InitKeyCodeMap();
 internal void InitOpenGL( HWND hWnd );
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
+internal void RenderWindow( HDC dc );
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags );
 
 int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow )
@@ -120,6 +121,7 @@ internal void InitOpenGL( HWND hWnd )
 
    desiredPixelFormat.nSize = sizeof( desiredPixelFormat );
    desiredPixelFormat.nVersion = 1;
+   desiredPixelFormat.iPixelType = PFD_TYPE_RGBA;
    desiredPixelFormat.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
    desiredPixelFormat.cColorBits = GRAPHICS_BPP;
    desiredPixelFormat.cAlphaBits = GRAPHICS_ALPHABITS;
@@ -155,6 +157,8 @@ internal void InitOpenGL( HWND hWnd )
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam )
 {
    LRESULT result = 0;
+   PAINTSTRUCT paint;
+   HDC dc;
 
    switch ( uMsg )
    {
@@ -167,6 +171,11 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
             cGame_EmergencySave( &( g_globals.gameData ) );
             g_globals.gameData.isRunning = cFalse;
          }
+         break;
+      case WM_PAINT:
+         dc = BeginPaint( hWnd, &paint );
+         RenderWindow( dc );
+         EndPaint( hWnd, &paint );
          break;
       case WM_KEYDOWN:
       case WM_KEYUP:
@@ -181,40 +190,15 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
    return result;
 }
 
-void Platform_Tick()
-{
-   MSG msg;
-
-   while ( PeekMessage( &msg, g_globals.hWndMain, 0, 0, PM_REMOVE ) )
-   {
-      if ( msg.message == WM_QUIT )
-      {
-         cGame_TryClose( &( g_globals.gameData ) );
-         break;
-      }
-      else
-      {
-         TranslateMessage( &msg );
-         DispatchMessage( &msg );
-      }
-   }
-}
-
-cScreenBuffer_t* Platform_GetScreenBuffer()
-{
-   return &( g_globals.screenBuffer );
-}
-
-void Platform_RenderScreen()
+internal void RenderWindow( HDC dc )
 {
    GLfloat modelMatrix[] = 
    {
       2.0f / SCREEN_BUFFER_WIDTH, 0.0f, 0.0f, 0.0f,
-      0, 2.0f / SCREEN_BUFFER_HEIGHT, 0.0f, 0.0f,
+      0.0f, 2.0f / SCREEN_BUFFER_HEIGHT, 0.0f, 0.0f,
       0.0f, 0.0f, 1.0f, 0.0f,
       -1.0f, -1.0f, 0.0f, 1.0f
    };
-   HDC dc = GetDC( g_globals.hWndMain );
 
    glViewport( 0, 0, SCREEN_BUFFER_WIDTH, SCREEN_BUFFER_HEIGHT );
 
@@ -273,38 +257,6 @@ void Platform_RenderScreen()
    glEnd();
 
    SwapBuffers( dc );
-
-   ReleaseDC( g_globals.hWndMain, dc );
-}
-
-uint64_t Platform_GetTimeStampMicro()
-{
-   LARGE_INTEGER ticks;
-   QueryPerformanceCounter( &ticks );
-
-   return (uint64_t)( ( (double)( ticks.QuadPart ) / (double)( g_globals.performanceFrequency.QuadPart ) ) * (uint64_t)1000000 );
-}
-
-void Platform_Sleep( uint64_t startMicro, uint64_t sleepMicro )
-{
-   uint64_t timeStampMicro;
-   uint64_t milli = ( sleepMicro / 1000 ) - 1;
-   uint64_t targetEndMicro = startMicro + sleepMicro;
-
-   // TODO: Windows' Sleep() is super inaccurate, if a frame goes by really fast it
-   // has a tendency to sleep too long. Subtracting one millisecond is a band-aid,
-   // and should probably be revisited later. Subtracting two milliseconds makes it
-   // even more accurate, but I'm not sure it matters enough at this point.
-   if ( milli > 0 )
-   {
-      Sleep( (DWORD)( milli ) );
-   }
-
-   do
-   {
-      timeStampMicro = Platform_GetTimeStampMicro();
-   }
-   while ( timeStampMicro < targetEndMicro );
 }
 
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
@@ -346,4 +298,63 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
          }
       }
    }
+}
+
+void Platform_Tick()
+{
+   MSG msg;
+
+   while ( PeekMessage( &msg, g_globals.hWndMain, 0, 0, PM_REMOVE ) )
+   {
+      if ( msg.message == WM_QUIT )
+      {
+         cGame_TryClose( &( g_globals.gameData ) );
+         break;
+      }
+      else
+      {
+         TranslateMessage( &msg );
+         DispatchMessage( &msg );
+      }
+   }
+}
+
+cScreenBuffer_t* Platform_GetScreenBuffer()
+{
+   return &( g_globals.screenBuffer );
+}
+
+void Platform_RenderScreen()
+{
+   RedrawWindow( g_globals.hWndMain, 0, 0, RDW_INVALIDATE );
+}
+
+uint64_t Platform_GetTimeStampMicro()
+{
+   LARGE_INTEGER ticks;
+   QueryPerformanceCounter( &ticks );
+
+   return (uint64_t)( ( (double)( ticks.QuadPart ) / (double)( g_globals.performanceFrequency.QuadPart ) ) * (uint64_t)1000000 );
+}
+
+void Platform_Sleep( uint64_t startMicro, uint64_t sleepMicro )
+{
+   uint64_t timeStampMicro;
+   uint64_t milli = ( sleepMicro / 1000 ) - 1;
+   uint64_t targetEndMicro = startMicro + sleepMicro;
+
+   // TODO: Windows' Sleep() is super inaccurate, if a frame goes by really fast it
+   // has a tendency to sleep too long. Subtracting one millisecond is a band-aid,
+   // and should probably be revisited later. Subtracting two milliseconds makes it
+   // even more accurate, but I'm not sure it matters enough at this point.
+   if ( milli > 0 )
+   {
+      Sleep( (DWORD)( milli ) );
+   }
+
+   do
+   {
+      timeStampMicro = Platform_GetTimeStampMicro();
+   }
+   while ( timeStampMicro < targetEndMicro );
 }
