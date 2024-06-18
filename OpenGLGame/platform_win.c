@@ -39,8 +39,6 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    UNUSED_PARAM( lpCmdLine );
    UNUSED_PARAM( nCmdShow );
 
-   InitKeyCodeMap();
-
    if ( !QueryPerformanceFrequency( &( g_globals.performanceFrequency ) ) )
    {
       FatalError( _T( STR_WINERR_PERFORMANCEFREQUENCY ) );
