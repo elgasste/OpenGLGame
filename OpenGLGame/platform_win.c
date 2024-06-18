@@ -14,6 +14,7 @@ typedef struct
 {
    HWND hWndMain;
    cScreenBuffer_t screenBuffer;
+   GLuint screenTexture;
    cGameData_t gameData;
    LARGE_INTEGER performanceFrequency;
    uint32_t keyCodeMap[(int)cKeyCode_Count];
@@ -115,7 +116,6 @@ internal void InitOpenGL( HWND hWnd )
    PIXELFORMATDESCRIPTOR suggestedPixelFormat;
    int suggestedPixelFormatIndex;
    HGLRC glRC;
-   GLuint textureHandle;
    HDC dc = GetDC( hWnd );
 
    desiredPixelFormat.nSize = sizeof( desiredPixelFormat );
@@ -147,8 +147,7 @@ internal void InitOpenGL( HWND hWnd )
       FatalError( _T( STR_WINERR_RENDERINGCONTEXT ) );
    }
 
-   glGenTextures( 1, &textureHandle );
-   glBindTexture( GL_TEXTURE_2D, textureHandle );
+   glGenTextures( 1, &( g_globals.screenTexture ) );
 
    ReleaseDC( hWnd, dc );
 }
@@ -219,6 +218,7 @@ void Platform_RenderScreen()
 
    glViewport( 0, 0, SCREEN_BUFFER_WIDTH, SCREEN_BUFFER_HEIGHT );
 
+   glBindTexture( GL_TEXTURE_2D, g_globals.screenTexture );
    glTexImage2D( GL_TEXTURE_2D,
                  0,
                  GL_RGBA8,
@@ -233,7 +233,6 @@ void Platform_RenderScreen()
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
-
    glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
    glEnable( GL_TEXTURE_2D );
