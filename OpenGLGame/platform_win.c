@@ -157,8 +157,6 @@ internal void InitOpenGL( HWND hWnd )
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam )
 {
    LRESULT result = 0;
-   PAINTSTRUCT paint;
-   HDC dc;
 
    switch ( uMsg )
    {
@@ -171,11 +169,6 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
             cGame_EmergencySave( &( g_globals.gameData ) );
             g_globals.gameData.isRunning = cFalse;
          }
-         break;
-      case WM_PAINT:
-         dc = BeginPaint( hWnd, &paint );
-         RenderWindow( dc );
-         EndPaint( hWnd, &paint );
          break;
       case WM_KEYDOWN:
       case WM_KEYUP:
@@ -326,7 +319,9 @@ cScreenBuffer_t* Platform_GetScreenBuffer()
 
 void Platform_RenderScreen()
 {
-   RedrawWindow( g_globals.hWndMain, 0, 0, RDW_INVALIDATE );
+   HDC dc = GetDC( g_globals.hWndMain );
+   RenderWindow( dc );
+   ReleaseDC( g_globals.hWndMain, dc );
 }
 
 uint64_t Platform_GetTimeStampMicro()
