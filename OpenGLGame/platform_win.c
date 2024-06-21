@@ -176,6 +176,14 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
       case WM_SYSKEYUP:
          HandleKeyboardInput( (uint32_t)wParam, lParam );
          break;
+      case WM_KILLFOCUS:
+         cGame_PauseEngine( &( g_globals.gameData ) );
+         DefWindowProc( hWnd, uMsg, wParam, lParam );
+         break;
+      case WM_SETFOCUS:
+         cGame_ResumeEngine( &( g_globals.gameData ) );
+         DefWindowProc( hWnd, uMsg, wParam, lParam );
+         break;
       default:
          result = DefWindowProc( hWnd, uMsg, wParam, lParam );
    }
