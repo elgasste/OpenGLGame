@@ -11,6 +11,7 @@ void cGame_Init( cGameData_t* gameData )
    cInput_Init( gameData->keyStates );
 
    gameData->isRunning = cFalse;
+   gameData->isEngineRunning = cTrue;
 }
 
 void cGame_Run( cGameData_t* gameData )
@@ -19,13 +20,38 @@ void cGame_Run( cGameData_t* gameData )
 
    while ( gameData->isRunning )
    {
-      cClock_StartFrame( &( gameData->clock ) );
-      cInput_UpdateStates( gameData->keyStates );
-      Platform_Tick();
-      cGame_HandleInput( gameData );
-      cGame_Tick( gameData );
-      cGame_Render( gameData );
-      cClock_EndFrame( &( gameData->clock ) );
+      if ( gameData->isEngineRunning )
+      {
+         cClock_StartFrame( &( gameData->clock ) );
+         cInput_UpdateStates( gameData->keyStates );
+         Platform_Tick();
+         cGame_HandleInput( gameData );
+         cGame_Tick( gameData );
+         cGame_Render( gameData );
+         cClock_EndFrame( &( gameData->clock ) );
+      }
+      else
+      {
+         Platform_Tick();
+      }
+   }
+}
+
+void cGame_PauseEngine( cGameData_t* gameData )
+{
+   if ( gameData->isEngineRunning )
+   {
+      cClock_Pause( &( gameData->clock ) );
+      gameData->isEngineRunning = cFalse;
+   }
+}
+
+void cGame_ResumeEngine( cGameData_t* gameData )
+{
+   if ( !gameData->isEngineRunning )
+   {
+      gameData->isEngineRunning = cTrue;
+      cClock_Resume( &( gameData->clock ) );
    }
 }
 
