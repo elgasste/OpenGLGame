@@ -23,7 +23,7 @@ cGlobalObjects_t;
 
 global cGlobalObjects_t g_globals;
 
-internal void FatalError( const wchar_t* message );
+internal void FatalError( const char* message );
 internal void InitKeyCodeMap();
 internal void InitOpenGL( HWND hWnd );
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
@@ -34,7 +34,7 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 {
    TIMECAPS timeCaps;
    UINT timerResolution;
-   WNDCLASS mainWindowClass = { 0 };
+   WNDCLASSA mainWindowClass = { 0 };
    int bytesPerPixel;
 
    UNUSED_PARAM( hPrevInstance );
@@ -43,12 +43,12 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
    if ( !QueryPerformanceFrequency( &( g_globals.performanceFrequency ) ) )
    {
-      FatalError( _T( STR_WINERR_PERFORMANCEFREQUENCY ) );
+      FatalError( STR_WINERR_PERFORMANCEFREQUENCY );
    }
 
    if ( timeGetDevCaps( &timeCaps, sizeof( TIMECAPS ) ) != TIMERR_NOERROR )
    {
-      FatalError( _T( STR_WINERR_TIMERRESOLUTION ) );
+      FatalError( STR_WINERR_TIMERRESOLUTION );
    }
 
    timerResolution = min( max( timeCaps.wPeriodMin, 1 ), timeCaps.wPeriodMax );
@@ -61,29 +61,29 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    mainWindowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
    mainWindowClass.lpfnWndProc = MainWindowProc;
    mainWindowClass.hInstance = hInstance;
-   mainWindowClass.lpszClassName = _T( "mainWindowClass" );
+   mainWindowClass.lpszClassName = "mainWindowClass";
 
-   if ( !RegisterClass( &mainWindowClass ) )
+   if ( !RegisterClassA( &mainWindowClass ) )
    {
-      FatalError( _T( STR_WINERR_REGISTERWINDOW ) );
+      FatalError( STR_WINERR_REGISTERWINDOW );
    }
 
-   g_globals.hWndMain = CreateWindowEx( 0,
-                                        mainWindowClass.lpszClassName,
-                                        _T( STR_WIN_WINDOWTITLE ),
-                                        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE,
-                                        CW_USEDEFAULT,
-                                        CW_USEDEFAULT,
-                                        SCREEN_BUFFER_WIDTH,
-                                        SCREEN_BUFFER_HEIGHT,
-                                        0,
-                                        0,
-                                        hInstance,
-                                        0 );
+   g_globals.hWndMain = CreateWindowExA( 0,
+                                         mainWindowClass.lpszClassName,
+                                         STR_WIN_WINDOWTITLE,
+                                         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE,
+                                         CW_USEDEFAULT,
+                                         CW_USEDEFAULT,
+                                         SCREEN_BUFFER_WIDTH,
+                                         SCREEN_BUFFER_HEIGHT,
+                                         0,
+                                         0,
+                                         hInstance,
+                                         0 );
 
    if ( !g_globals.hWndMain )
    {
-      FatalError( _T( STR_WINERR_CREATEWINDOW ) );
+      FatalError( STR_WINERR_CREATEWINDOW );
    }
 
    InitKeyCodeMap();
@@ -94,11 +94,11 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    return 0;
 }
 
-internal void FatalError( const wchar_t* message )
+internal void FatalError( const char* message )
 {
    // TODO: logging
    cGame_EmergencySave( &( g_globals.gameData ) );
-   MessageBox( 0, message, _T( STR_WINERR_HEADER ), MB_OK | MB_ICONERROR );
+   MessageBoxA( 0, message, STR_WINERR_HEADER, MB_OK | MB_ICONERROR );
    exit( 1 );
 }
 
@@ -131,14 +131,14 @@ internal void InitOpenGL( HWND hWnd )
 
    if ( !suggestedPixelFormatIndex )
    {
-      FatalError( _T( STR_WINERR_NOPIXELFORMAT ) );
+      FatalError( STR_WINERR_NOPIXELFORMAT );
    }
 
    DescribePixelFormat( dc, suggestedPixelFormatIndex, sizeof( suggestedPixelFormat ), &suggestedPixelFormat );
 
    if ( suggestedPixelFormat.cColorBits != GRAPHICS_BPP || suggestedPixelFormat.cAlphaBits != GRAPHICS_ALPHABITS )
    {
-      FatalError( _T( STR_WINERR_UNSUITABLEPIXELFORMAT ) );
+      FatalError( STR_WINERR_UNSUITABLEPIXELFORMAT );
    }
 
    SetPixelFormat( dc, suggestedPixelFormatIndex, &suggestedPixelFormat );
@@ -146,7 +146,7 @@ internal void InitOpenGL( HWND hWnd )
 
    if ( !wglMakeCurrent( dc, glRC ) )
    {
-      FatalError( _T( STR_WINERR_RENDERINGCONTEXT ) );
+      FatalError( STR_WINERR_RENDERINGCONTEXT );
    }
 
    glGenTextures( 1, &( g_globals.screenTexture ) );
@@ -186,7 +186,7 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
          DefWindowProc( hWnd, uMsg, wParam, lParam );
          break;
       default:
-         result = DefWindowProc( hWnd, uMsg, wParam, lParam );
+         result = DefWindowProcA( hWnd, uMsg, wParam, lParam );
    }
 
    return result;
@@ -306,10 +306,10 @@ void Platform_Tick()
 {
    MSG msg;
 
-   while ( PeekMessage( &msg, g_globals.hWndMain, 0, 0, PM_REMOVE ) )
+   while ( PeekMessageA( &msg, g_globals.hWndMain, 0, 0, PM_REMOVE ) )
    {
       TranslateMessage( &msg );
-      DispatchMessage( &msg );
+      DispatchMessageA( &msg );
    }
 }
 
@@ -343,4 +343,73 @@ void Platform_Sleep( uint64_t micro )
    {
       Sleep( milli );
    }
+}
+
+cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
+{
+   HANDLE hFile;
+   LARGE_INTEGER fileSize;
+   OVERLAPPED overlapped = { 0 };
+
+   fileData->contents = 0;
+   fileData->size = 0;
+
+   hFile = CreateFileA( filePath, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
+
+   if ( !hFile )
+   {
+      return cFalse;
+   }
+
+   if ( !GetFileSizeEx( hFile, &fileSize ) )
+   {
+      CloseHandle( hFile );
+      return cFalse;
+   }
+
+   fileData->size = fileSize.LowPart;
+   fileData->contents = VirtualAlloc( 0, (SIZE_T)( fileData->size ), MEM_COMMIT, PAGE_READWRITE );
+
+// not sure why it shows this warning, according to the docs the 5th param can be null
+#pragma warning(suppress : 6387)
+   if ( !ReadFileEx( hFile, fileData->contents, fileData->size, &overlapped, 0 ) )
+   {
+      Platform_ClearFileData( fileData );
+      CloseHandle( hFile );
+      return cFalse;
+   }
+
+   CloseHandle( hFile );
+   return cTrue;
+}
+
+cBool_t Platform_WriteFileData( const char* filePath, cFileData_t* fileData )
+{
+   HANDLE hFile;
+   OVERLAPPED overlapped = { 0 };
+
+   hFile = CreateFileA( filePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
+
+   if ( !hFile )
+   {
+      return cFalse;
+   }
+
+// again, not sure why it shows this warning, according to the docs the 5th param can be null
+#pragma warning(suppress : 6387)
+   if ( !WriteFileEx( hFile, fileData->contents, fileData->size, &overlapped, 0 ) )
+   {
+      CloseHandle( hFile );
+      return cFalse;
+   }
+
+   CloseHandle( hFile );
+   return cTrue;
+}
+
+void Platform_ClearFileData( cFileData_t* fileData )
+{
+   VirtualFree( fileData->contents, 0, MEM_RELEASE );
+   fileData->contents = 0;
+   fileData->size = 0;
 }
