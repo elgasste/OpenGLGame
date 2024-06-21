@@ -5,6 +5,9 @@
 
 typedef struct
 {
+   cBool_t isRunning;
+   uint64_t pauseTimeMicro;
+
    uint32_t totalFrames;
    uint32_t lagFrames;
    uint64_t absoluteStartMicro;
@@ -12,6 +15,7 @@ typedef struct
    uint64_t totalTimeMicro;
    uint64_t lastFrameDurationMicro;
    uint64_t targetFrameDurationMicro;
+
    float frameDeltaSeconds;
 }
 cClock_t;
@@ -19,5 +23,7 @@ cClock_t;
 void cClock_Init( cClock_t* clock );
 void cClock_StartFrame( cClock_t* clock );
 void cClock_EndFrame( cClock_t* clock );
+void cClock_Pause( cClock_t* clock );
+void cClock_Resume( cClock_t* clock );
 
 #endif
