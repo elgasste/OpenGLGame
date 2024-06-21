@@ -344,3 +344,41 @@ void Platform_Sleep( uint64_t micro )
       Sleep( milli );
    }
 }
+
+cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
+{
+   HANDLE hFile;
+   LARGE_INTEGER fileSize;
+   OVERLAPPED overlapped = { 0 };
+
+   fileData->contents = 0;
+   fileData->size = 0;
+
+   hFile = CreateFileA( filePath, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
+
+   if ( !hFile || !GetFileSizeEx( hFile, &fileSize ) )
+   {
+      return cFalse;
+   }
+
+   fileData->size = fileSize.LowPart;
+   fileData->contents = VirtualAlloc( 0, (SIZE_T)( fileData->size ), MEM_COMMIT, PAGE_READWRITE );
+
+// not sure why it shows this warning, according to the docs the 5th param can be null
+#pragma warning(suppress : 6387)
+   if ( !ReadFileEx( hFile, fileData->contents, fileData->size, &overlapped, 0 ) )
+   {
+      Platform_ClearFileData( fileData );
+      return cFalse;
+   }
+
+   CloseHandle( hFile );
+   return cTrue;
+}
+
+void Platform_ClearFileData( cFileData_t* fileData )
+{
+   VirtualFree( fileData->contents, 0, MEM_RELEASE );
+   fileData->contents = 0;
+   fileData->size = 0;
+}
