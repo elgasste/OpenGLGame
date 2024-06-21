@@ -356,8 +356,14 @@ cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
 
    hFile = CreateFileA( filePath, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
 
-   if ( !hFile || !GetFileSizeEx( hFile, &fileSize ) )
+   if ( !hFile )
    {
+      return cFalse;
+   }
+
+   if ( !GetFileSizeEx( hFile, &fileSize ) )
+   {
+      CloseHandle( hFile );
       return cFalse;
    }
 
@@ -369,6 +375,31 @@ cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
    if ( !ReadFileEx( hFile, fileData->contents, fileData->size, &overlapped, 0 ) )
    {
       Platform_ClearFileData( fileData );
+      CloseHandle( hFile );
+      return cFalse;
+   }
+
+   CloseHandle( hFile );
+   return cTrue;
+}
+
+cBool_t Platform_WriteFileData( const char* filePath, cFileData_t* fileData )
+{
+   HANDLE hFile;
+   OVERLAPPED overlapped = { 0 };
+
+   hFile = CreateFileA( filePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
+
+   if ( !hFile )
+   {
+      return cFalse;
+   }
+
+// again, not sure why it shows this warning, according to the docs the 5th param can be null
+#pragma warning(suppress : 6387)
+   if ( !WriteFileEx( hFile, fileData->contents, fileData->size, &overlapped, 0 ) )
+   {
+      CloseHandle( hFile );
       return cFalse;
    }
 
