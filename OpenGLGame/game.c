@@ -63,7 +63,7 @@ void cGame_EmergencySave( cGameData_t* gameData )
 
 void cGame_TryClose( cGameData_t* gameData )
 {
-   // NOTE: this means the user is trying to exit the game prematurely,
+   // NOTE: the user could be trying to exit the game prematurely,
    // so give them the chance to save or whatever before it happens.
    gameData->isRunning = cFalse;
 }

@@ -160,6 +160,7 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
 
    switch ( uMsg )
    {
+      case WM_QUIT:
       case WM_CLOSE:
          cGame_TryClose( &( g_globals.gameData ) );
          break;
@@ -307,16 +308,8 @@ void Platform_Tick()
 
    while ( PeekMessage( &msg, g_globals.hWndMain, 0, 0, PM_REMOVE ) )
    {
-      if ( msg.message == WM_QUIT )
-      {
-         cGame_TryClose( &( g_globals.gameData ) );
-         break;
-      }
-      else
-      {
-         TranslateMessage( &msg );
-         DispatchMessage( &msg );
-      }
+      TranslateMessage( &msg );
+      DispatchMessage( &msg );
    }
 }
 
