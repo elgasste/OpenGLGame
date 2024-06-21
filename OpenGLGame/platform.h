@@ -3,13 +3,7 @@
 
 #include "common.h"
 #include "screen_buffer.h"
-
-typedef struct
-{
-   uint32_t size;
-   void* contents;
-}
-cFileData_t;
+#include "file_data.h"
 
 void Platform_Tick();
 cScreenBuffer_t* Platform_GetScreenBuffer();
