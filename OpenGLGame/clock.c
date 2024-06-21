@@ -8,7 +8,8 @@ void cClock_Init( cClock_t* clock )
    clock->frameDeltaSeconds = 1.0f / GAME_FPS;
    clock->targetFrameDurationMicro = (uint64_t)( 1000000 / GAME_FPS );
    clock->absoluteStartMicro = 0;
-   clock->averageMsPerFrame = 0.0f;
+   clock->totalTimeMicro = 0;
+   clock->lastFrameDurationMicro = 0;
 }
 
 void cClock_StartFrame( cClock_t* clock )
@@ -23,17 +24,15 @@ void cClock_StartFrame( cClock_t* clock )
 
 void cClock_EndFrame( cClock_t* clock )
 {
-   uint64_t totalTimeMicro;
    uint64_t frameStopMicro = Platform_GetTimeStampMicro();
-   uint64_t frameDurationMicro = frameStopMicro - clock->frameStartMicro;
+
+   clock->lastFrameDurationMicro = frameStopMicro - clock->frameStartMicro;
    clock->totalFrames++;
+   clock->totalTimeMicro = frameStopMicro - clock->absoluteStartMicro;
 
-   totalTimeMicro = frameStopMicro - clock->absoluteStartMicro;
-   clock->averageMsPerFrame = (float)( ( totalTimeMicro / (double)clock->totalFrames ) / 1000.0f );
-
-   if ( frameDurationMicro < clock->targetFrameDurationMicro )
+   if ( clock->lastFrameDurationMicro < clock->targetFrameDurationMicro )
    {
-      Platform_Sleep( frameStopMicro, clock->targetFrameDurationMicro - frameDurationMicro );
+      Platform_Sleep( clock->targetFrameDurationMicro - clock->lastFrameDurationMicro );
    }
    else
    {

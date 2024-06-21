@@ -9,9 +9,10 @@ typedef struct
    uint32_t lagFrames;
    uint64_t absoluteStartMicro;
    uint64_t frameStartMicro;
+   uint64_t totalTimeMicro;
+   uint64_t lastFrameDurationMicro;
    uint64_t targetFrameDurationMicro;
    float frameDeltaSeconds;
-   float averageMsPerFrame;
 }
 cClock_t;
 

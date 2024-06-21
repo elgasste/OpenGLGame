@@ -332,24 +332,14 @@ uint64_t Platform_GetTimeStampMicro()
    return (uint64_t)( ( (double)( ticks.QuadPart ) / (double)( g_globals.performanceFrequency.QuadPart ) ) * (uint64_t)1000000 );
 }
 
-void Platform_Sleep( uint64_t startMicro, uint64_t sleepMicro )
+void Platform_Sleep( uint64_t micro )
 {
-   uint64_t timeStampMicro;
-   uint64_t milli = ( sleepMicro / 1000 ) - 1;
-   uint64_t targetEndMicro = startMicro + sleepMicro;
+   DWORD milli = (DWORD)( micro / 1000 );
 
-   // TODO: Windows' Sleep() is super inaccurate, if a frame goes by really fast it
-   // has a tendency to sleep too long. Subtracting one millisecond is a band-aid,
-   // and should probably be revisited later. Subtracting two milliseconds makes it
-   // even more accurate, but I'm not sure it matters enough at this point.
+   // TODO: this isn't super accurate, especially with very fast frames. it'd be
+   // great to find a better way to sleep (something like std::chrono).
    if ( milli > 0 )
    {
-      Sleep( (DWORD)( milli ) );
+      Sleep( milli );
    }
-
-   do
-   {
-      timeStampMicro = Platform_GetTimeStampMicro();
-   }
-   while ( timeStampMicro < targetEndMicro );
 }

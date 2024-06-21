@@ -8,6 +8,6 @@ void Platform_Tick();
 cScreenBuffer_t* Platform_GetScreenBuffer();
 void Platform_RenderScreen();
 uint64_t Platform_GetTimeStampMicro();
-void Platform_Sleep( uint64_t startMicro, uint64_t sleepMicro );
+void Platform_Sleep( uint64_t micro );
 
 #endif
