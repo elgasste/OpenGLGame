@@ -9,8 +9,6 @@
 #define global static
 #define local_persist static
 
-#define PNG_SIGNATURE 0x0a1a0a0d474e5089
-
 // use this to suppress unused parameter warnings
 #define UNUSED_PARAM(x) (void)x
 
