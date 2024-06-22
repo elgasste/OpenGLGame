@@ -13,7 +13,7 @@
 
 #define STR_WIN_WINDOWTITLE               "Testing"
 
-#define STR_PNGERROR_FILETOOSMALL         "PNG file error: file is too small: %s"
+#define STR_PNGERROR_FILECORRUPT          "PNG file error: file is corrupt: %s"
 #define STR_PNGERROR_NOTAPNGFILE          "PNG file error: file is not a PNG file: %s"
 #define STR_PNGERROR_HEADERNOTFOUND       "PNG file error: header missing or invalid: %s"
 #define STR_PNGERROR_COLORTYPEMISMATCH    "PNG file error: color type does not match bit depth: %s"
@@ -21,6 +21,9 @@
 #define STR_PNGERROR_INVALIDCOMPRESSION   "PNG file error: invalid compression method: %s"
 #define STR_PNGERROR_INVALIDFILTER        "PNG file error: invalid filter method: %s"
 #define STR_PNGERROR_INVALIDINTERLACE     "PNG file error: invalid interlacing method: %s"
+#define STR_PNGERROR_ROGUEPALETTE         "PNG file error: rogue palette found: %s"
+#define STR_PNGERROR_INVALIDPALETTESIZE   "PNG file error: invalid palette size: %s"
+#define STR_PNGERROR_PALETTENOTFOUND      "PNG file error: palette is missing: %s"
 
 #endif
 

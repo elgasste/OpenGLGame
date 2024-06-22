@@ -5,7 +5,11 @@
 #include "file_data.h"
 
 #define PNG_SIGNATURE         0x0a1a0a0d474e5089
+
 #define PNG_CHUNKTYPE_IHDR    0x49484452
+#define PNG_CHUNKTYPE_PLTE    0x504C5445
+#define PNG_CHUNKTYPE_IDAT    0x49444154
+#define PNG_CHUNKTYPE_IEND    0x49454E44
 
 typedef struct
 {
