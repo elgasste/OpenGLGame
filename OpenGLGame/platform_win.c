@@ -96,8 +96,8 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 internal void FatalError( const char* message )
 {
-   // TODO: logging
    cGame_EmergencySave( &( g_globals.gameData ) );
+   Platform_Log( message );
    MessageBoxA( 0, message, STR_WINERR_HEADER, MB_OK | MB_ICONERROR );
    exit( 1 );
 }
@@ -345,7 +345,7 @@ void Platform_Sleep( uint64_t micro )
    }
 }
 
-cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
+cBool_t Platform_ReadFileData( cFileData_t* fileData )
 {
    HANDLE hFile;
    LARGE_INTEGER fileSize;
@@ -354,7 +354,7 @@ cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
    fileData->contents = 0;
    fileData->size = 0;
 
-   hFile = CreateFileA( filePath, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
+   hFile = CreateFileA( fileData->filePath, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
 
    if ( !hFile )
    {
@@ -383,12 +383,12 @@ cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
    return cTrue;
 }
 
-cBool_t Platform_WriteFileData( const char* filePath, cFileData_t* fileData )
+cBool_t Platform_WriteFileData( cFileData_t* fileData )
 {
    HANDLE hFile;
    OVERLAPPED overlapped = { 0 };
 
-   hFile = CreateFileA( filePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
+   hFile = CreateFileA( fileData->filePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
 
    if ( !hFile )
    {
@@ -412,4 +412,10 @@ void Platform_ClearFileData( cFileData_t* fileData )
    VirtualFree( fileData->contents, 0, MEM_RELEASE );
    fileData->contents = 0;
    fileData->size = 0;
+}
+
+void Platform_Log( const char* message )
+{
+   // TODO: write to a log file with a time stamp, probably
+   UNUSED_PARAM( message );
 }

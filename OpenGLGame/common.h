@@ -2,6 +2,7 @@
 #define COMMON_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "strings.h"
 
@@ -23,5 +24,7 @@ typedef int32_t cBool_t;
 #define SCREEN_BUFFER_HEIGHT     720
 
 #define GAME_FPS                 60
+
+#define STRING_SIZE_DEFAULT      1024
 
 #endif

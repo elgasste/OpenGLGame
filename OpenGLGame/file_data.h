@@ -3,6 +3,7 @@
 
 typedef struct
 {
+   char filePath[STRING_SIZE_DEFAULT];
    uint32_t size;
    void* contents;
 }

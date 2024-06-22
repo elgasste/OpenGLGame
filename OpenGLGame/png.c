@@ -1,23 +1,27 @@
 #include "png.h"
+#include "platform.h"
 
 #define EXTRACT_CHUNK_DATA_32( x ) 0 | ( x[0] << 24 ) | ( x[1] << 16 ) | ( x[2] << 8 ) | x[3]
 
-internal cBool_t cPng_LoadHeader( uint8_t* chunkPosition, cPngData_t* pngData );
+internal cBool_t cPng_LoadHeader( uint8_t* chunkPosition, cPngData_t* pngData, const char* filePath );
 
 cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData )
 {
    uint8_t* chunkPosition;
    uint32_t chunkSize, chunkType;
+   char errorMsg[STRING_SIZE_DEFAULT];
 
    if ( fileData->size < 8 )
    {
-      // TODO: logging, the file is too small
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_FILETOOSMALL, fileData->filePath );
+      Platform_Log( errorMsg );
       return cFalse;
    }
 
    if ( ( (uint64_t*)( fileData->contents ) )[0] != PNG_SIGNATURE )
    {
-      // TODO: logging, this isn't a PNG file
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_NOTAPNGFILE, fileData->filePath );
+      Platform_Log( errorMsg );
       return cFalse;
    }
 
@@ -29,13 +33,13 @@ cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData )
 
    if ( chunkSize != 13 || chunkType != PNG_CHUNKTYPE_IHDR )
    {
-      // TODO: logging, this means the IHDR chunk is missing or invalid
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_HEADERNOTFOUND, fileData->filePath );
+      Platform_Log( errorMsg );
       return cFalse;
    }
 
-   if ( !cPng_LoadHeader( chunkPosition, pngData ) )
+   if ( !cPng_LoadHeader( chunkPosition, pngData, fileData->filePath ) )
    {
-      // TODO: logging, this means something is wrong with the header
       return cFalse;
    }
 
@@ -44,8 +48,10 @@ cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData )
    return cTrue;
 }
 
-internal cBool_t cPng_LoadHeader( uint8_t* chunkPosition, cPngData_t* pngData )
+internal cBool_t cPng_LoadHeader( uint8_t* chunkPosition, cPngData_t* pngData, const char* filePath )
 {
+   char errorMsg[STRING_SIZE_DEFAULT];
+
    pngData->width = EXTRACT_CHUNK_DATA_32( chunkPosition );
    chunkPosition += 4;
    pngData->height = EXTRACT_CHUNK_DATA_32( chunkPosition );
@@ -78,7 +84,8 @@ internal cBool_t cPng_LoadHeader( uint8_t* chunkPosition, cPngData_t* pngData )
    {
       if ( pngData->bitDepth != 1 && pngData->bitDepth != 2 && pngData->bitDepth != 4 && pngData->bitDepth != 8 && pngData->bitDepth != 16 )
       {
-         // TODO: logging
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_COLORTYPEMISMATCH, filePath );
+         Platform_Log( errorMsg );
          return cFalse;
       }
    }
@@ -86,7 +93,8 @@ internal cBool_t cPng_LoadHeader( uint8_t* chunkPosition, cPngData_t* pngData )
    {
       if ( pngData->bitDepth != 8 && pngData->bitDepth != 16 )
       {
-         // TODO: logging
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_COLORTYPEMISMATCH, filePath );
+         Platform_Log( errorMsg );
          return cFalse;
       }
    }
@@ -94,31 +102,36 @@ internal cBool_t cPng_LoadHeader( uint8_t* chunkPosition, cPngData_t* pngData )
    {
       if ( pngData->bitDepth != 1 && pngData->bitDepth != 2 && pngData->bitDepth != 4 && pngData->bitDepth != 8 )
       {
-         // TODO: logging
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_COLORTYPEMISMATCH, filePath );
+         Platform_Log( errorMsg );
          return cFalse;
       }
    }
    else
    {
-      // TODO: logging
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDCOLORTYPE, filePath );
+      Platform_Log( errorMsg );
       return cFalse;
    }
 
    if ( pngData->compressionMethod != 0 )
    {
-      // TODO: logging
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDCOMPRESSION, filePath );
+      Platform_Log( errorMsg );
       return cFalse;
    }
 
    if ( pngData->filterMethod != 0 )
    {
-      // TODO: logging
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDFILTER, filePath );
+      Platform_Log( errorMsg );
       return cFalse;
    }
 
    if ( pngData->interlaceMethod > 1 )
    {
-      // TODO: logging
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDINTERLACE, filePath );
+      Platform_Log( errorMsg );
       return cFalse;
    }
 
