@@ -5,7 +5,7 @@
 
 internal void cPng_LogCorruptFile( const char* filePath );
 internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const char* filePath );
-internal cBool_t cPng_LoadPaletteChunk();
+internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath );
 internal cBool_t cPng_LoadImageDataChunk();
 internal cBool_t cPng_LoadSRGBChunk();
 internal cBool_t cPng_LoadGammaChunk();
@@ -24,7 +24,17 @@ cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData )
    uint32_t chunkSize, chunkType, bytesRead;
    char errorMsg[STRING_SIZE_DEFAULT];
    cBool_t foundPalette = cFalse;
-   cBool_t foundData = cFalse;
+   cBool_t foundImageData = cFalse;
+   cBool_t foundSRGB = cFalse;
+   cBool_t foundChromaticities = cFalse;
+   cBool_t foundGamma = cFalse;
+   cBool_t foundICCProfile = cFalse;
+   cBool_t foundSignificantBits = cFalse;
+   cBool_t foundBackgroundColor = cFalse;
+   cBool_t foundPaletteHistogram = cFalse;
+   cBool_t foundTransparency = cFalse;
+   cBool_t foundPhysicalPixelDimensions = cFalse;
+   cBool_t foundTime = cFalse;
    cBool_t stillGood = cTrue;
 
    // the file signature plus header data is 29 bytes
@@ -91,8 +101,12 @@ cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData )
 
       switch ( chunkType )
       {
+         case PNG_CHUNKTYPE_IHDR:
+            cPng_LogCorruptFile( fileData->filePath );
+            stillGood = cFalse;
+            break;
          case PNG_CHUNKTYPE_PLTE:
-            if ( foundPalette || foundData )
+            if ( foundPalette || foundImageData )
             {
                snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ROGUEPALETTE, fileData->filePath );
                Platform_Log( errorMsg );
@@ -101,122 +115,133 @@ cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData )
             else
             {
                foundPalette = cTrue;
-               stillGood = cPng_LoadPaletteChunk();
+               stillGood = cPng_LoadPaletteChunk( filePos, chunkSize, fileData->filePath );
             }
             break;
          case PNG_CHUNKTYPE_IDAT:
-            if ( foundData )
+            // TODO: this assumes there's only one IDAT chunk, but it's possible to have several.
+            // they should be consecutive, so we need to check for more chunks here.
+            if ( foundImageData )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
             }
             else
             {
-               foundData = cTrue;
                stillGood = cPng_LoadImageDataChunk();
+               foundImageData = cTrue;
             }
             break;
          case PNG_CHUNKTYPE_SRGB:
-            if ( foundPalette )
+            if ( foundPalette || foundSRGB )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
             }
             else
             {
+               foundSRGB = cTrue;
                stillGood = cPng_LoadSRGBChunk();
             }
             break;
          case PNG_CHUNKTYPE_GAMA:
-            if ( foundPalette )
+            if ( foundPalette || foundGamma )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
             }
             else
             {
+               foundGamma = cTrue;
                stillGood = cPng_LoadGammaChunk();
             }
             break;
          case PNG_CHUNKTYPE_CHRM:
-            if ( foundPalette )
+            if ( foundPalette || foundChromaticities )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
             }
             else
             {
+               foundChromaticities = cTrue;
                stillGood = cPng_LoadChromaticitiesChunk();
             }
             break;
          case PNG_CHUNKTYPE_ICCP:
-            if ( foundPalette )
+            if ( foundPalette || foundICCProfile )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
             }
             else
             {
+               foundICCProfile = cTrue;
                stillGood = cPng_LoadICCProfileChunk();
             }
             break;
          case PNG_CHUNKTYPE_SBIT:
-            if ( foundPalette )
+            if ( foundPalette || foundSignificantBits )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
             }
             else
             {
+               foundSignificantBits = cTrue;
                stillGood = cPng_LoadSignificantBitsChunk();
             }
             break;
          case PNG_CHUNKTYPE_TRNS:
-            if ( ( pngData->headerData.colorType == 3 && !foundPalette ) || foundData )
+            if ( ( pngData->headerData.colorType == 3 && !foundPalette ) || foundImageData || foundTransparency )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
             }
             else
             {
+               foundTransparency = cTrue;
                stillGood = cPng_LoadTransparencyChunk();
             }
             break;
          case PNG_CHUNKTYPE_BKGD:
-            if ( ( pngData->headerData.colorType == 3 && !foundPalette ) || foundData )
+            if ( ( pngData->headerData.colorType == 3 && !foundPalette ) || foundImageData || foundBackgroundColor )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
             }
             else
             {
+               foundBackgroundColor = cTrue;
                stillGood = cPng_LoadBackgroundColorChunk();
             }
             break;
          case PNG_CHUNKTYPE_HIST:
-            if ( !foundPalette || foundData )
+            if ( !foundPalette || foundImageData || foundPaletteHistogram )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
             }
             else
             {
+               foundPaletteHistogram = cTrue;
                stillGood = cPng_LoadPaletteHistogramChunk();
             }
             break;
          case PNG_CHUNKTYPE_PHYS:
-            if ( foundData )
+            if ( foundImageData || foundPhysicalPixelDimensions )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
             }
             else
             {
+               foundPhysicalPixelDimensions = cTrue;
                stillGood = cPng_LoadPhysicalPixelDimensionsChunk();
             }
             break;
          case PNG_CHUNKTYPE_SPLT:
-            if ( foundData )
+            if ( foundImageData )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
@@ -226,8 +251,18 @@ cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData )
                stillGood = cPng_LoadSuggestedPaletteChunk();
             }
             break;
-         // TODO: I don't think we care about these, should we keep them here?
          case PNG_CHUNKTYPE_TIME:
+            if ( foundTime )
+            {
+               cPng_LogCorruptFile( fileData->filePath );
+               stillGood = cFalse;
+            }
+            else
+            {
+               foundTime = cTrue;
+            }
+            break;
+         // TODO: I don't think we care about these, should we keep them here?
          case PNG_CHUNKTYPE_ITXT:
          case PNG_CHUNKTYPE_TEXT:
          case PNG_CHUNKTYPE_ZTXT:
@@ -244,7 +279,7 @@ cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData )
       bytesRead += ( chunkSize + 4 );
    }
 
-   if ( bytesRead != fileData->size || !foundData )
+   if ( bytesRead != fileData->size || !foundImageData )
    {
       cPng_LogCorruptFile( fileData->filePath );
       return cFalse;
@@ -271,7 +306,7 @@ internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const c
    filePos += 4;
    header->height = EXTRACT_CHUNK_DATA_32( filePos );
    filePos += 4;
-   header->bitDepth = filePos[0];           // bits per sample, or per palette index (not per pixel)
+   header->bitDepth = filePos[0];            // bits per sample, or per palette index (not per pixel)
                                              // allowed combinations of bit depths with color types:
                                              // - color type 0: bit depths 1, 2, 4, 8, 16 (each pixel is a grayscale sample)
                                              // - color type 2: bit depths 8, 16 (each pixel is an RGB triple)
@@ -282,17 +317,17 @@ internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const c
                                              // - color type 6: bit depths 8, 16 (each pixel is an RGB triple,
                                              //                                   followed by an alpha sample)
    filePos++;
-   header->colorType = filePos[0];          // sums of the following:
+   header->colorType = filePos[0];           // sums of the following:
                                              // 1 - palette used
                                              // 2 - color used,
                                              // 4 - alpha channel used
                                              // possible values are 0, 2, 3, 4, and 6 (see above)
    filePos++;
-   header->compressionMethod = filePos[0];  // only 0 (deflate/inflate compression with a 32K sliding window) is defined
+   header->compressionMethod = filePos[0];   // only 0 (deflate/inflate compression with a 32K sliding window) is defined
    filePos++;
-   header->filterMethod = filePos[0];       // only 0 (adaptive filtering with five basic filter types) is defined
+   header->filterMethod = filePos[0];        // only 0 (adaptive filtering with five basic filter types) is defined
    filePos++;
-   header->interlaceMethod = filePos[0];    // 0 (no interlace) or 1 (Adam7 interlace)
+   header->interlaceMethod = filePos[0];     // 0 (no interlace) or 1 (Adam7 interlace)
    filePos++;
 
    if ( header->colorType == 0 )
@@ -353,15 +388,27 @@ internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const c
    return cTrue;
 }
 
-internal cBool_t cPng_LoadPaletteChunk()
+internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath )
 {
-   // TODO
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   UNUSED_PARAM( filePos );
+
+   if ( ( chunkSize % 3 ) != 0 )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDPALETTESIZE, filePath );
+      Platform_Log( errorMsg );
+      return cFalse;
+   }
+
+   // TODO: actually load the palette
+
    return cTrue;
 }
 
 internal cBool_t cPng_LoadImageDataChunk()
 {
-   // TODO
+   // TODO (there could be multiple of these)
    return cTrue;
 }
 
@@ -421,6 +468,6 @@ internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk()
 
 internal cBool_t cPng_LoadSuggestedPaletteChunk()
 {
-   // TODO
+   // TODO (there could be multiple of these)
    return cTrue;
 }
