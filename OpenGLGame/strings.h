@@ -25,6 +25,7 @@
 #define STR_PNGERROR_INVALIDPALETTESIZE   "PNG file error: invalid palette size: %s"
 #define STR_PNGERROR_PALETTENOTFOUND      "PNG file error: palette is missing: %s"
 #define STR_PNGERROR_PALETTEENTRYOVERRUN  "PNG file error: palette contains too many entries: %s"
+#define STR_PNGERROR_ROGUEIDAT            "PNG file error: rogue image data found: %s"
 
 #endif
 

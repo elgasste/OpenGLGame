@@ -27,6 +27,8 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
    uint32_t chunkSize, chunkType, bytesRead;
    char errorMsg[STRING_SIZE_DEFAULT];
    cBool_t foundImageData = cFalse;
+   cBool_t readingImageData = cFalse;
+   cBool_t finishedReadingImageData = cFalse;
    cBool_t foundSRGB = cFalse;
    cBool_t foundChromaticities = cFalse;
    cBool_t foundGamma = cFalse;
@@ -93,8 +95,15 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
 
       if ( chunkType == PNG_CHUNKTYPE_IEND )
       {
+         readingImageData = cFalse;
+         finishedReadingImageData = cTrue;
          bytesRead += 4;
          break;
+      }
+      else if ( chunkType != PNG_CHUNKTYPE_IDAT && readingImageData )
+      {
+         readingImageData = cFalse;
+         finishedReadingImageData = cTrue;
       }
 
       if ( fileData->size < ( bytesRead + chunkSize ) )
@@ -123,17 +132,17 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             }
             break;
          case PNG_CHUNKTYPE_IDAT:
-            // TODO: this assumes there's only one IDAT chunk, but it's possible to have several.
-            // they should be consecutive, so we need to check for more chunks here.
-            if ( foundImageData )
+            if ( finishedReadingImageData )
             {
-               cPng_LogCorruptFile( fileData->filePath );
+               snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ROGUEIDAT, fileData->filePath );
+               Platform_Log( errorMsg );
                stillGood = cFalse;
             }
             else
             {
-               stillGood = cPng_LoadImageDataChunk();
                foundImageData = cTrue;
+               readingImageData = cTrue;
+               stillGood = cPng_LoadImageDataChunk();
             }
             break;
          case PNG_CHUNKTYPE_SRGB:
