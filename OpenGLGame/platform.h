@@ -6,6 +6,8 @@
 #include "file_data.h"
 
 void Platform_Log( const char* message );
+void* Platform_MemAlloc( uint64_t size );
+void Platform_MemFree( void* memory );
 void Platform_Tick();
 cScreenBuffer_t* Platform_GetScreenBuffer();
 void Platform_RenderScreen();

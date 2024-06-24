@@ -51,8 +51,8 @@ cPngHeader_t;
 
 typedef struct
 {
-   uint16_t numEntries;
-   uint16_t maxEntries;
+   uint16_t numColors;
+   uint32_t* colors;
 }
 cPngPalette_t;
 
@@ -65,6 +65,7 @@ typedef struct
 }
 cPngData_t;
 
-cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData );
+cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData );
+void cPng_DeletePngData( cPngData_t* pngData );
 
 #endif

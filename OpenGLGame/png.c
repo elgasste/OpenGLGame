@@ -21,7 +21,7 @@ internal cBool_t cPng_LoadPaletteHistogramChunk();
 internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk();
 internal cBool_t cPng_LoadSuggestedPaletteChunk();
 
-cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData )
+cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
 {
    uint8_t* filePos;
    uint32_t chunkSize, chunkType, bytesRead;
@@ -294,6 +294,14 @@ cBool_t cPng_LoadImageData( cFileData_t* fileData, cPngData_t* pngData )
    }
 }
 
+void cPng_DeletePngData( cPngData_t* pngData )
+{
+   if ( pngData->hasPalette )
+   {
+      Platform_MemFree( pngData->palette.colors );
+   }
+}
+
 internal void cPng_InitData( cPngData_t* pngData )
 {
    pngData->header.width = 0;
@@ -305,8 +313,8 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->header.interlaceMethod = 0;
 
    pngData->hasPalette = cFalse;
-   pngData->palette.numEntries = 0;
-   pngData->palette.maxEntries = 0;
+   pngData->palette.numColors = 0;
+   pngData->palette.colors = 0;
 }
 
 internal void cPng_LogCorruptFile( const char* filePath )
@@ -411,9 +419,10 @@ internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const c
 
 internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
+   uint16_t maxColors;
+   uint32_t r, g, b;
+   uint16_t i;
    char errorMsg[STRING_SIZE_DEFAULT];
-
-   UNUSED_PARAM( filePos );
 
    if ( ( chunkSize % 3 ) != 0 )
    {
@@ -421,24 +430,34 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
       Platform_Log( errorMsg );
       return cFalse;
    }
-   else if ( pngData->header.colorType == 0 || pngData->header.colorType == 4 )
+   else if ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALE ||
+             pngData->header.colorType == PNG_COLORTYPE_GRAYSCALEALPHA )
    {
       snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ROGUEPALETTE, filePath );
       Platform_Log( errorMsg );
       return cFalse;
    }
 
-   pngData->palette.maxEntries = (uint16_t)pow( (double)2, (double)( pngData->header.bitDepth ) );
-   pngData->palette.numEntries = (uint16_t)( chunkSize / 3 ) / pngData->header.bitDepth;
+   maxColors = (uint16_t)pow( (double)2, (double)( pngData->header.bitDepth ) );
+   pngData->palette.numColors = (uint16_t)( chunkSize / 3 ) / pngData->header.bitDepth;
 
-   if ( pngData->palette.numEntries > pngData->palette.maxEntries )
+   if ( pngData->palette.numColors > maxColors )
    {
       snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_PALETTEENTRYOVERRUN, filePath );
       Platform_Log( errorMsg );
       return cFalse;
    }
 
-   // TODO: load the palette data
+   pngData->palette.colors = (uint32_t*)Platform_MemAlloc( sizeof( uint32_t ) * pngData->palette.numColors );
+
+   for ( i = 0; i < pngData->palette.numColors; i++ )
+   {
+      r = filePos[0];
+      g = filePos[1];
+      b = filePos[2];
+      pngData->palette.colors[i] = 0xFF000000 | ( r << 16 ) | ( g << 8 ) | b;
+      filePos += 3;
+   }
 
    return cTrue;
 }
