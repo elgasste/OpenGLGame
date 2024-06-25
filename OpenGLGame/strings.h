@@ -26,6 +26,8 @@
 #define STR_PNGERROR_PALETTENOTFOUND      "PNG file error: palette is missing: %s"
 #define STR_PNGERROR_PALETTEENTRYOVERRUN  "PNG file error: palette contains too many entries: %s"
 #define STR_PNGERROR_ROGUEIDAT            "PNG file error: rogue image data found: %s"
+#define STR_PNGERROR_ROGUETRNS            "PNG file error: rogue transparency data found: %s"
+#define STR_PNGERROR_TRNSOVERRUN          "PNG file error: too many transparency entries: %s"
 
 #endif
 

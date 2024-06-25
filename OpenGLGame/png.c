@@ -15,7 +15,7 @@ internal cBool_t cPng_LoadGammaChunk();
 internal cBool_t cPng_LoadChromaticitiesChunk();
 internal cBool_t cPng_LoadICCProfileChunk();
 internal cBool_t cPng_LoadSignificantBitsChunk();
-internal cBool_t cPng_LoadTransparencyChunk();
+internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadBackgroundColorChunk();
 internal cBool_t cPng_LoadPaletteHistogramChunk();
 internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk();
@@ -206,7 +206,11 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             }
             break;
          case PNG_CHUNKTYPE_TRNS:
-            if ( ( pngData->header.colorType == 3 && !pngData->hasPalette ) || foundImageData || foundTransparency )
+            if ( ( pngData->header.colorType == PNG_COLORTYPE_INDEXED && !pngData->hasPalette ) ||
+                 ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALEALPHA ) ||
+                 ( pngData->header.colorType == PNG_COLORTYPE_TRUECOLORALPHA ) ||
+                 foundImageData ||
+                 foundTransparency )
             {
                cPng_LogCorruptFile( fileData->filePath );
                stillGood = cFalse;
@@ -214,7 +218,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             else
             {
                foundTransparency = cTrue;
-               stillGood = cPng_LoadTransparencyChunk();
+               stillGood = cPng_LoadTransparencyChunk( filePos, chunkSize, fileData->filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_BKGD:
@@ -447,7 +451,15 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
       return cFalse;
    }
 
-   maxColors = (uint16_t)pow( (double)2, (double)( pngData->header.bitDepth ) );
+   if ( pngData->header.bitDepth > 8 )
+   {
+      maxColors = 256;
+   }
+   else
+   {
+      maxColors = (uint16_t)pow( (double)2, (double)( pngData->header.bitDepth ) );
+   }
+
    pngData->palette.numColors = (uint16_t)( chunkSize / 3 ) / pngData->header.bitDepth;
 
    if ( pngData->palette.numColors > maxColors )
@@ -507,9 +519,47 @@ internal cBool_t cPng_LoadSignificantBitsChunk()
    return cTrue;
 }
 
-internal cBool_t cPng_LoadTransparencyChunk()
+internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   // TODO
+   uint16_t numTransparentColors, i;
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   if ( pngData->header.colorType == PNG_COLORTYPE_INDEXED )
+   {
+      numTransparentColors = (uint16_t)chunkSize;
+
+      if ( numTransparentColors > pngData->palette.numColors )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_TRNSOVERRUN, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      for ( i = 0; i < numTransparentColors; i++ )
+      {
+         pngData->palette.colors[i] = ( (uint32_t)( filePos[0] ) << 24 ) | ( pngData->palette.colors[i] & 0x00FFFFFF );
+         filePos++;
+      }
+   }
+   else if ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALE )
+   {
+      // TODO
+      // for grayscale color, there should be 2 bytes that contain the gray level value,
+      // which is stored in this format: ( 2 ^ bitdepth ) - 1
+      // and if the bit depth is less than 16, the least significant bits are used and the
+      // others are presumed to be zero. any pixels at this gray level are to be
+      // considered transparent, and all others are to be considered opaque.
+   }
+   else if ( pngData->header.colorType == PNG_COLORTYPE_TRUECOLOR )
+   {
+      // TODO
+      // for true color, there should be 6 bytes that contain a single RGB color value,
+      // where each color is 2 bytes in this format: ( 2 ^ bitdepth ) - 1
+      // in the order of R, G, B. if the bit depth is less than 16, the least significant
+      // bits are used and the others are presumed to be zero. any pixels of this color
+      // are to be considered transparent, and all others are to be considered opaque.
+   }
+
    return cTrue;
 }
 
