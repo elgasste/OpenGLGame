@@ -58,7 +58,7 @@ cPngHeader_t;
 
 typedef struct
 {
-   uint16_t numColors;
+   uint32_t numColors;
    uint32_t* colors;
 }
 cPngPalette_t;

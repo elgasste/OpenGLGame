@@ -17,7 +17,6 @@ internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize,
 internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
-internal cBool_t cPng_LoadPaletteHistogramChunk();
 internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk();
 internal cBool_t cPng_LoadSuggestedPaletteChunk();
 
@@ -35,7 +34,6 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
    cBool_t foundICCProfile = cFalse;
    cBool_t foundSignificantBits = cFalse;
    cBool_t foundBackgroundColor = cFalse;
-   cBool_t foundPaletteHistogram = cFalse;
    cBool_t foundTransparency = cFalse;
    cBool_t foundPhysicalPixelDimensions = cFalse;
    cBool_t foundTime = cFalse;
@@ -234,18 +232,6 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
                stillGood = cPng_LoadBackgroundColorChunk( filePos, chunkSize, fileData->filePath, pngData );
             }
             break;
-         case PNG_CHUNKTYPE_HIST:
-            if ( !pngData->hasPalette || foundImageData || foundPaletteHistogram )
-            {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
-            }
-            else
-            {
-               foundPaletteHistogram = cTrue;
-               stillGood = cPng_LoadPaletteHistogramChunk();
-            }
-            break;
          case PNG_CHUNKTYPE_PHYS:
             if ( foundImageData || foundPhysicalPixelDimensions )
             {
@@ -284,6 +270,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
          case PNG_CHUNKTYPE_ITXT:
          case PNG_CHUNKTYPE_TEXT:
          case PNG_CHUNKTYPE_ZTXT:
+         case PNG_CHUNKTYPE_HIST:
             break;
       }
 
@@ -463,9 +450,7 @@ internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const c
 
 internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   uint16_t maxColors;
-   uint32_t r, g, b;
-   uint16_t i;
+   uint32_t maxColors, r, g, b, i;
    char errorMsg[STRING_SIZE_DEFAULT];
 
    if ( ( chunkSize % 3 ) != 0 )
@@ -488,10 +473,10 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
    }
    else
    {
-      maxColors = (uint16_t)pow( (double)2, (double)( pngData->header.bitDepth ) );
+      maxColors = (uint32_t)pow( (double)2, (double)( pngData->header.bitDepth ) );
    }
 
-   pngData->palette.numColors = (uint16_t)( chunkSize / 3 ) / pngData->header.bitDepth;
+   pngData->palette.numColors = ( chunkSize / 3 ) / pngData->header.bitDepth;
 
    if ( pngData->palette.numColors > maxColors )
    {
@@ -807,12 +792,6 @@ internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunk
                                  (uint32_t)( ( (uint16_t*)filePos )[4] );
    }
 
-   return cTrue;
-}
-
-internal cBool_t cPng_LoadPaletteHistogramChunk()
-{
-   // TODO
    return cTrue;
 }
 

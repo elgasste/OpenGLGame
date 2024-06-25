@@ -37,6 +37,7 @@
 #define STR_PNGERROR_ICCCORRUPT              "PNG file error: ICC profile entry is corrupt: %s"
 #define STR_PNGERROR_ICCCOMPRESSIONINVALID   "PNG file error: ICC profile has invalid compression method: %s"
 #define STR_PNGERROR_BKGDCORRUPT             "PNG file error: background color entry is corrupt: %s"
+#define STR_PNGERROR_HISTCORRUPT             "PNG file error: histogram entry is corrupt: %s"
 
 #endif
 
