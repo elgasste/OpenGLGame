@@ -33,6 +33,7 @@
 #define STR_PNGERROR_SBITCORRUPT          "PNG file error: significant bits entry is corrupt: %s"
 #define STR_PNGERROR_SRGBCORRUPT          "PNG file error: sRGB entry is corrupt: %s"
 #define STR_PNGERROR_SRGBINVALID          "PNG file error: sRGB entry is invalid: %s"
+#define STR_PNGERROR_CHRMCORRUPT          "PNG file error: Chromaticity entry is corrupt: %s"
 
 #endif
 

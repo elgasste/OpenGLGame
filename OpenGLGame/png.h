@@ -63,20 +63,35 @@ cPngPalette_t;
 
 typedef struct
 {
+   float whitePointX;
+   float whitePointY;
+   float redX;
+   float redY;
+   float greenX;
+   float greenY;
+   float blueX;
+   float blueY;
+}
+cPngChromaticity_t;
+
+typedef struct
+{
    cPngHeader_t header;
+   cPngPalette_t palette;
+   uint16_t trnsGrayLevel;
+   uint32_t trnsColor;
+   float gammaCorrection;
+   uint32_t significantBits;
+   uint8_t sRGB;
+   cPngChromaticity_t chromaticity;
 
    cBool_t hasPalette;
-   cPngPalette_t palette;
    cBool_t hasTrnsGrayLevel;
-   uint16_t trnsGrayLevel;
    cBool_t hasTrnsColor;
-   uint32_t trnsColor;
    cBool_t hasGammaCorrection;
-   float gammaCorrection;
    cBool_t hasSignificantBits;
-   uint32_t significantBits;
    cBool_t hasSRGB;
-   uint8_t sRGB;
+   cBool_t hasChromaticity;
 }
 cPngData_t;
 

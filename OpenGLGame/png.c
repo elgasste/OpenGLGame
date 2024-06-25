@@ -12,7 +12,7 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
 internal cBool_t cPng_LoadImageDataChunk();
 internal cBool_t cPng_LoadSRGBChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadGammaChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
-internal cBool_t cPng_LoadChromaticitiesChunk();
+internal cBool_t cPng_LoadChromaticitiesChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadICCProfileChunk();
 internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
@@ -153,6 +153,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             }
             else
             {
+               // NOTE: if sRGB is present, it should override cHRM
                foundSRGB = cTrue;
                stillGood = cPng_LoadSRGBChunk( filePos, chunkSize, fileData->filePath, pngData );
             }
@@ -178,7 +179,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             else
             {
                foundChromaticities = cTrue;
-               stillGood = cPng_LoadChromaticitiesChunk();
+               stillGood = cPng_LoadChromaticitiesChunk( filePos, chunkSize, fileData->filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_ICCP:
@@ -303,8 +304,6 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
    }
    else
    {
-      // TODO: some additional checks need to be done here, like making sure
-      // the sRGB and iCCP chunks aren't both present.
       return cTrue;
    }
 }
@@ -326,21 +325,29 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->header.compressionMethod = 0;
    pngData->header.filterMethod = 0;
    pngData->header.interlaceMethod = 0;
-
-   pngData->hasPalette = cFalse;
    pngData->palette.numColors = 0;
    pngData->palette.colors = 0;
-
-   pngData->hasTrnsGrayLevel = cFalse;
    pngData->trnsGrayLevel = 0;
-   pngData->hasTrnsColor = cFalse;
    pngData->trnsColor = 0;
-   pngData->hasGammaCorrection = cFalse;
-   pngData->gammaCorrection = 0;
-   pngData->hasSignificantBits = cFalse;
+   pngData->gammaCorrection = 0.0f;
    pngData->significantBits = 0;
-   pngData->hasSRGB = cFalse;
    pngData->sRGB = 0;
+   pngData->chromaticity.whitePointX = 0.0f;
+   pngData->chromaticity.whitePointY = 0.0f;
+   pngData->chromaticity.redX = 0.0f;
+   pngData->chromaticity.redY = 0.0f;
+   pngData->chromaticity.greenX = 0.0f;
+   pngData->chromaticity.greenY = 0.0f;
+   pngData->chromaticity.blueX = 0.0f;
+   pngData->chromaticity.blueY = 0.0f;
+
+   pngData->hasPalette = cFalse;
+   pngData->hasTrnsGrayLevel = cFalse;
+   pngData->hasTrnsColor = cFalse;
+   pngData->hasGammaCorrection = cFalse;
+   pngData->hasSignificantBits = cFalse;
+   pngData->hasSRGB = cFalse;
+   pngData->hasChromaticity = cFalse;
 }
 
 internal void cPng_LogCorruptFile( const char* filePath )
@@ -542,9 +549,27 @@ internal cBool_t cPng_LoadGammaChunk(  uint8_t* filePos, uint32_t chunkSize, con
    return cTrue;
 }
 
-internal cBool_t cPng_LoadChromaticitiesChunk()
+internal cBool_t cPng_LoadChromaticitiesChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   // TODO
+   uint32_t* filePos32 = (uint32_t*)filePos;
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   if ( chunkSize != sizeof( cPngChromaticity_t ) )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_CHRMCORRUPT, filePath );
+      Platform_Log( errorMsg );
+      return cFalse;
+   }
+
+   pngData->chromaticity.whitePointX = (float)( filePos32[0] ) / 100000;
+   pngData->chromaticity.whitePointY = (float)( filePos32[1] ) / 100000;
+   pngData->chromaticity.redX = (float)( filePos32[2] ) / 100000;
+   pngData->chromaticity.redY = (float)( filePos32[3] ) / 100000;
+   pngData->chromaticity.greenX = (float)( filePos32[4] ) / 100000;
+   pngData->chromaticity.greenY = (float)( filePos32[5] ) / 100000;
+   pngData->chromaticity.blueX = (float)( filePos32[6] ) / 100000;
+   pngData->chromaticity.blueY = (float)( filePos32[7] ) / 100000;
+
    return cTrue;
 }
 
