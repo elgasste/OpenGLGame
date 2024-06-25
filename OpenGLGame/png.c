@@ -5,8 +5,16 @@
 
 #define EXTRACT_CHUNK_DATA_32( x ) 0 | ( x[0] << 24 ) | ( x[1] << 16 ) | ( x[2] << 8 ) | x[3]
 
+#define ERROR_RETURN_FALSE( m ) \
+   snprintf( errorMsg, STRING_SIZE_DEFAULT, m, filePath ); \
+   Platform_Log( errorMsg ); \
+   return cFalse
+#define ERROR_NOT_GOOD( m ) \
+   snprintf( errorMsg, STRING_SIZE_DEFAULT, m, filePath ); \
+   Platform_Log( errorMsg ); \
+   stillGood = cFalse
+
 internal void cPng_InitData( cPngData_t* pngData );
-internal void cPng_LogCorruptFile( const char* filePath );
 internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const char* filePath );
 internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadImageDataChunk();
@@ -18,13 +26,14 @@ internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunk
 internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
-internal cBool_t cPng_LoadSuggestedPaletteChunk();
+internal cBool_t cPng_LoadSuggestedPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 
 cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
 {
    uint8_t* filePos;
    uint32_t chunkSize, chunkType, bytesRead;
    char errorMsg[STRING_SIZE_DEFAULT];
+   const char* filePath = fileData->filePath;
    cBool_t foundImageData = cFalse;
    cBool_t readingImageData = cFalse;
    cBool_t finishedReadingImageData = cFalse;
@@ -44,15 +53,12 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
    // the file signature plus header data is 29 bytes
    if ( fileData->size < 29 )
    {
-      cPng_LogCorruptFile( fileData->filePath );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_FILECORRUPT );
    }
 
    if ( ( (uint64_t*)( fileData->contents ) )[0] != PNG_SIGNATURE )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_NOTAPNGFILE, fileData->filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_NOTAPNGFILE );
    }
 
    filePos = (uint8_t*)( fileData->contents ) + 8;
@@ -64,12 +70,10 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
 
    if ( chunkSize != 13 || chunkType != PNG_CHUNKTYPE_IHDR )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_HEADERNOTFOUND, fileData->filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_HEADERNOTFOUND );
    }
 
-   if ( !cPng_LoadHeader( filePos, pngData, fileData->filePath ) )
+   if ( !cPng_LoadHeader( filePos, pngData, filePath ) )
    {
       return cFalse;
    }
@@ -81,8 +85,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
    {
       if ( fileData->size < ( bytesRead + 8 ) )
       {
-         cPng_LogCorruptFile( fileData->filePath );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_FILECORRUPT );
       }
 
       chunkSize = EXTRACT_CHUNK_DATA_32( filePos );
@@ -106,35 +109,28 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
 
       if ( fileData->size < ( bytesRead + chunkSize ) )
       {
-         cPng_LogCorruptFile( fileData->filePath );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_FILECORRUPT );
       }
 
       switch ( chunkType )
       {
          case PNG_CHUNKTYPE_IHDR:
-            cPng_LogCorruptFile( fileData->filePath );
-            stillGood = cFalse;
+            ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             break;
          case PNG_CHUNKTYPE_PLTE:
             if ( pngData->hasPalette || foundImageData )
             {
-               snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ROGUEPALETTE, fileData->filePath );
-               Platform_Log( errorMsg );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_ROGUEPALETTE );
             }
             else
             {
-               pngData->hasPalette = cTrue;
-               stillGood = cPng_LoadPaletteChunk( filePos, chunkSize, fileData->filePath, pngData );
+               stillGood = cPng_LoadPaletteChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_IDAT:
             if ( finishedReadingImageData )
             {
-               snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ROGUEIDAT, fileData->filePath );
-               Platform_Log( errorMsg );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_ROGUEIDAT );
             }
             else
             {
@@ -146,62 +142,57 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
          case PNG_CHUNKTYPE_SRGB:
             if ( pngData->hasPalette || foundSRGB )
             {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
                // NOTE: if sRGB is present, it should override cHRM
                foundSRGB = cTrue;
-               stillGood = cPng_LoadSRGBChunk( filePos, chunkSize, fileData->filePath, pngData );
+               stillGood = cPng_LoadSRGBChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_GAMA:
             if ( pngData->hasPalette || foundGamma )
             {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
                foundGamma = cTrue;
-               stillGood = cPng_LoadGammaChunk( filePos, chunkSize, fileData->filePath, pngData );
+               stillGood = cPng_LoadGammaChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_CHRM:
             if ( pngData->hasPalette || foundChromaticities )
             {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
                foundChromaticities = cTrue;
-               stillGood = cPng_LoadChromaticitiesChunk( filePos, chunkSize, fileData->filePath, pngData );
+               stillGood = cPng_LoadChromaticitiesChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_ICCP:
             if ( pngData->hasPalette || foundICCProfile )
             {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
                foundICCProfile = cTrue;
-               stillGood = cPng_LoadICCProfileChunk( filePos, chunkSize, fileData->filePath, pngData );
+               stillGood = cPng_LoadICCProfileChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_SBIT:
             if ( pngData->hasPalette || foundSignificantBits )
             {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
                foundSignificantBits = cTrue;
-               stillGood = cPng_LoadSignificantBitsChunk( filePos, chunkSize, fileData->filePath, pngData );
+               stillGood = cPng_LoadSignificantBitsChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_TRNS:
@@ -211,55 +202,50 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
                  foundImageData ||
                  foundTransparency )
             {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
                foundTransparency = cTrue;
-               stillGood = cPng_LoadTransparencyChunk( filePos, chunkSize, fileData->filePath, pngData );
+               stillGood = cPng_LoadTransparencyChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_BKGD:
             if ( ( pngData->header.colorType == 3 && !pngData->hasPalette ) || foundImageData || foundBackgroundColor )
             {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
                foundBackgroundColor = cTrue;
-               stillGood = cPng_LoadBackgroundColorChunk( filePos, chunkSize, fileData->filePath, pngData );
+               stillGood = cPng_LoadBackgroundColorChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_PHYS:
             if ( foundImageData || foundPhysicalPixelDimensions )
             {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
                foundPhysicalPixelDimensions = cTrue;
-               stillGood = cPng_LoadPhysicalPixelDimensionsChunk( filePos, chunkSize, fileData->filePath, pngData );
+               stillGood = cPng_LoadPhysicalPixelDimensionsChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_SPLT:
             if ( foundImageData )
             {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
-               stillGood = cPng_LoadSuggestedPaletteChunk();
+               stillGood = cPng_LoadSuggestedPaletteChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_TIME:
             if ( foundTime )
             {
-               cPng_LogCorruptFile( fileData->filePath );
-               stillGood = cFalse;
+               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
@@ -286,8 +272,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
 
    if ( bytesRead != fileData->size || !foundImageData )
    {
-      cPng_LogCorruptFile( fileData->filePath );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_FILECORRUPT );
    }
    else
    {
@@ -295,15 +280,22 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
    }
 }
 
-void cPng_DeletePngData( cPngData_t* pngData )
+void cPng_ClearPngData( cPngData_t* pngData )
 {
-   if ( pngData->hasPalette )
+   if ( pngData->allocatedPalette )
    {
       Platform_MemFree( pngData->palette.colors );
+      pngData->allocatedPalette = cFalse;
    }
-   if ( pngData->hasICCProfile )
+   if ( pngData->allocatedICCProfile )
    {
       Platform_MemFree( pngData->ICCProfile.compressedProfile );
+      pngData->allocatedICCProfile = cFalse;
+   }
+   if ( pngData->allocatedSuggestedPalette )
+   {
+      Platform_MemFree( pngData->suggestedPalette.colors );
+      pngData->allocatedSuggestedPalette = cFalse;
    }
 }
 
@@ -339,8 +331,12 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->physPixelDimensions.ppuX = 0;
    pngData->physPixelDimensions.ppuY = 0;
    pngData->physPixelDimensions.unitSpecifier = 0;
+   pngData->suggestedPalette.name[0] = '\0';
+   pngData->suggestedPalette.numColors = 0;
+   pngData->suggestedPalette.colors = 0;
 
    pngData->hasPalette = cFalse;
+   pngData->allocatedPalette = cFalse;
    pngData->hasTrnsGrayLevel = cFalse;
    pngData->hasTrnsColor = cFalse;
    pngData->hasGammaCorrection = cFalse;
@@ -348,15 +344,11 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->hasSRGB = cFalse;
    pngData->hasChromaticity = cFalse;
    pngData->hasICCProfile = cFalse;
+   pngData->allocatedICCProfile = cFalse;
    pngData->hasBackgroundColor = cFalse;
    pngData->hasPhysPixelDimensions = cFalse;
-}
-
-internal void cPng_LogCorruptFile( const char* filePath )
-{
-   char errorMsg[STRING_SIZE_DEFAULT];
-   snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_FILECORRUPT, filePath );
-   Platform_Log( errorMsg );
+   pngData->hasSuggestedPalette = cFalse;
+   pngData->allocatedSuggestedPalette = cFalse;
 }
 
 internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const char* filePath )
@@ -480,6 +472,7 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
       maxColors = (uint32_t)pow( (double)2, (double)( pngData->header.bitDepth ) );
    }
 
+   pngData->hasPalette = cTrue;
    pngData->palette.numColors = ( chunkSize / 3 ) / pngData->header.bitDepth;
 
    if ( pngData->palette.numColors > maxColors )
@@ -489,7 +482,13 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
       return cFalse;
    }
 
+   if ( pngData->allocatedPalette )
+   {
+      ERROR_RETURN_FALSE( STR_PNGERROR_PNGDATAREUSE );
+   }
+
    pngData->palette.colors = (uint32_t*)Platform_MemAlloc( sizeof( uint32_t ) * pngData->palette.numColors );
+   pngData->allocatedPalette = cTrue;
 
    for ( i = 0; i < pngData->palette.numColors; i++ )
    {
@@ -589,7 +588,7 @@ internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize,
 
    pngData->hasICCProfile = cTrue;
 
-   for ( i = 0; i < PNG_ICC_MAXNAMELENGTH; i++ )
+   for ( i = 0; i < PNG_MAX_NAMELENGTH; i++ )
    {
       if ( i == chunkSize - 1 )
       {
@@ -624,6 +623,7 @@ internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize,
    filePos++;
    pngData->ICCProfile.compressedProfileSize = chunkSize - ( i + 2 );
    pngData->ICCProfile.compressedProfile = (uint8_t*)Platform_MemAlloc( pngData->ICCProfile.compressedProfileSize );
+   pngData->allocatedICCProfile = cTrue;
 
    for ( i = 0; i < pngData->ICCProfile.compressedProfileSize; i++ )
    {
@@ -803,9 +803,6 @@ internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk( uint8_t* filePos, uint32
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   UNUSED_PARAM( filePos );
-   UNUSED_PARAM( pngData );
-
    if ( chunkSize != 9 )
    {
       snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_PHYSCORRUPT, filePath );
@@ -828,8 +825,107 @@ internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk( uint8_t* filePos, uint32
    return cTrue;
 }
 
-internal cBool_t cPng_LoadSuggestedPaletteChunk()
+internal cBool_t cPng_LoadSuggestedPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   // TODO (there could be multiple of these)
+   uint32_t i;
+   uint16_t* filePos16;
+   cBool_t foundName = cFalse;
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   if ( chunkSize < 9 )
+   {
+      ERROR_RETURN_FALSE( STR_PNGERROR_SPLTCORRUPT );
+   }
+
+   pngData->hasSuggestedPalette = cTrue;
+
+   for ( i = 0; i < PNG_MAX_NAMELENGTH; i++ )
+   {
+      if ( i == chunkSize - 1 )
+      {
+         ERROR_RETURN_FALSE( STR_PNGERROR_SPLTCORRUPT );
+      }
+
+      pngData->suggestedPalette.name[i] = filePos[0];
+      filePos++;
+
+      if ( pngData->suggestedPalette.name[i] == '\0' )
+      {
+         foundName = cTrue;
+         break;
+      }
+   }
+
+   if ( i >= chunkSize - 8 )
+   {
+      ERROR_RETURN_FALSE( STR_PNGERROR_SPLTCORRUPT );
+   }
+
+   pngData->suggestedPalette.sampleDepth = filePos[0];
+   filePos++;
+   i += 2;
+
+   if ( pngData->suggestedPalette.sampleDepth == 8 )
+   {
+      if ( ( ( chunkSize - i ) % 6 ) != 0 )
+      {
+         ERROR_RETURN_FALSE( STR_PNGERROR_SPLTCORRUPT );
+      }
+
+      pngData->suggestedPalette.numColors = ( chunkSize - i ) / 6;
+
+      if ( pngData->suggestedPalette.numColors > 256 )
+      {
+         ERROR_RETURN_FALSE( STR_PNGERROR_SPLTTOOMANYCOLORS );
+      }
+
+      pngData->suggestedPalette.colors = (cPngSuggestedPaletteColor_t*)Platform_MemAlloc( sizeof( cPngSuggestedPaletteColor_t ) * pngData->suggestedPalette.numColors );
+      pngData->allocatedSuggestedPalette = cTrue;
+
+      for ( i = 0; i < pngData->suggestedPalette.numColors; i++ )
+      {
+         pngData->suggestedPalette.colors[i].color = ( (uint32_t)( filePos[3] ) << 24 ) |
+                                                     ( (uint32_t)( filePos[0] ) << 16 ) |
+                                                     ( (uint32_t)( filePos[1] ) << 8 ) |
+                                                     (uint32_t)( filePos[2] );
+         filePos += 4;
+         pngData->suggestedPalette.colors[i].frequency = ( (uint16_t*)filePos )[0];
+         filePos += 2;
+      }
+   }
+   else if ( pngData->suggestedPalette.sampleDepth == 16 )
+   {
+      if ( ( ( chunkSize - i ) % 10 ) != 0 )
+      {
+         ERROR_RETURN_FALSE( STR_PNGERROR_SPLTCORRUPT );
+      }
+
+      pngData->suggestedPalette.numColors = ( chunkSize - i ) / 10;
+
+      if ( pngData->suggestedPalette.numColors > 256 )
+      {
+         ERROR_RETURN_FALSE( STR_PNGERROR_SPLTTOOMANYCOLORS );
+      }
+
+      pngData->suggestedPalette.colors = (cPngSuggestedPaletteColor_t*)Platform_MemAlloc( sizeof( cPngSuggestedPaletteColor_t ) * pngData->suggestedPalette.numColors );
+      pngData->allocatedSuggestedPalette = cTrue;
+      filePos16 = (uint16_t*)filePos;
+
+      for ( i = 0; i < pngData->suggestedPalette.numColors; i++ )
+      {
+         pngData->suggestedPalette.colors[i].color = ( (uint32_t)( filePos16[3] ) << 24 ) |
+                                                     ( (uint32_t)( filePos16[0] ) << 16 ) |
+                                                     ( (uint32_t)( filePos16[1] ) << 8 ) |
+                                                     (uint32_t)( filePos16[2] );
+         filePos16 += 4;
+         pngData->suggestedPalette.colors[i].frequency = filePos16[0];
+         filePos16++;
+      }
+   }
+   else
+   {
+      ERROR_RETURN_FALSE( STR_PNGERROR_SPLTCORRUPT );
+   }
+
    return cTrue;
 }

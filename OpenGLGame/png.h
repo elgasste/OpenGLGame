@@ -17,7 +17,7 @@
 #define PNG_SRGB_SATURATION            2
 #define PNG_SRGB_ABSOLUTECOLORIMETRIC  3
 
-#define PNG_ICC_MAXNAMELENGTH          80
+#define PNG_MAX_NAMELENGTH             80
 
 #define PNG_PHYSSPECIFIER_UNKNOWN      0
 #define PNG_PHYSSPECIFIER_METER        1
@@ -81,7 +81,7 @@ cPngChromaticity_t;
 
 typedef struct
 {
-   char name[PNG_ICC_MAXNAMELENGTH];
+   char name[PNG_MAX_NAMELENGTH];
    uint8_t compressionMethod;
    uint32_t compressedProfileSize;
    uint8_t* compressedProfile;
@@ -98,6 +98,22 @@ cPngPhysPixelDimensions_t;
 
 typedef struct
 {
+   uint32_t color;
+   uint16_t frequency;
+}
+cPngSuggestedPaletteColor_t;
+
+typedef struct
+{
+   char name[PNG_MAX_NAMELENGTH];
+   uint8_t sampleDepth;
+   uint32_t numColors;
+   cPngSuggestedPaletteColor_t* colors;
+}
+cPngSuggestedPalette_t;
+
+typedef struct
+{
    cPngHeader_t header;
    cPngPalette_t palette;
    uint16_t trnsGrayLevel;
@@ -109,9 +125,11 @@ typedef struct
    cPngICCProfile_t ICCProfile;
    uint32_t backgroundColor;
    cPngPhysPixelDimensions_t physPixelDimensions;
+   cPngSuggestedPalette_t suggestedPalette;
 
    // TODO: make these bitwise flags?
    cBool_t hasPalette;
+   cBool_t allocatedPalette;
    cBool_t hasTrnsGrayLevel;
    cBool_t hasTrnsColor;
    cBool_t hasGammaCorrection;
@@ -119,12 +137,15 @@ typedef struct
    cBool_t hasSRGB;
    cBool_t hasChromaticity;
    cBool_t hasICCProfile;
+   cBool_t allocatedICCProfile;
    cBool_t hasBackgroundColor;
    cBool_t hasPhysPixelDimensions;
+   cBool_t hasSuggestedPalette;
+   cBool_t allocatedSuggestedPalette;
 }
 cPngData_t;
 
 cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData );
-void cPng_DeletePngData( cPngData_t* pngData );
+void cPng_ClearPngData( cPngData_t* pngData );
 
 #endif

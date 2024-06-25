@@ -13,6 +13,7 @@
 
 #define STR_WIN_WINDOWTITLE                  "Testing"
 
+#define STR_PNGERROR_PNGDATAREUSE            "PNG file error: trying to reuse PNG data struct, bad idea: %s"
 #define STR_PNGERROR_FILECORRUPT             "PNG file error: file is corrupt: %s"
 #define STR_PNGERROR_NOTAPNGFILE             "PNG file error: file is not a PNG file: %s"
 #define STR_PNGERROR_HEADERNOTFOUND          "PNG file error: header missing or invalid: %s"
@@ -24,7 +25,7 @@
 #define STR_PNGERROR_ROGUEPALETTE            "PNG file error: rogue palette found: %s"
 #define STR_PNGERROR_INVALIDPALETTESIZE      "PNG file error: invalid palette size: %s"
 #define STR_PNGERROR_PALETTENOTFOUND         "PNG file error: palette is missing: %s"
-#define STR_PNGERROR_PALETTEENTRYOVERRUN     "PNG file error: palette contains too many entries: %s"
+#define STR_PNGERROR_PALETTEENTRYOVERRUN     "PNG file error: palette contains too many colors: %s"
 #define STR_PNGERROR_ROGUEIDAT               "PNG file error: rogue image data found: %s"
 #define STR_PNGERROR_ROGUETRNS               "PNG file error: rogue transparency data found: %s"
 #define STR_PNGERROR_TRNSOVERRUN             "PNG file error: too many transparency entries: %s"
@@ -40,6 +41,8 @@
 #define STR_PNGERROR_HISTCORRUPT             "PNG file error: histogram entry is corrupt: %s"
 #define STR_PNGERROR_PHYSCORRUPT             "PNG file error: physical pixel dimensions entry is corrupt: %s"
 #define STR_PNGERROR_INVALIDPHYSSPECIFIER    "PNG file error: physical pixel unit specifier is invalid: %s"
+#define STR_PNGERROR_SPLTCORRUPT             "PNG file error: suggested palette entry is corrupt: %s"
+#define STR_PNGERROR_SPLTTOOMANYCOLORS       "PNG file error: suggested palette contains too many colors: %s"
 
 #endif
 
