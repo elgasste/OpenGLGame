@@ -64,6 +64,8 @@ typedef struct
    cPngPalette_t palette;
    cBool_t hasTrnsGrayLevel;
    uint16_t trnsGrayLevel;
+   cBool_t hasTrnsColor;
+   uint32_t trnsColor;
 }
 cPngData_t;
 

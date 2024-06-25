@@ -330,6 +330,8 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->palette.colors = 0;
    pngData->hasTrnsGrayLevel = cFalse;
    pngData->trnsGrayLevel = 0;
+   pngData->hasTrnsColor = cFalse;
+   pngData->trnsColor = 0;
 }
 
 internal void cPng_LogCorruptFile( const char* filePath )
@@ -563,12 +565,23 @@ internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSiz
    }
    else if ( pngData->header.colorType == PNG_COLORTYPE_TRUECOLOR )
    {
-      // TODO
-      // for true color, there should be 6 bytes that contain a single RGB color value,
-      // where each color is 2 bytes in this format: ( 2 ^ bitdepth ) - 1
-      // in the order of R, G, B. if the bit depth is less than 16, the least significant
-      // bits are used and the others are presumed to be zero. any pixels of this color
-      // are to be considered transparent, and all others are to be considered opaque.
+      // there should be 6 bytes that contain a single RGB color value, in the order
+      // of R, G, B. if the bit depth is less than 16, the least significant bits are
+      // used and the others are presumed to be zero. any pixels of this color are
+      // to be considered transparent, and all others are to be considered opaque.
+      if ( chunkSize != 6 )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_TRNSCORRUPT, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      // TODO: truncate these for bit depths less than 16?
+      pngData->hasTrnsColor = cTrue;
+      pngData->trnsColor = 0xFF000000;
+      pngData->trnsColor |= (uint32_t)( (uint16_t*)filePos )[0] << 16;
+      pngData->trnsColor |= (uint32_t)( (uint16_t*)filePos )[2] << 8;
+      pngData->trnsColor |= (uint32_t)( (uint16_t*)filePos )[4];
    }
 
    return cTrue;
