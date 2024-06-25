@@ -28,6 +28,7 @@
 #define STR_PNGERROR_ROGUEIDAT            "PNG file error: rogue image data found: %s"
 #define STR_PNGERROR_ROGUETRNS            "PNG file error: rogue transparency data found: %s"
 #define STR_PNGERROR_TRNSOVERRUN          "PNG file error: too many transparency entries: %s"
+#define STR_PNGERROR_TRNSCORRUPT          "PNG file error: transparency entry is corrupt: %s"
 
 #endif
 

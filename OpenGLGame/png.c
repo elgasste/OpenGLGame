@@ -328,6 +328,8 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->hasPalette = cFalse;
    pngData->palette.numColors = 0;
    pngData->palette.colors = 0;
+   pngData->hasTrnsGrayLevel = cFalse;
+   pngData->trnsGrayLevel = 0;
 }
 
 internal void cPng_LogCorruptFile( const char* filePath )
@@ -526,6 +528,8 @@ internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSiz
 
    if ( pngData->header.colorType == PNG_COLORTYPE_INDEXED )
    {
+      // there should be a stream of 1-byte alpha values, each one corresponding
+      // to a palette index. there can be fewer alpha values than palette colors.
       numTransparentColors = (uint16_t)chunkSize;
 
       if ( numTransparentColors > pngData->palette.numColors )
@@ -543,12 +547,19 @@ internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSiz
    }
    else if ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALE )
    {
-      // TODO
-      // for grayscale color, there should be 2 bytes that contain the gray level value,
-      // which is stored in this format: ( 2 ^ bitdepth ) - 1
-      // and if the bit depth is less than 16, the least significant bits are used and the
+      // there should be 2 bytes that contain the gray level value, and if the
+      // bit depth is less than 16, the least significant bits are used and the
       // others are presumed to be zero. any pixels at this gray level are to be
       // considered transparent, and all others are to be considered opaque.
+      if ( chunkSize != 2 )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_TRNSCORRUPT, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      pngData->hasTrnsGrayLevel = cTrue;
+      pngData->trnsGrayLevel = ( (uint16_t*)filePos )[0] & ( 0xFFFF >> ( 16 - pngData->header.bitDepth ) );
    }
    else if ( pngData->header.colorType == PNG_COLORTYPE_TRUECOLOR )
    {
