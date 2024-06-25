@@ -96,7 +96,9 @@ typedef struct
    uint8_t sRGB;
    cPngChromaticity_t chromaticity;
    cPngICCProfile_t ICCProfile;
+   uint32_t backgroundColor;
 
+   // TODO: make these bitwise flags?
    cBool_t hasPalette;
    cBool_t hasTrnsGrayLevel;
    cBool_t hasTrnsColor;
@@ -105,6 +107,7 @@ typedef struct
    cBool_t hasSRGB;
    cBool_t hasChromaticity;
    cBool_t hasICCProfile;
+   cBool_t hasBackgroundColor;
 }
 cPngData_t;
 

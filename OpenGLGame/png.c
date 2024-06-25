@@ -16,7 +16,7 @@ internal cBool_t cPng_LoadChromaticitiesChunk( uint8_t* filePos, uint32_t chunkS
 internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
-internal cBool_t cPng_LoadBackgroundColorChunk();
+internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadPaletteHistogramChunk();
 internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk();
 internal cBool_t cPng_LoadSuggestedPaletteChunk();
@@ -231,7 +231,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             else
             {
                foundBackgroundColor = cTrue;
-               stillGood = cPng_LoadBackgroundColorChunk();
+               stillGood = cPng_LoadBackgroundColorChunk( filePos, chunkSize, fileData->filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_HIST:
@@ -348,6 +348,7 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->ICCProfile.compressionMethod = 0;
    pngData->ICCProfile.compressedProfileSize = 0;
    pngData->ICCProfile.compressedProfile = 0;
+   pngData->backgroundColor = 0;
 
    pngData->hasPalette = cFalse;
    pngData->hasTrnsGrayLevel = cFalse;
@@ -357,6 +358,7 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->hasSRGB = cFalse;
    pngData->hasChromaticity = cFalse;
    pngData->hasICCProfile = cFalse;
+   pngData->hasBackgroundColor = cFalse;
 }
 
 internal void cPng_LogCorruptFile( const char* filePath )
@@ -761,9 +763,50 @@ internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSiz
    return cTrue;
 }
 
-internal cBool_t cPng_LoadBackgroundColorChunk()
+internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   // TODO
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   pngData->hasBackgroundColor = cTrue;
+
+   if ( pngData->header.colorType == PNG_COLORTYPE_INDEXED )
+   {
+      if ( chunkSize != 1 )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_BKGDCORRUPT, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      pngData->backgroundColor = (uint16_t)( filePos[0] );
+   }
+   else if ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALE ||
+             pngData->header.colorType == PNG_COLORTYPE_GRAYSCALEALPHA )
+   {
+      if ( chunkSize != 2 )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_BKGDCORRUPT, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      pngData->backgroundColor = 0xFF000000 | (uint32_t)( filePos[0] );
+   }
+   else
+   {
+      if ( chunkSize != 6 )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_BKGDCORRUPT, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      pngData->backgroundColor = 0xFF000000 |
+                                 ( (uint32_t)( ( (uint16_t*)filePos )[0] ) << 16 ) |
+                                 ( (uint32_t)( ( (uint16_t*)filePos )[2] ) << 8 ) |
+                                 (uint32_t)( ( (uint16_t*)filePos )[4] );
+   }
+
    return cTrue;
 }
 

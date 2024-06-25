@@ -33,9 +33,10 @@
 #define STR_PNGERROR_SBITCORRUPT             "PNG file error: significant bits entry is corrupt: %s"
 #define STR_PNGERROR_SRGBCORRUPT             "PNG file error: sRGB entry is corrupt: %s"
 #define STR_PNGERROR_SRGBINVALID             "PNG file error: sRGB entry is invalid: %s"
-#define STR_PNGERROR_CHRMCORRUPT             "PNG file error: Chromaticity entry is corrupt: %s"
+#define STR_PNGERROR_CHRMCORRUPT             "PNG file error: chromaticity entry is corrupt: %s"
 #define STR_PNGERROR_ICCCORRUPT              "PNG file error: ICC profile entry is corrupt: %s"
 #define STR_PNGERROR_ICCCOMPRESSIONINVALID   "PNG file error: ICC profile has invalid compression method: %s"
+#define STR_PNGERROR_BKGDCORRUPT             "PNG file error: background color entry is corrupt: %s"
 
 #endif
 
