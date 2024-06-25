@@ -12,6 +12,11 @@
 #define PNG_COLORTYPE_GRAYSCALEALPHA   4
 #define PNG_COLORTYPE_TRUECOLORALPHA   6
 
+#define PNG_SRGB_PERCEPTUAL            0
+#define PNG_SRGB_RELATIVECOLORIMETRIC  1
+#define PNG_SRGB_SATURATION            2
+#define PNG_SRGB_ABSOLUTECOLORIMETRIC  3
+
 // basic chunk types
 #define PNG_CHUNKTYPE_IHDR             0x49484452
 #define PNG_CHUNKTYPE_PLTE             0x504C5445
@@ -70,6 +75,8 @@ typedef struct
    float gammaCorrection;
    cBool_t hasSignificantBits;
    uint32_t significantBits;
+   cBool_t hasSRGB;
+   uint8_t sRGB;
 }
 cPngData_t;
 

@@ -10,7 +10,7 @@ internal void cPng_LogCorruptFile( const char* filePath );
 internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const char* filePath );
 internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadImageDataChunk();
-internal cBool_t cPng_LoadSRGBChunk();
+internal cBool_t cPng_LoadSRGBChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadGammaChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadChromaticitiesChunk();
 internal cBool_t cPng_LoadICCProfileChunk();
@@ -154,7 +154,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             else
             {
                foundSRGB = cTrue;
-               stillGood = cPng_LoadSRGBChunk();
+               stillGood = cPng_LoadSRGBChunk( filePos, chunkSize, fileData->filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_GAMA:
@@ -303,6 +303,8 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
    }
    else
    {
+      // TODO: some additional checks need to be done here, like making sure
+      // the sRGB and iCCP chunks aren't both present.
       return cTrue;
    }
 }
@@ -337,6 +339,8 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->gammaCorrection = 0;
    pngData->hasSignificantBits = cFalse;
    pngData->significantBits = 0;
+   pngData->hasSRGB = cFalse;
+   pngData->sRGB = 0;
 }
 
 internal void cPng_LogCorruptFile( const char* filePath )
@@ -498,9 +502,26 @@ internal cBool_t cPng_LoadImageDataChunk()
    return cTrue;
 }
 
-internal cBool_t cPng_LoadSRGBChunk()
+internal cBool_t cPng_LoadSRGBChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   // TODO
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   if ( chunkSize != 1 )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SRGBCORRUPT, filePath );
+      Platform_Log( errorMsg );
+      return cFalse;
+   }
+   else if ( filePos[0] > PNG_SRGB_ABSOLUTECOLORIMETRIC )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SRGBINVALID, filePath );
+      Platform_Log( errorMsg );
+      return cFalse;
+   }
+
+   pngData->hasSRGB = cTrue;
+   pngData->sRGB = filePos[0];
+
    return cTrue;
 }
 
