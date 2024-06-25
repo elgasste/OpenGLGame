@@ -38,6 +38,8 @@
 #define STR_PNGERROR_ICCCOMPRESSIONINVALID   "PNG file error: ICC profile has invalid compression method: %s"
 #define STR_PNGERROR_BKGDCORRUPT             "PNG file error: background color entry is corrupt: %s"
 #define STR_PNGERROR_HISTCORRUPT             "PNG file error: histogram entry is corrupt: %s"
+#define STR_PNGERROR_PHYSCORRUPT             "PNG file error: physical pixel dimensions entry is corrupt: %s"
+#define STR_PNGERROR_INVALIDPHYSSPECIFIER    "PNG file error: physical pixel unit specifier is invalid: %s"
 
 #endif
 

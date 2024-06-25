@@ -19,6 +19,9 @@
 
 #define PNG_ICC_MAXNAMELENGTH          80
 
+#define PNG_PHYSSPECIFIER_UNKNOWN      0
+#define PNG_PHYSSPECIFIER_METER        1
+
 // basic chunk types
 #define PNG_CHUNKTYPE_IHDR             0x49484452
 #define PNG_CHUNKTYPE_PLTE             0x504C5445
@@ -87,6 +90,14 @@ cPngICCProfile_t;
 
 typedef struct
 {
+   uint32_t ppuX;
+   uint32_t ppuY;
+   uint8_t unitSpecifier;
+}
+cPngPhysPixelDimensions_t;
+
+typedef struct
+{
    cPngHeader_t header;
    cPngPalette_t palette;
    uint16_t trnsGrayLevel;
@@ -97,6 +108,7 @@ typedef struct
    cPngChromaticity_t chromaticity;
    cPngICCProfile_t ICCProfile;
    uint32_t backgroundColor;
+   cPngPhysPixelDimensions_t physPixelDimensions;
 
    // TODO: make these bitwise flags?
    cBool_t hasPalette;
@@ -108,6 +120,7 @@ typedef struct
    cBool_t hasChromaticity;
    cBool_t hasICCProfile;
    cBool_t hasBackgroundColor;
+   cBool_t hasPhysPixelDimensions;
 }
 cPngData_t;
 

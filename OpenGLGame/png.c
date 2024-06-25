@@ -17,7 +17,7 @@ internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize,
 internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
-internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk();
+internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadSuggestedPaletteChunk();
 
 cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
@@ -241,7 +241,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             else
             {
                foundPhysicalPixelDimensions = cTrue;
-               stillGood = cPng_LoadPhysicalPixelDimensionsChunk();
+               stillGood = cPng_LoadPhysicalPixelDimensionsChunk( filePos, chunkSize, fileData->filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_SPLT:
@@ -336,6 +336,9 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->ICCProfile.compressedProfileSize = 0;
    pngData->ICCProfile.compressedProfile = 0;
    pngData->backgroundColor = 0;
+   pngData->physPixelDimensions.ppuX = 0;
+   pngData->physPixelDimensions.ppuY = 0;
+   pngData->physPixelDimensions.unitSpecifier = 0;
 
    pngData->hasPalette = cFalse;
    pngData->hasTrnsGrayLevel = cFalse;
@@ -346,6 +349,7 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->hasChromaticity = cFalse;
    pngData->hasICCProfile = cFalse;
    pngData->hasBackgroundColor = cFalse;
+   pngData->hasPhysPixelDimensions = cFalse;
 }
 
 internal void cPng_LogCorruptFile( const char* filePath )
@@ -656,7 +660,7 @@ internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunk
          return cFalse;
       }
 
-      pngData->significantBits = 0 | ( (uint32_t)( filePath[0] ) << 16 ) | ( (uint32_t)( filePath[0] ) << 8 ) | (uint32_t)( filePath[0] );
+      pngData->significantBits = 0 | ( (uint32_t)( filePos[0] ) << 16 ) | ( (uint32_t)( filePos[0] ) << 8 ) | (uint32_t)( filePos[0] );
    }
    else if ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALEALPHA )
    {
@@ -795,9 +799,32 @@ internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunk
    return cTrue;
 }
 
-internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk()
+internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   // TODO
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   UNUSED_PARAM( filePos );
+   UNUSED_PARAM( pngData );
+
+   if ( chunkSize != 9 )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_PHYSCORRUPT, filePath );
+      Platform_Log( errorMsg );
+      return cFalse;
+   }
+
+   pngData->hasPhysPixelDimensions = cTrue;
+   pngData->physPixelDimensions.ppuX = ( (uint32_t*)filePos )[0];
+   pngData->physPixelDimensions.ppuY = ( (uint32_t*)filePos )[1];
+   pngData->physPixelDimensions.unitSpecifier = filePos[8];
+
+   if ( pngData->physPixelDimensions.unitSpecifier > PNG_PHYSSPECIFIER_METER )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDPHYSSPECIFIER, filePath );
+      Platform_Log( errorMsg );
+      return cFalse;
+   }
+
    return cTrue;
 }
 
