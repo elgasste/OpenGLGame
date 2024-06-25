@@ -66,6 +66,8 @@ typedef struct
    uint16_t trnsGrayLevel;
    cBool_t hasTrnsColor;
    uint32_t trnsColor;
+   cBool_t hasGammaCorrection;
+   float gammaCorrection;
 }
 cPngData_t;
 

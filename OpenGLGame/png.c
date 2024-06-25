@@ -11,7 +11,7 @@ internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const c
 internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadImageDataChunk();
 internal cBool_t cPng_LoadSRGBChunk();
-internal cBool_t cPng_LoadGammaChunk();
+internal cBool_t cPng_LoadGammaChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadChromaticitiesChunk();
 internal cBool_t cPng_LoadICCProfileChunk();
 internal cBool_t cPng_LoadSignificantBitsChunk();
@@ -166,7 +166,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             else
             {
                foundGamma = cTrue;
-               stillGood = cPng_LoadGammaChunk();
+               stillGood = cPng_LoadGammaChunk( filePos, chunkSize, fileData->filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_CHRM:
@@ -328,10 +328,13 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->hasPalette = cFalse;
    pngData->palette.numColors = 0;
    pngData->palette.colors = 0;
+
    pngData->hasTrnsGrayLevel = cFalse;
    pngData->trnsGrayLevel = 0;
    pngData->hasTrnsColor = cFalse;
    pngData->trnsColor = 0;
+   pngData->hasGammaCorrection = cFalse;
+   pngData->gammaCorrection = 0;
 }
 
 internal void cPng_LogCorruptFile( const char* filePath )
@@ -499,9 +502,20 @@ internal cBool_t cPng_LoadSRGBChunk()
    return cTrue;
 }
 
-internal cBool_t cPng_LoadGammaChunk()
+internal cBool_t cPng_LoadGammaChunk(  uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   // TODO
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   if ( chunkSize != 4 )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_GAMMACORRUPT, filePath );
+      Platform_Log( errorMsg );
+      return cFalse;
+   }
+
+   pngData->hasGammaCorrection = cTrue;
+   pngData->gammaCorrection = (float)( ( (uint32_t*)filePos )[0] ) / 100000;
+
    return cTrue;
 }
 
