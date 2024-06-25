@@ -68,6 +68,8 @@ typedef struct
    uint32_t trnsColor;
    cBool_t hasGammaCorrection;
    float gammaCorrection;
+   cBool_t hasSignificantBits;
+   uint32_t significantBits;
 }
 cPngData_t;
 

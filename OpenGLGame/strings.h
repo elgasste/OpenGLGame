@@ -30,6 +30,7 @@
 #define STR_PNGERROR_TRNSOVERRUN          "PNG file error: too many transparency entries: %s"
 #define STR_PNGERROR_TRNSCORRUPT          "PNG file error: transparency entry is corrupt: %s"
 #define STR_PNGERROR_GAMMACORRUPT         "PNG file error: gamma entry is corrupt: %s"
+#define STR_PNGERROR_SBITCORRUPT          "PNG file error: significant bits entry is corrupt: %s"
 
 #endif
 

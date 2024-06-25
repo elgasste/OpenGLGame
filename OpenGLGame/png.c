@@ -14,7 +14,7 @@ internal cBool_t cPng_LoadSRGBChunk();
 internal cBool_t cPng_LoadGammaChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadChromaticitiesChunk();
 internal cBool_t cPng_LoadICCProfileChunk();
-internal cBool_t cPng_LoadSignificantBitsChunk();
+internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadBackgroundColorChunk();
 internal cBool_t cPng_LoadPaletteHistogramChunk();
@@ -202,7 +202,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             else
             {
                foundSignificantBits = cTrue;
-               stillGood = cPng_LoadSignificantBitsChunk();
+               stillGood = cPng_LoadSignificantBitsChunk( filePos, chunkSize, fileData->filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_TRNS:
@@ -335,6 +335,8 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->trnsColor = 0;
    pngData->hasGammaCorrection = cFalse;
    pngData->gammaCorrection = 0;
+   pngData->hasSignificantBits = cFalse;
+   pngData->significantBits = 0;
 }
 
 internal void cPng_LogCorruptFile( const char* filePath )
@@ -531,9 +533,57 @@ internal cBool_t cPng_LoadICCProfileChunk()
    return cTrue;
 }
 
-internal cBool_t cPng_LoadSignificantBitsChunk()
+internal cBool_t cPng_LoadSignificantBitsChunk(  uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   // TODO
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   pngData->hasSignificantBits = cTrue;
+
+   if ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALE )
+   {
+      if ( chunkSize != 1 )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SBITCORRUPT, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      pngData->significantBits = (uint32_t)( filePos[0] );
+   }
+   else if ( pngData->header.colorType == PNG_COLORTYPE_TRUECOLOR || pngData->header.colorType == PNG_COLORTYPE_INDEXED )
+   {
+      if ( chunkSize != 3 )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SBITCORRUPT, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      pngData->significantBits = 0 | ( (uint32_t)( filePath[0] ) << 16 ) | ( (uint32_t)( filePath[0] ) << 8 ) | (uint32_t)( filePath[0] );
+   }
+   else if ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALEALPHA )
+   {
+      if ( chunkSize != 2 )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SBITCORRUPT, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      pngData->significantBits = (uint32_t)( ( (uint16_t*)filePos )[0] );
+   }
+   else if ( pngData->header.colorType == PNG_COLORTYPE_TRUECOLORALPHA )
+   {
+      if ( chunkSize != 4 )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SBITCORRUPT, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      pngData->significantBits = ( (uint32_t*)filePos )[0];
+   }
+
    return cTrue;
 }
 
