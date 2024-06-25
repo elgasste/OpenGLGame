@@ -13,7 +13,7 @@ internal cBool_t cPng_LoadImageDataChunk();
 internal cBool_t cPng_LoadSRGBChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadGammaChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadChromaticitiesChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
-internal cBool_t cPng_LoadICCProfileChunk();
+internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadBackgroundColorChunk();
@@ -191,7 +191,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             else
             {
                foundICCProfile = cTrue;
-               stillGood = cPng_LoadICCProfileChunk();
+               stillGood = cPng_LoadICCProfileChunk( filePos, chunkSize, fileData->filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_SBIT:
@@ -314,6 +314,10 @@ void cPng_DeletePngData( cPngData_t* pngData )
    {
       Platform_MemFree( pngData->palette.colors );
    }
+   if ( pngData->hasICCProfile )
+   {
+      Platform_MemFree( pngData->ICCProfile.compressedProfile );
+   }
 }
 
 internal void cPng_InitData( cPngData_t* pngData )
@@ -340,6 +344,10 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->chromaticity.greenY = 0.0f;
    pngData->chromaticity.blueX = 0.0f;
    pngData->chromaticity.blueY = 0.0f;
+   pngData->ICCProfile.name[0] = '\0';
+   pngData->ICCProfile.compressionMethod = 0;
+   pngData->ICCProfile.compressedProfileSize = 0;
+   pngData->ICCProfile.compressedProfile = 0;
 
    pngData->hasPalette = cFalse;
    pngData->hasTrnsGrayLevel = cFalse;
@@ -348,6 +356,7 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->hasSignificantBits = cFalse;
    pngData->hasSRGB = cFalse;
    pngData->hasChromaticity = cFalse;
+   pngData->hasICCProfile = cFalse;
 }
 
 internal void cPng_LogCorruptFile( const char* filePath )
@@ -561,6 +570,7 @@ internal cBool_t cPng_LoadChromaticitiesChunk( uint8_t* filePos, uint32_t chunkS
       return cFalse;
    }
 
+   pngData->hasChromaticity = cTrue;
    pngData->chromaticity.whitePointX = (float)( filePos32[0] ) / 100000;
    pngData->chromaticity.whitePointY = (float)( filePos32[1] ) / 100000;
    pngData->chromaticity.redX = (float)( filePos32[2] ) / 100000;
@@ -573,13 +583,67 @@ internal cBool_t cPng_LoadChromaticitiesChunk( uint8_t* filePos, uint32_t chunkS
    return cTrue;
 }
 
-internal cBool_t cPng_LoadICCProfileChunk()
+internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   // TODO
+   uint32_t i;
+   cBool_t foundName = cFalse;
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   if ( chunkSize < 4 )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ICCCORRUPT, filePath );
+      Platform_Log( errorMsg );
+      return cFalse;
+   }
+
+   pngData->hasICCProfile = cTrue;
+
+   for ( i = 0; i < PNG_ICC_MAXNAMELENGTH; i++ )
+   {
+      if ( i == chunkSize - 1 )
+      {
+         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ICCCORRUPT, filePath );
+         Platform_Log( errorMsg );
+         return cFalse;
+      }
+
+      pngData->ICCProfile.name[i] = filePos[0];
+      filePos++;
+
+      if ( pngData->ICCProfile.name[i] == '\0' )
+      {
+         foundName = cTrue;
+         break;
+      }
+   }
+
+   if ( i >= chunkSize - 3 )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ICCCORRUPT, filePath );
+      Platform_Log( errorMsg );
+      return cFalse;
+   }
+   else if ( filePos[0] != 0 )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ICCCOMPRESSIONINVALID, filePath );
+      Platform_Log( errorMsg );
+      return cFalse;
+   }
+
+   filePos++;
+   pngData->ICCProfile.compressedProfileSize = chunkSize - ( i + 2 );
+   pngData->ICCProfile.compressedProfile = (uint8_t*)Platform_MemAlloc( pngData->ICCProfile.compressedProfileSize );
+
+   for ( i = 0; i < pngData->ICCProfile.compressedProfileSize; i++ )
+   {
+      pngData->ICCProfile.compressedProfile[i] = filePos[0];
+      filePos++;
+   }
+
    return cTrue;
 }
 
-internal cBool_t cPng_LoadSignificantBitsChunk(  uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
+internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 

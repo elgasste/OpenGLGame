@@ -17,6 +17,8 @@
 #define PNG_SRGB_SATURATION            2
 #define PNG_SRGB_ABSOLUTECOLORIMETRIC  3
 
+#define PNG_ICC_MAXNAMELENGTH          80
+
 // basic chunk types
 #define PNG_CHUNKTYPE_IHDR             0x49484452
 #define PNG_CHUNKTYPE_PLTE             0x504C5445
@@ -76,6 +78,15 @@ cPngChromaticity_t;
 
 typedef struct
 {
+   char name[PNG_ICC_MAXNAMELENGTH];
+   uint8_t compressionMethod;
+   uint32_t compressedProfileSize;
+   uint8_t* compressedProfile;
+}
+cPngICCProfile_t;
+
+typedef struct
+{
    cPngHeader_t header;
    cPngPalette_t palette;
    uint16_t trnsGrayLevel;
@@ -84,6 +95,7 @@ typedef struct
    uint32_t significantBits;
    uint8_t sRGB;
    cPngChromaticity_t chromaticity;
+   cPngICCProfile_t ICCProfile;
 
    cBool_t hasPalette;
    cBool_t hasTrnsGrayLevel;
@@ -92,6 +104,7 @@ typedef struct
    cBool_t hasSignificantBits;
    cBool_t hasSRGB;
    cBool_t hasChromaticity;
+   cBool_t hasICCProfile;
 }
 cPngData_t;
 
