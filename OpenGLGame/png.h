@@ -114,6 +114,14 @@ cPngSuggestedPalette_t;
 
 typedef struct
 {
+   uint32_t size;
+   uint8_t* data;
+   void* nextSection;
+}
+cPngImageDataSection_t;
+
+typedef struct
+{
    cPngHeader_t header;
    cPngPalette_t palette;
    uint16_t trnsGrayLevel;
@@ -126,6 +134,8 @@ typedef struct
    uint32_t backgroundColor;
    cPngPhysPixelDimensions_t physPixelDimensions;
    cPngSuggestedPalette_t suggestedPalette;
+   uint32_t numDataSections;
+   cPngImageDataSection_t* dataSections;
 
    // TODO: make these bitwise flags?
    cBool_t hasPalette;
@@ -142,6 +152,7 @@ typedef struct
    cBool_t hasPhysPixelDimensions;
    cBool_t hasSuggestedPalette;
    cBool_t allocatedSuggestedPalette;
+   cBool_t allocatedDataSections;
 }
 cPngData_t;
 

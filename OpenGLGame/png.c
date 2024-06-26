@@ -17,7 +17,7 @@
 internal void cPng_InitData( cPngData_t* pngData );
 internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const char* filePath );
 internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
-internal cBool_t cPng_LoadImageDataChunk();
+internal void cPng_LoadImageDataChunk( uint8_t* filePos, uint32_t chunkSize, cPngData_t* pngData );
 internal cBool_t cPng_LoadSRGBChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadGammaChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadChromaticitiesChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
@@ -136,7 +136,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             {
                foundImageData = cTrue;
                readingImageData = cTrue;
-               stillGood = cPng_LoadImageDataChunk();
+               cPng_LoadImageDataChunk( filePos, chunkSize, pngData );
             }
             break;
          case PNG_CHUNKTYPE_SRGB:
@@ -282,20 +282,36 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
 
 void cPng_ClearPngData( cPngData_t* pngData )
 {
+   uint32_t i;
+   cPngImageDataSection_t* section;
+
    if ( pngData->allocatedPalette )
    {
       Platform_MemFree( pngData->palette.colors );
       pngData->allocatedPalette = cFalse;
    }
+
    if ( pngData->allocatedICCProfile )
    {
       Platform_MemFree( pngData->ICCProfile.compressedProfile );
       pngData->allocatedICCProfile = cFalse;
    }
+
    if ( pngData->allocatedSuggestedPalette )
    {
       Platform_MemFree( pngData->suggestedPalette.colors );
       pngData->allocatedSuggestedPalette = cFalse;
+   }
+
+   if ( pngData->allocatedDataSections )
+   {
+      section = pngData->dataSections;
+
+      for ( i = 0; i < pngData->numDataSections; i++ )
+      {
+         Platform_MemFree( section->data );
+         section = section->nextSection;
+      }
    }
 }
 
@@ -334,6 +350,8 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->suggestedPalette.name[0] = '\0';
    pngData->suggestedPalette.numColors = 0;
    pngData->suggestedPalette.colors = 0;
+   pngData->numDataSections = 0;
+   pngData->dataSections = 0;
 
    pngData->hasPalette = cFalse;
    pngData->allocatedPalette = cFalse;
@@ -349,6 +367,7 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->hasPhysPixelDimensions = cFalse;
    pngData->hasSuggestedPalette = cFalse;
    pngData->allocatedSuggestedPalette = cFalse;
+   pngData->allocatedDataSections = cFalse;
 }
 
 internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const char* filePath )
@@ -502,10 +521,32 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
    return cTrue;
 }
 
-internal cBool_t cPng_LoadImageDataChunk()
+internal void cPng_LoadImageDataChunk( uint8_t* filePos, uint32_t chunkSize, cPngData_t* pngData )
 {
-   // TODO (there could be multiple of these)
-   return cTrue;
+   uint32_t i;
+   cPngImageDataSection_t* section;
+
+   if ( !pngData->allocatedDataSections )
+   {
+      pngData->dataSections = (cPngImageDataSection_t*)Platform_MemAlloc( sizeof( cPngImageDataSection_t ) );
+      pngData->allocatedDataSections = cTrue;
+      section = pngData->dataSections;
+   }
+   else
+   {
+      pngData->dataSections[pngData->numDataSections - 1].nextSection = (cPngImageDataSection_t*)Platform_MemAlloc( sizeof( cPngImageDataSection_t ) );
+      section = pngData->dataSections[pngData->numDataSections - 1].nextSection;
+   }
+
+   pngData->numDataSections++;
+   section->size = chunkSize;
+   section->data = (uint8_t*)Platform_MemAlloc( chunkSize );
+   section->nextSection = 0;
+
+   for ( i = 0; i < chunkSize; i++ )
+   {
+      section->data[i] = filePos[i];
+   }
 }
 
 internal cBool_t cPng_LoadSRGBChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
