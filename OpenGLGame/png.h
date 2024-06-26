@@ -4,48 +4,57 @@
 #include "common.h"
 #include "file_data.h"
 
-#define PNG_SIGNATURE            0x0a1a0a0d474e5089
+#define PNG_SIGNATURE                        0x0a1a0a0d474e5089
 
-#define PNG_COLORTYPE_GRAYSCALE        0
-#define PNG_COLORTYPE_TRUECOLOR        2
-#define PNG_COLORTYPE_INDEXED          3
-#define PNG_COLORTYPE_GRAYSCALEALPHA   4
-#define PNG_COLORTYPE_TRUECOLORALPHA   6
+#define PNG_COLORTYPE_GRAYSCALE              0
+#define PNG_COLORTYPE_TRUECOLOR              2
+#define PNG_COLORTYPE_INDEXED                3
+#define PNG_COLORTYPE_GRAYSCALEALPHA         4
+#define PNG_COLORTYPE_TRUECOLORALPHA         6
 
-#define PNG_SRGB_PERCEPTUAL            0
-#define PNG_SRGB_RELATIVECOLORIMETRIC  1
-#define PNG_SRGB_SATURATION            2
-#define PNG_SRGB_ABSOLUTECOLORIMETRIC  3
+#define PNG_SRGB_PERCEPTUAL                  0
+#define PNG_SRGB_RELATIVECOLORIMETRIC        1
+#define PNG_SRGB_SATURATION                  2
+#define PNG_SRGB_ABSOLUTECOLORIMETRIC        3
 
-#define PNG_MAX_NAMELENGTH             80
+#define PNG_MAX_NAMELENGTH                   80
 
-#define PNG_PHYSSPECIFIER_UNKNOWN      0
-#define PNG_PHYSSPECIFIER_METER        1
+#define PNG_PHYSSPECIFIER_UNKNOWN            0
+#define PNG_PHYSSPECIFIER_METER              1
 
-// basic chunk types
-#define PNG_CHUNKTYPE_IHDR             0x49484452
-#define PNG_CHUNKTYPE_PLTE             0x504C5445
-#define PNG_CHUNKTYPE_IDAT             0x49444154
-#define PNG_CHUNKTYPE_IEND             0x49454E44
+#define PNG_FLAG_HASPALETTE                  0x0001
+#define PNG_FLAG_ALLOCATEDPALETTE            0x0002
+#define PNG_FLAG_HASTRNSGRAYLEVEL            0x0004
+#define PNG_FLAG_HASTRNSCOLOR                0x0008
+#define PNG_FLAG_HASGAMMACORRECTION          0x0010
+#define PNG_FLAG_HASSIGNIFICANTBITS          0x0020
+#define PNG_FLAG_HASSRGB                     0x0040
+#define PNG_FLAG_HASCHROMATICITY             0x0080
+#define PNG_FLAG_HASICCPROFILE               0x0100
+#define PNG_FLAG_ALLOCATEDICCPROFILE         0x0200
+#define PNG_FLAG_HASBACKGROUNDCOLOR          0x0400
+#define PNG_FLAG_HASPHYSPIXELDIMENSIONS      0x0800
+#define PNG_FLAG_HASSUGGESTEDPALETTE         0x1000
+#define PNG_FLAG_ALLOCATEDSUGGESTEDPALETTE   0x2000
+#define PNG_FLAG_ALLOCATEDDATASECTIONS       0x4000
 
-// ancillary chunk types
-#define PNG_CHUNKTYPE_SRGB             0x73524742
-#define PNG_CHUNKTYPE_GAMA             0x67414D41
-#define PNG_CHUNKTYPE_CHRM             0x6348524D
-#define PNG_CHUNKTYPE_ICCP             0x69434350
-#define PNG_CHUNKTYPE_SBIT             0x73424954
+#define PNG_CHUNKTYPE_IHDR                   0x49484452  // IHDR
+#define PNG_CHUNKTYPE_PLTE                   0x504C5445  // PLTE
+#define PNG_CHUNKTYPE_IDAT                   0x49444154  // IDAT
+#define PNG_CHUNKTYPE_IEND                   0x49454E44  // IEND
 
-#define PNG_CHUNKTYPE_TRNS             0x74524E53
-#define PNG_CHUNKTYPE_BKGD             0x624B4744
-#define PNG_CHUNKTYPE_HIST             0x68495354
+#define PNG_CHUNKTYPE_SRGB                   0x73524742  // sRGB
+#define PNG_CHUNKTYPE_GAMA                   0x67414D41  // gAMA
+#define PNG_CHUNKTYPE_CHRM                   0x6348524D  // cHRM
+#define PNG_CHUNKTYPE_ICCP                   0x69434350  // iCCP
+#define PNG_CHUNKTYPE_SBIT                   0x73424954  // sBIT
 
-#define PNG_CHUNKTYPE_PHYS             0x70485973
-#define PNG_CHUNKTYPE_SPLT             0x73504C54
+#define PNG_CHUNKTYPE_TRNS                   0x74524E53  // tRNS
+#define PNG_CHUNKTYPE_BKGD                   0x624B4744  // bKGD
+#define PNG_CHUNKTYPE_HIST                   0x68495354  // hIST
 
-#define PNG_CHUNKTYPE_TIME             0x74494D45
-#define PNG_CHUNKTYPE_ITXT             0x69545874
-#define PNG_CHUNKTYPE_TEXT             0x74455874
-#define PNG_CHUNKTYPE_ZTXT             0x7A545874
+#define PNG_CHUNKTYPE_PHYS                   0x70485973  // pHYS
+#define PNG_CHUNKTYPE_SPLT                   0x73504C54  // sPLT
 
 typedef struct
 {
@@ -61,7 +70,7 @@ cPngHeader_t;
 
 typedef struct
 {
-   uint32_t numColors;
+   uint16_t numColors;
    uint32_t* colors;
 }
 cPngPalette_t;
@@ -107,7 +116,7 @@ typedef struct
 {
    char name[PNG_MAX_NAMELENGTH];
    uint8_t sampleDepth;
-   uint32_t numColors;
+   uint16_t numColors;
    cPngSuggestedPaletteColor_t* colors;
 }
 cPngSuggestedPalette_t;
@@ -136,23 +145,7 @@ typedef struct
    cPngSuggestedPalette_t suggestedPalette;
    uint32_t numDataSections;
    cPngImageDataSection_t* dataSections;
-
-   // TODO: make these bitwise flags?
-   cBool_t hasPalette;
-   cBool_t allocatedPalette;
-   cBool_t hasTrnsGrayLevel;
-   cBool_t hasTrnsColor;
-   cBool_t hasGammaCorrection;
-   cBool_t hasSignificantBits;
-   cBool_t hasSRGB;
-   cBool_t hasChromaticity;
-   cBool_t hasICCProfile;
-   cBool_t allocatedICCProfile;
-   cBool_t hasBackgroundColor;
-   cBool_t hasPhysPixelDimensions;
-   cBool_t hasSuggestedPalette;
-   cBool_t allocatedSuggestedPalette;
-   cBool_t allocatedDataSections;
+   uint16_t flags;
 }
 cPngData_t;
 

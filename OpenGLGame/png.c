@@ -5,6 +5,10 @@
 
 #define EXTRACT_CHUNK_DATA_32( x ) 0 | ( x[0] << 24 ) | ( x[1] << 16 ) | ( x[2] << 8 ) | x[3]
 
+#define HAS_FLAG( f ) ( pngData->flags & f )
+#define TURN_ON_FLAG( f ) pngData->flags |= f
+#define TURN_OFF_FLAG( f ) pngData->flags ^= f
+
 #define ERROR_RETURN_FALSE( m ) \
    snprintf( errorMsg, STRING_SIZE_DEFAULT, m, filePath ); \
    Platform_Log( errorMsg ); \
@@ -45,7 +49,6 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
    cBool_t foundBackgroundColor = cFalse;
    cBool_t foundTransparency = cFalse;
    cBool_t foundPhysicalPixelDimensions = cFalse;
-   cBool_t foundTime = cFalse;
    cBool_t stillGood = cTrue;
 
    cPng_InitData( pngData );
@@ -118,7 +121,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             break;
          case PNG_CHUNKTYPE_PLTE:
-            if ( pngData->hasPalette || foundImageData )
+            if ( HAS_FLAG( PNG_FLAG_HASPALETTE ) || foundImageData )
             {
                ERROR_NOT_GOOD( STR_PNGERROR_ROGUEPALETTE );
             }
@@ -140,19 +143,18 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             }
             break;
          case PNG_CHUNKTYPE_SRGB:
-            if ( pngData->hasPalette || foundSRGB )
+            if ( HAS_FLAG( PNG_FLAG_HASPALETTE ) || foundSRGB )
             {
                ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
             else
             {
-               // NOTE: if sRGB is present, it should override cHRM
                foundSRGB = cTrue;
                stillGood = cPng_LoadSRGBChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
          case PNG_CHUNKTYPE_GAMA:
-            if ( pngData->hasPalette || foundGamma )
+            if ( HAS_FLAG( PNG_FLAG_HASPALETTE ) || foundGamma )
             {
                ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
@@ -163,7 +165,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             }
             break;
          case PNG_CHUNKTYPE_CHRM:
-            if ( pngData->hasPalette || foundChromaticities )
+            if ( HAS_FLAG( PNG_FLAG_HASPALETTE ) || foundChromaticities )
             {
                ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
@@ -174,7 +176,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             }
             break;
          case PNG_CHUNKTYPE_ICCP:
-            if ( pngData->hasPalette || foundICCProfile )
+            if ( HAS_FLAG( PNG_FLAG_HASPALETTE ) || foundICCProfile )
             {
                ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
@@ -185,7 +187,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             }
             break;
          case PNG_CHUNKTYPE_SBIT:
-            if ( pngData->hasPalette || foundSignificantBits )
+            if ( HAS_FLAG( PNG_FLAG_HASPALETTE ) || foundSignificantBits )
             {
                ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
@@ -196,7 +198,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             }
             break;
          case PNG_CHUNKTYPE_TRNS:
-            if ( ( pngData->header.colorType == PNG_COLORTYPE_INDEXED && !pngData->hasPalette ) ||
+            if ( ( pngData->header.colorType == PNG_COLORTYPE_INDEXED && !HAS_FLAG( PNG_FLAG_HASPALETTE ) ) ||
                  ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALEALPHA ) ||
                  ( pngData->header.colorType == PNG_COLORTYPE_TRUECOLORALPHA ) ||
                  foundImageData ||
@@ -211,7 +213,7 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             }
             break;
          case PNG_CHUNKTYPE_BKGD:
-            if ( ( pngData->header.colorType == 3 && !pngData->hasPalette ) || foundImageData || foundBackgroundColor )
+            if ( ( pngData->header.colorType == 3 && !HAS_FLAG( PNG_FLAG_HASPALETTE ) ) || foundImageData || foundBackgroundColor )
             {
                ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
             }
@@ -242,22 +244,6 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
                stillGood = cPng_LoadSuggestedPaletteChunk( filePos, chunkSize, filePath, pngData );
             }
             break;
-         case PNG_CHUNKTYPE_TIME:
-            if ( foundTime )
-            {
-               ERROR_NOT_GOOD( STR_PNGERROR_FILECORRUPT );
-            }
-            else
-            {
-               foundTime = cTrue;
-            }
-            break;
-         // TODO: I don't think we care about these, should we keep them here?
-         case PNG_CHUNKTYPE_ITXT:
-         case PNG_CHUNKTYPE_TEXT:
-         case PNG_CHUNKTYPE_ZTXT:
-         case PNG_CHUNKTYPE_HIST:
-            break;
       }
 
       if ( !stillGood )
@@ -286,25 +272,25 @@ void cPng_ClearPngData( cPngData_t* pngData )
    cPngImageDataSection_t* section;
    cPngImageDataSection_t* nextSection;
 
-   if ( pngData->allocatedPalette )
+   if ( HAS_FLAG( PNG_FLAG_ALLOCATEDPALETTE ) )
    {
       Platform_MemFree( pngData->palette.colors );
-      pngData->allocatedPalette = cFalse;
+      TURN_OFF_FLAG( PNG_FLAG_ALLOCATEDPALETTE );
    }
 
-   if ( pngData->allocatedICCProfile )
+   if ( HAS_FLAG( PNG_FLAG_ALLOCATEDICCPROFILE ) )
    {
       Platform_MemFree( pngData->ICCProfile.compressedProfile );
-      pngData->allocatedICCProfile = cFalse;
+      TURN_OFF_FLAG( PNG_FLAG_ALLOCATEDICCPROFILE );
    }
 
-   if ( pngData->allocatedSuggestedPalette )
+   if ( HAS_FLAG( PNG_FLAG_ALLOCATEDSUGGESTEDPALETTE ) )
    {
       Platform_MemFree( pngData->suggestedPalette.colors );
-      pngData->allocatedSuggestedPalette = cFalse;
+      TURN_OFF_FLAG( PNG_FLAG_ALLOCATEDSUGGESTEDPALETTE );
    }
 
-   if ( pngData->allocatedDataSections )
+   if ( HAS_FLAG( PNG_FLAG_ALLOCATEDDATASECTIONS ) )
    {
       section = pngData->dataSections;
 
@@ -315,6 +301,8 @@ void cPng_ClearPngData( cPngData_t* pngData )
          Platform_MemFree( section );
          section = nextSection;
       }
+
+      TURN_OFF_FLAG( PNG_FLAG_ALLOCATEDDATASECTIONS );
    }
 }
 
@@ -355,22 +343,7 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->suggestedPalette.colors = 0;
    pngData->numDataSections = 0;
    pngData->dataSections = 0;
-
-   pngData->hasPalette = cFalse;
-   pngData->allocatedPalette = cFalse;
-   pngData->hasTrnsGrayLevel = cFalse;
-   pngData->hasTrnsColor = cFalse;
-   pngData->hasGammaCorrection = cFalse;
-   pngData->hasSignificantBits = cFalse;
-   pngData->hasSRGB = cFalse;
-   pngData->hasChromaticity = cFalse;
-   pngData->hasICCProfile = cFalse;
-   pngData->allocatedICCProfile = cFalse;
-   pngData->hasBackgroundColor = cFalse;
-   pngData->hasPhysPixelDimensions = cFalse;
-   pngData->hasSuggestedPalette = cFalse;
-   pngData->allocatedSuggestedPalette = cFalse;
-   pngData->allocatedDataSections = cFalse;
+   pngData->flags = 0;
 }
 
 internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const char* filePath )
@@ -454,7 +427,8 @@ internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const c
 
 internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   uint32_t maxColors, r, g, b, i;
+   uint8_t r, g, b;
+   uint16_t maxColors, i;
    char errorMsg[STRING_SIZE_DEFAULT];
 
    if ( ( chunkSize % 3 ) != 0 )
@@ -473,31 +447,31 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
    }
    else
    {
-      maxColors = (uint32_t)pow( (double)2, (double)( pngData->header.bitDepth ) );
+      maxColors = (uint16_t)pow( (double)2, (double)( pngData->header.bitDepth ) );
    }
 
-   pngData->hasPalette = cTrue;
-   pngData->palette.numColors = ( chunkSize / 3 ) / pngData->header.bitDepth;
+   TURN_ON_FLAG( PNG_FLAG_HASPALETTE );
+   pngData->palette.numColors = (uint16_t)( ( chunkSize / 3 ) / pngData->header.bitDepth );
 
    if ( pngData->palette.numColors > maxColors )
    {
       ERROR_RETURN_FALSE( STR_PNGERROR_PALETTEENTRYOVERRUN );
    }
 
-   if ( pngData->allocatedPalette )
+   if ( HAS_FLAG( PNG_FLAG_ALLOCATEDPALETTE ) )
    {
       ERROR_RETURN_FALSE( STR_PNGERROR_PNGDATAREUSE );
    }
 
    pngData->palette.colors = (uint32_t*)Platform_MemAlloc( sizeof( uint32_t ) * pngData->palette.numColors );
-   pngData->allocatedPalette = cTrue;
+   TURN_ON_FLAG( PNG_FLAG_ALLOCATEDPALETTE );
 
    for ( i = 0; i < pngData->palette.numColors; i++ )
    {
       r = filePos[0];
       g = filePos[1];
       b = filePos[2];
-      pngData->palette.colors[i] = 0xFF000000 | ( r << 16 ) | ( g << 8 ) | b;
+      pngData->palette.colors[i] = 0xFF000000 | ( (uint32_t)r << 16 ) | ( (uint32_t)g << 8 ) | (uint32_t)b;
       filePos += 3;
    }
 
@@ -509,10 +483,10 @@ internal void cPng_LoadImageDataChunk( uint8_t* filePos, uint32_t chunkSize, cPn
    uint32_t i;
    cPngImageDataSection_t* section;
 
-   if ( !pngData->allocatedDataSections )
+   if ( !HAS_FLAG( PNG_FLAG_ALLOCATEDDATASECTIONS ) )
    {
       pngData->dataSections = (cPngImageDataSection_t*)Platform_MemAlloc( sizeof( cPngImageDataSection_t ) );
-      pngData->allocatedDataSections = cTrue;
+      TURN_ON_FLAG( PNG_FLAG_ALLOCATEDDATASECTIONS );
       section = pngData->dataSections;
    }
    else
@@ -552,7 +526,7 @@ internal cBool_t cPng_LoadSRGBChunk( uint8_t* filePos, uint32_t chunkSize, const
       ERROR_RETURN_FALSE( STR_PNGERROR_SRGBINVALID );
    }
 
-   pngData->hasSRGB = cTrue;
+   TURN_ON_FLAG( PNG_FLAG_HASSRGB );
    pngData->sRGB = filePos[0];
 
    return cTrue;
@@ -567,7 +541,7 @@ internal cBool_t cPng_LoadGammaChunk(  uint8_t* filePos, uint32_t chunkSize, con
       ERROR_RETURN_FALSE( STR_PNGERROR_GAMMACORRUPT );
    }
 
-   pngData->hasGammaCorrection = cTrue;
+   TURN_ON_FLAG( PNG_FLAG_HASGAMMACORRECTION );
    pngData->gammaCorrection = (float)( ( (uint32_t*)filePos )[0] ) / 100000;
 
    return cTrue;
@@ -583,7 +557,7 @@ internal cBool_t cPng_LoadChromaticitiesChunk( uint8_t* filePos, uint32_t chunkS
       ERROR_RETURN_FALSE( STR_PNGERROR_CHRMCORRUPT );
    }
 
-   pngData->hasChromaticity = cTrue;
+   TURN_ON_FLAG( PNG_FLAG_HASCHROMATICITY );
    pngData->chromaticity.whitePointX = (float)( filePos32[0] ) / 100000;
    pngData->chromaticity.whitePointY = (float)( filePos32[1] ) / 100000;
    pngData->chromaticity.redX = (float)( filePos32[2] ) / 100000;
@@ -607,7 +581,7 @@ internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize,
       ERROR_RETURN_FALSE( STR_PNGERROR_ICCCORRUPT );
    }
 
-   pngData->hasICCProfile = cTrue;
+   TURN_ON_FLAG( PNG_FLAG_HASICCPROFILE );
 
    for ( i = 0; i < PNG_MAX_NAMELENGTH; i++ )
    {
@@ -638,7 +612,7 @@ internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize,
    filePos++;
    pngData->ICCProfile.compressedProfileSize = chunkSize - ( i + 2 );
    pngData->ICCProfile.compressedProfile = (uint8_t*)Platform_MemAlloc( pngData->ICCProfile.compressedProfileSize );
-   pngData->allocatedICCProfile = cTrue;
+   TURN_ON_FLAG( PNG_FLAG_ALLOCATEDICCPROFILE );
 
    for ( i = 0; i < pngData->ICCProfile.compressedProfileSize; i++ )
    {
@@ -653,7 +627,7 @@ internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunk
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   pngData->hasSignificantBits = cTrue;
+   TURN_ON_FLAG( PNG_FLAG_HASSIGNIFICANTBITS );
 
    if ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALE )
    {
@@ -728,8 +702,8 @@ internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSiz
          ERROR_RETURN_FALSE( STR_PNGERROR_TRNSCORRUPT );
       }
 
-      pngData->hasTrnsGrayLevel = cTrue;
-      pngData->trnsGrayLevel = ( (uint16_t*)filePos )[0] & ( 0xFFFF >> ( 16 - pngData->header.bitDepth ) );
+      TURN_ON_FLAG( PNG_FLAG_HASTRNSGRAYLEVEL );
+      pngData->trnsGrayLevel = ( (uint16_t*)filePos )[0];
    }
    else if ( pngData->header.colorType == PNG_COLORTYPE_TRUECOLOR )
    {
@@ -742,8 +716,7 @@ internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSiz
          ERROR_RETURN_FALSE( STR_PNGERROR_TRNSCORRUPT );
       }
 
-      // TODO: truncate these for bit depths less than 16?
-      pngData->hasTrnsColor = cTrue;
+      TURN_ON_FLAG( PNG_FLAG_HASTRNSCOLOR );
       pngData->trnsColor = 0xFF000000;
       pngData->trnsColor |= (uint32_t)( (uint16_t*)filePos )[0] << 16;
       pngData->trnsColor |= (uint32_t)( (uint16_t*)filePos )[2] << 8;
@@ -757,7 +730,7 @@ internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunk
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   pngData->hasBackgroundColor = cTrue;
+   TURN_ON_FLAG( PNG_FLAG_HASBACKGROUNDCOLOR );
 
    if ( pngData->header.colorType == PNG_COLORTYPE_INDEXED )
    {
@@ -803,7 +776,7 @@ internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk( uint8_t* filePos, uint32
       ERROR_RETURN_FALSE( STR_PNGERROR_PHYSCORRUPT );
    }
 
-   pngData->hasPhysPixelDimensions = cTrue;
+   TURN_ON_FLAG( PNG_FLAG_HASPHYSPIXELDIMENSIONS );
    pngData->physPixelDimensions.ppuX = ( (uint32_t*)filePos )[0];
    pngData->physPixelDimensions.ppuY = ( (uint32_t*)filePos )[1];
    pngData->physPixelDimensions.unitSpecifier = filePos[8];
@@ -818,7 +791,7 @@ internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk( uint8_t* filePos, uint32
 
 internal cBool_t cPng_LoadSuggestedPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData )
 {
-   uint32_t i;
+   uint16_t i;
    uint16_t* filePos16;
    cBool_t foundName = cFalse;
    char errorMsg[STRING_SIZE_DEFAULT];
@@ -828,7 +801,7 @@ internal cBool_t cPng_LoadSuggestedPaletteChunk( uint8_t* filePos, uint32_t chun
       ERROR_RETURN_FALSE( STR_PNGERROR_SPLTCORRUPT );
    }
 
-   pngData->hasSuggestedPalette = cTrue;
+   TURN_ON_FLAG( PNG_FLAG_HASSUGGESTEDPALETTE );
 
    for ( i = 0; i < PNG_MAX_NAMELENGTH; i++ )
    {
@@ -863,7 +836,7 @@ internal cBool_t cPng_LoadSuggestedPaletteChunk( uint8_t* filePos, uint32_t chun
          ERROR_RETURN_FALSE( STR_PNGERROR_SPLTCORRUPT );
       }
 
-      pngData->suggestedPalette.numColors = ( chunkSize - i ) / 6;
+      pngData->suggestedPalette.numColors = (uint16_t)( ( chunkSize - i ) / 6 );
 
       if ( pngData->suggestedPalette.numColors > 256 )
       {
@@ -871,7 +844,7 @@ internal cBool_t cPng_LoadSuggestedPaletteChunk( uint8_t* filePos, uint32_t chun
       }
 
       pngData->suggestedPalette.colors = (cPngSuggestedPaletteColor_t*)Platform_MemAlloc( sizeof( cPngSuggestedPaletteColor_t ) * pngData->suggestedPalette.numColors );
-      pngData->allocatedSuggestedPalette = cTrue;
+      TURN_ON_FLAG( PNG_FLAG_ALLOCATEDSUGGESTEDPALETTE );
 
       for ( i = 0; i < pngData->suggestedPalette.numColors; i++ )
       {
@@ -891,7 +864,7 @@ internal cBool_t cPng_LoadSuggestedPaletteChunk( uint8_t* filePos, uint32_t chun
          ERROR_RETURN_FALSE( STR_PNGERROR_SPLTCORRUPT );
       }
 
-      pngData->suggestedPalette.numColors = ( chunkSize - i ) / 10;
+      pngData->suggestedPalette.numColors = (uint16_t)( ( chunkSize - i ) / 10 );
 
       if ( pngData->suggestedPalette.numColors > 256 )
       {
@@ -899,7 +872,7 @@ internal cBool_t cPng_LoadSuggestedPaletteChunk( uint8_t* filePos, uint32_t chun
       }
 
       pngData->suggestedPalette.colors = (cPngSuggestedPaletteColor_t*)Platform_MemAlloc( sizeof( cPngSuggestedPaletteColor_t ) * pngData->suggestedPalette.numColors );
-      pngData->allocatedSuggestedPalette = cTrue;
+      TURN_ON_FLAG( PNG_FLAG_ALLOCATEDSUGGESTEDPALETTE );
       filePos16 = (uint16_t*)filePos;
 
       for ( i = 0; i < pngData->suggestedPalette.numColors; i++ )
