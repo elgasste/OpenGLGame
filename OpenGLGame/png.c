@@ -284,6 +284,7 @@ void cPng_ClearPngData( cPngData_t* pngData )
 {
    uint32_t i;
    cPngImageDataSection_t* section;
+   cPngImageDataSection_t* nextSection;
 
    if ( pngData->allocatedPalette )
    {
@@ -310,7 +311,9 @@ void cPng_ClearPngData( cPngData_t* pngData )
       for ( i = 0; i < pngData->numDataSections; i++ )
       {
          Platform_MemFree( section->data );
-         section = section->nextSection;
+         nextSection = section->nextSection;
+         Platform_MemFree( section );
+         section = nextSection;
       }
    }
 }
@@ -407,9 +410,7 @@ internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const c
    {
       if ( header->bitDepth != 1 && header->bitDepth != 2 && header->bitDepth != 4 && header->bitDepth != 8 && header->bitDepth != 16 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_COLORTYPEMISMATCH, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_COLORTYPEMISMATCH );
       }
    }
    else if ( header->colorType == PNG_COLORTYPE_TRUECOLOR ||
@@ -418,46 +419,34 @@ internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const c
    {
       if ( header->bitDepth != 8 && header->bitDepth != 16 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_COLORTYPEMISMATCH, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_COLORTYPEMISMATCH );
       }
    }
    else if ( header->colorType == PNG_COLORTYPE_INDEXED )
    {
       if ( header->bitDepth != 1 && header->bitDepth != 2 && header->bitDepth != 4 && header->bitDepth != 8 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_COLORTYPEMISMATCH, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_COLORTYPEMISMATCH );
       }
    }
    else
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDCOLORTYPE, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_INVALIDCOLORTYPE );
    }
 
    if ( header->compressionMethod != 0 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDCOMPRESSION, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_INVALIDCOMPRESSION );
    }
 
    if ( header->filterMethod != 0 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDFILTER, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_INVALIDFILTER );
    }
 
    if ( header->interlaceMethod > 1 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDINTERLACE, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_INVALIDINTERLACE );
    }
 
    return cTrue;
@@ -470,16 +459,12 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
 
    if ( ( chunkSize % 3 ) != 0 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDPALETTESIZE, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_INVALIDPALETTESIZE );
    }
    else if ( pngData->header.colorType == PNG_COLORTYPE_GRAYSCALE ||
              pngData->header.colorType == PNG_COLORTYPE_GRAYSCALEALPHA )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ROGUEPALETTE, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_ROGUEPALETTE );
    }
 
    if ( pngData->header.bitDepth > 8 )
@@ -496,9 +481,7 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
 
    if ( pngData->palette.numColors > maxColors )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_PALETTEENTRYOVERRUN, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_PALETTEENTRYOVERRUN );
    }
 
    if ( pngData->allocatedPalette )
@@ -534,8 +517,15 @@ internal void cPng_LoadImageDataChunk( uint8_t* filePos, uint32_t chunkSize, cPn
    }
    else
    {
-      pngData->dataSections[pngData->numDataSections - 1].nextSection = (cPngImageDataSection_t*)Platform_MemAlloc( sizeof( cPngImageDataSection_t ) );
-      section = pngData->dataSections[pngData->numDataSections - 1].nextSection;
+      section = pngData->dataSections;
+
+      while ( section->nextSection != 0 )
+      {
+         section = section->nextSection;
+      }
+
+      section->nextSection = (cPngImageDataSection_t*)Platform_MemAlloc( sizeof( cPngImageDataSection_t ) );
+      section = section->nextSection;
    }
 
    pngData->numDataSections++;
@@ -555,15 +545,11 @@ internal cBool_t cPng_LoadSRGBChunk( uint8_t* filePos, uint32_t chunkSize, const
 
    if ( chunkSize != 1 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SRGBCORRUPT, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_SRGBCORRUPT );
    }
    else if ( filePos[0] > PNG_SRGB_ABSOLUTECOLORIMETRIC )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SRGBINVALID, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_SRGBINVALID );
    }
 
    pngData->hasSRGB = cTrue;
@@ -578,9 +564,7 @@ internal cBool_t cPng_LoadGammaChunk(  uint8_t* filePos, uint32_t chunkSize, con
 
    if ( chunkSize != 4 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_GAMMACORRUPT, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_GAMMACORRUPT );
    }
 
    pngData->hasGammaCorrection = cTrue;
@@ -596,9 +580,7 @@ internal cBool_t cPng_LoadChromaticitiesChunk( uint8_t* filePos, uint32_t chunkS
 
    if ( chunkSize != sizeof( cPngChromaticity_t ) )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_CHRMCORRUPT, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_CHRMCORRUPT );
    }
 
    pngData->hasChromaticity = cTrue;
@@ -622,9 +604,7 @@ internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize,
 
    if ( chunkSize < 4 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ICCCORRUPT, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_ICCCORRUPT );
    }
 
    pngData->hasICCProfile = cTrue;
@@ -633,9 +613,7 @@ internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize,
    {
       if ( i == chunkSize - 1 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ICCCORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_ICCCORRUPT );
       }
 
       pngData->ICCProfile.name[i] = filePos[0];
@@ -650,15 +628,11 @@ internal cBool_t cPng_LoadICCProfileChunk( uint8_t* filePos, uint32_t chunkSize,
 
    if ( i >= chunkSize - 3 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ICCCORRUPT, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_ICCCORRUPT );
    }
    else if ( filePos[0] != 0 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_ICCCOMPRESSIONINVALID, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_ICCCOMPRESSIONINVALID );
    }
 
    filePos++;
@@ -685,9 +659,7 @@ internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunk
    {
       if ( chunkSize != 1 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SBITCORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_SBITCORRUPT );
       }
 
       pngData->significantBits = (uint32_t)( filePos[0] );
@@ -696,9 +668,7 @@ internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunk
    {
       if ( chunkSize != 3 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SBITCORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_SBITCORRUPT );
       }
 
       pngData->significantBits = 0 | ( (uint32_t)( filePos[0] ) << 16 ) | ( (uint32_t)( filePos[0] ) << 8 ) | (uint32_t)( filePos[0] );
@@ -707,9 +677,7 @@ internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunk
    {
       if ( chunkSize != 2 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SBITCORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_SBITCORRUPT );
       }
 
       pngData->significantBits = (uint32_t)( ( (uint16_t*)filePos )[0] );
@@ -718,9 +686,7 @@ internal cBool_t cPng_LoadSignificantBitsChunk( uint8_t* filePos, uint32_t chunk
    {
       if ( chunkSize != 4 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_SBITCORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_SBITCORRUPT );
       }
 
       pngData->significantBits = ( (uint32_t*)filePos )[0];
@@ -742,9 +708,7 @@ internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSiz
 
       if ( numTransparentColors > pngData->palette.numColors )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_TRNSOVERRUN, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_TRNSOVERRUN );
       }
 
       for ( i = 0; i < numTransparentColors; i++ )
@@ -761,9 +725,7 @@ internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSiz
       // considered transparent, and all others are to be considered opaque.
       if ( chunkSize != 2 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_TRNSCORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_TRNSCORRUPT );
       }
 
       pngData->hasTrnsGrayLevel = cTrue;
@@ -777,9 +739,7 @@ internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSiz
       // to be considered transparent, and all others are to be considered opaque.
       if ( chunkSize != 6 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_TRNSCORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_TRNSCORRUPT );
       }
 
       // TODO: truncate these for bit depths less than 16?
@@ -803,9 +763,7 @@ internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunk
    {
       if ( chunkSize != 1 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_BKGDCORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_BKGDCORRUPT );
       }
 
       pngData->backgroundColor = (uint16_t)( filePos[0] );
@@ -815,9 +773,7 @@ internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunk
    {
       if ( chunkSize != 2 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_BKGDCORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_BKGDCORRUPT );
       }
 
       pngData->backgroundColor = 0xFF000000 | (uint32_t)( filePos[0] );
@@ -826,9 +782,7 @@ internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunk
    {
       if ( chunkSize != 6 )
       {
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_BKGDCORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return cFalse;
+         ERROR_RETURN_FALSE( STR_PNGERROR_BKGDCORRUPT );
       }
 
       pngData->backgroundColor = 0xFF000000 |
@@ -846,9 +800,7 @@ internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk( uint8_t* filePos, uint32
 
    if ( chunkSize != 9 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_PHYSCORRUPT, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_PHYSCORRUPT );
    }
 
    pngData->hasPhysPixelDimensions = cTrue;
@@ -858,9 +810,7 @@ internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk( uint8_t* filePos, uint32
 
    if ( pngData->physPixelDimensions.unitSpecifier > PNG_PHYSSPECIFIER_METER )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_PNGERROR_INVALIDPHYSSPECIFIER, filePath );
-      Platform_Log( errorMsg );
-      return cFalse;
+      ERROR_RETURN_FALSE( STR_PNGERROR_INVALIDPHYSSPECIFIER );
    }
 
    return cTrue;
