@@ -302,6 +302,22 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
    }
 }
 
+void Platform_Log( const char* message )
+{
+   // TODO: write to a log file with a time stamp, probably
+   UNUSED_PARAM( message );
+}
+
+void* Platform_MemAlloc( uint64_t size )
+{
+   return VirtualAlloc( 0, size, MEM_COMMIT, PAGE_READWRITE );
+}
+
+void Platform_MemFree( void* memory )
+{
+   VirtualFree( memory, 0, MEM_RELEASE );
+}
+
 void Platform_Tick()
 {
    MSG msg;
