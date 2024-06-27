@@ -10,6 +10,9 @@
 #include "game.h"
 #include "platform.h"
 
+// MUFFINS
+#include "png.h"
+
 typedef struct
 {
    HWND hWndMain;
@@ -40,6 +43,35 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    UNUSED_PARAM( hPrevInstance );
    UNUSED_PARAM( lpCmdLine );
    UNUSED_PARAM( nCmdShow );
+
+   // START MUFFINS: cycle through all the files in "Downloads/PNG Testing"
+   WIN32_FIND_DATAA ffd;
+   HANDLE hFile = FindFirstFileA( "C:\\Users\\S.Elgas\\Downloads\\PNG Testing\\*.png", &ffd );
+   cBool_t foundError = cFalse;
+   if ( hFile != INVALID_HANDLE_VALUE )
+   {
+      do
+      {
+         if ( !( ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
+         {
+            cFileData_t fileData;
+            snprintf( fileData.filePath, STRING_SIZE_DEFAULT, "C:\\Users\\S.Elgas\\Downloads\\PNG Testing\\%s", ffd.cFileName );
+            cPngData_t pngData;
+            if ( !Platform_ReadFileData( &fileData ) )
+            {
+               FatalError( "Couldn't load the image file, OH NO!!" );
+            }
+            if ( !cPng_LoadPngData( &fileData, &pngData ) )
+            {
+               foundError = cTrue;
+            }
+            Platform_ClearFileData( &fileData );
+            cPng_ClearPngData( &pngData );
+         }
+      }
+      while ( FindNextFileA( hFile, &ffd ) );
+   }
+   // END MUFFINS
 
    if ( !QueryPerformanceFrequency( &( g_globals.performanceFrequency ) ) )
    {
