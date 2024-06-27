@@ -13,5 +13,7 @@
 
 #define STR_WIN_WINDOWTITLE               "Testing"
 
+#define STR_BMPERR_OPENFILEFAILED         "BMP error: could not open file: %s"
+
 #endif
 

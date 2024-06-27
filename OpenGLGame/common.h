@@ -2,6 +2,7 @@
 #define COMMON_H
 
 #include <stdint.h>
+#include <stdio.h>
 
 #include "strings.h"
 
@@ -16,6 +17,8 @@ typedef int32_t cBool_t;
 #define cTrue 1
 #define cFalse 0
 #define TOGGLE_BOOL( x ) x = ( x ) ? cFalse : cTrue
+
+#define STRING_SIZE_DEFAULT      1024
 
 #define GRAPHICS_BPP             32
 #define GRAPHICS_ALPHABITS       8
