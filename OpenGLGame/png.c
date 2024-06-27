@@ -18,10 +18,18 @@
    Platform_Log( errorMsg ); \
    stillGood = cFalse
 
+typedef struct
+{
+   uint32_t size;
+   uint8_t* data;
+   void* nextSection;
+}
+cPngImageDataSection_t;
+
 internal void cPng_InitData( cPngData_t* pngData );
 internal cBool_t cPng_LoadHeader( uint8_t* filePos, cPngData_t* pngData, const char* filePath );
 internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
-internal void cPng_LoadImageDataChunk( uint8_t* filePos, uint32_t chunkSize, cPngData_t* pngData );
+internal void cPng_LoadImageDataChunk( uint8_t* filePos, uint32_t chunkSize, cPngImageDataSection_t* imageDataSections );
 internal cBool_t cPng_LoadSRGBChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadGammaChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadChromaticitiesChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
@@ -31,6 +39,7 @@ internal cBool_t cPng_LoadTransparencyChunk( uint8_t* filePos, uint32_t chunkSiz
 internal cBool_t cPng_LoadBackgroundColorChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadPhysicalPixelDimensionsChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
 internal cBool_t cPng_LoadSuggestedPaletteChunk( uint8_t* filePos, uint32_t chunkSize, const char* filePath, cPngData_t* pngData );
+internal cBool_t cPng_ConsolidateImageData( const char* filePath, cPngData_t* pngData, uint32_t numImageDataSections, cPngImageDataSection_t* imageDataSections );
 
 cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
 {
@@ -38,6 +47,8 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
    uint32_t chunkSize, chunkType, bytesRead;
    char errorMsg[STRING_SIZE_DEFAULT];
    const char* filePath = fileData->filePath;
+   uint32_t numImageDataSections = 0;
+   cPngImageDataSection_t* imageDataSections = 0;
    cBool_t foundImageData = cFalse;
    cBool_t readingImageData = cFalse;
    cBool_t finishedReadingImageData = cFalse;
@@ -139,7 +150,8 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
             {
                foundImageData = cTrue;
                readingImageData = cTrue;
-               cPng_LoadImageDataChunk( filePos, chunkSize, pngData );
+               cPng_LoadImageDataChunk( filePos, chunkSize, imageDataSections );
+               numImageDataSections++;
             }
             break;
          case PNG_CHUNKTYPE_SRGB:
@@ -260,18 +272,12 @@ cBool_t cPng_LoadPngData( cFileData_t* fileData, cPngData_t* pngData )
    {
       ERROR_RETURN_FALSE( STR_PNGERROR_FILECORRUPT );
    }
-   else
-   {
-      return cTrue;
-   }
+
+   return cPng_ConsolidateImageData( filePath, pngData, numImageDataSections, imageDataSections );
 }
 
 void cPng_ClearPngData( cPngData_t* pngData )
 {
-   uint32_t i;
-   cPngImageDataSection_t* section;
-   cPngImageDataSection_t* nextSection;
-
    if ( HAS_FLAG( PNG_FLAG_ALLOCATEDPALETTE ) )
    {
       Platform_MemFree( pngData->palette.colors );
@@ -290,20 +296,14 @@ void cPng_ClearPngData( cPngData_t* pngData )
       TURN_OFF_FLAG( PNG_FLAG_ALLOCATEDSUGGESTEDPALETTE );
    }
 
-   if ( HAS_FLAG( PNG_FLAG_ALLOCATEDDATASECTIONS ) )
+   if ( HAS_FLAG( PNG_FLAG_ALLOCATEDIMAGEDATA ) )
    {
-      section = pngData->dataSections;
-
-      for ( i = 0; i < pngData->numDataSections; i++ )
-      {
-         Platform_MemFree( section->data );
-         nextSection = section->nextSection;
-         Platform_MemFree( section );
-         section = nextSection;
-      }
-
-      TURN_OFF_FLAG( PNG_FLAG_ALLOCATEDDATASECTIONS );
+      Platform_MemFree( pngData->imageData.data );
+      TURN_OFF_FLAG( PNG_FLAG_ALLOCATEDIMAGEDATA );
    }
+
+   // MUFFINS: it's technically possible that some image data sections have been allocated here,
+   // we should definitely account for that.
 }
 
 internal void cPng_InitData( cPngData_t* pngData )
@@ -341,8 +341,8 @@ internal void cPng_InitData( cPngData_t* pngData )
    pngData->suggestedPalette.name[0] = '\0';
    pngData->suggestedPalette.numColors = 0;
    pngData->suggestedPalette.colors = 0;
-   pngData->numDataSections = 0;
-   pngData->dataSections = 0;
+   pngData->imageData.size = 0;
+   pngData->imageData.data = 0;
    pngData->flags = 0;
 }
 
@@ -478,20 +478,19 @@ internal cBool_t cPng_LoadPaletteChunk( uint8_t* filePos, uint32_t chunkSize, co
    return cTrue;
 }
 
-internal void cPng_LoadImageDataChunk( uint8_t* filePos, uint32_t chunkSize, cPngData_t* pngData )
+internal void cPng_LoadImageDataChunk( uint8_t* filePos, uint32_t chunkSize, cPngImageDataSection_t* imageDataSections )
 {
    uint32_t i;
    cPngImageDataSection_t* section;
 
-   if ( !HAS_FLAG( PNG_FLAG_ALLOCATEDDATASECTIONS ) )
+   if ( !imageDataSections )
    {
-      pngData->dataSections = (cPngImageDataSection_t*)Platform_MemAlloc( sizeof( cPngImageDataSection_t ) );
-      TURN_ON_FLAG( PNG_FLAG_ALLOCATEDDATASECTIONS );
-      section = pngData->dataSections;
+      imageDataSections = (cPngImageDataSection_t*)Platform_MemAlloc( sizeof( cPngImageDataSection_t ) );
+      section = imageDataSections;
    }
    else
    {
-      section = pngData->dataSections;
+      section = imageDataSections;
 
       while ( section->nextSection != 0 )
       {
@@ -502,7 +501,6 @@ internal void cPng_LoadImageDataChunk( uint8_t* filePos, uint32_t chunkSize, cPn
       section = section->nextSection;
    }
 
-   pngData->numDataSections++;
    section->size = chunkSize;
    section->data = (uint8_t*)Platform_MemAlloc( chunkSize );
    section->nextSection = 0;
@@ -890,6 +888,63 @@ internal cBool_t cPng_LoadSuggestedPaletteChunk( uint8_t* filePos, uint32_t chun
    {
       ERROR_RETURN_FALSE( STR_PNGERROR_SPLTCORRUPT );
    }
+
+   return cTrue;
+}
+
+internal cBool_t cPng_ConsolidateImageData( const char* filePath, cPngData_t* pngData, uint32_t numImageDataSections, cPngImageDataSection_t* imageDataSections )
+{
+   uint32_t i = 0, j;
+   cPngImageDataSection_t* section;
+   cPngImageDataSection_t* nextSection;
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   if ( !HAS_FLAG( PNG_FLAG_ALLOCATEDDATASECTIONS ) )
+   {
+      ERROR_RETURN_FALSE( STR_PNGERROR_FILECORRUPT );
+   }
+
+   section = imageDataSections;
+
+   do
+   {
+      pngData->imageData.size += section->size;
+      section = section->nextSection;
+   }
+   while( section );
+
+   pngData->imageData.data = (uint8_t*)Platform_MemAlloc( pngData->imageData.size );
+   TURN_ON_FLAG( PNG_FLAG_ALLOCATEDIMAGEDATA );
+   section = imageDataSections;
+
+   do
+   {
+      for ( j = 0; j < section->size; i++, j++ )
+      {
+         pngData->imageData.data[i] = section->data[j];
+      }
+
+      section = section->nextSection;
+   }
+   while( section );
+
+   section = imageDataSections;
+
+   for ( j = 0; j < numImageDataSections; j++ )
+   {
+      // I hate this check, but Visual Studio whines if we don't do it.
+      if ( !section || !section->data )
+      {
+         ERROR_RETURN_FALSE( STR_PNGERROR_FILECORRUPT );
+      }
+
+      Platform_MemFree( section->data );
+      nextSection = section->nextSection;
+      Platform_MemFree( section );
+      section = nextSection;
+   }
+
+   TURN_OFF_FLAG( PNG_FLAG_ALLOCATEDDATASECTIONS );
 
    return cTrue;
 }

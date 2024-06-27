@@ -37,6 +37,7 @@
 #define PNG_FLAG_HASSUGGESTEDPALETTE         0x1000
 #define PNG_FLAG_ALLOCATEDSUGGESTEDPALETTE   0x2000
 #define PNG_FLAG_ALLOCATEDDATASECTIONS       0x4000
+#define PNG_FLAG_ALLOCATEDIMAGEDATA          0x8000
 
 #define PNG_CHUNKTYPE_IHDR                   0x49484452  // IHDR
 #define PNG_CHUNKTYPE_PLTE                   0x504C5445  // PLTE
@@ -125,9 +126,8 @@ typedef struct
 {
    uint32_t size;
    uint8_t* data;
-   void* nextSection;
 }
-cPngImageDataSection_t;
+cPngImageData_t;
 
 typedef struct
 {
@@ -143,8 +143,7 @@ typedef struct
    uint32_t backgroundColor;
    cPngPhysPixelDimensions_t physPixelDimensions;
    cPngSuggestedPalette_t suggestedPalette;
-   uint32_t numDataSections;
-   cPngImageDataSection_t* dataSections;
+   cPngImageData_t imageData;
    uint16_t flags;
 }
 cPngData_t;
