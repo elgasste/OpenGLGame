@@ -3,10 +3,11 @@
 
 #include "common.h"
 
+#define BMP_HEADER_SIZE    14
+
 typedef struct
 {
-   int32_t width;
-   int32_t height;
+   uint32_t imageOffset;
 }
 cBmpData_t;
 

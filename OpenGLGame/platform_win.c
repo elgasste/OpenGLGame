@@ -366,29 +366,36 @@ cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
    HANDLE hFile;
    LARGE_INTEGER fileSize;
    OVERLAPPED overlapped = { 0 };
+   char errorMsg[STRING_SIZE_DEFAULT];
 
+   strcpy_s( fileData->filePath, STRING_SIZE_DEFAULT, filePath );
    fileData->contents = 0;
-   fileData->size = 0;
+   fileData->fileSize = 0;
 
    hFile = CreateFileA( filePath, GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
 
-   if ( !hFile )
+   if ( hFile == INVALID_HANDLE_VALUE )
    {
+      // TODO: maybe log the reason it couldn't be opened (file not found, etc)
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FILEERR_OPENFILEFAILED, filePath );
+      Platform_Log( errorMsg );
       return cFalse;
    }
 
    if ( !GetFileSizeEx( hFile, &fileSize ) )
    {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FILEERR_GETFILESIZEFAILED, filePath );
+      Platform_Log( errorMsg );
       CloseHandle( hFile );
       return cFalse;
    }
 
-   fileData->size = fileSize.LowPart;
-   fileData->contents = VirtualAlloc( 0, (SIZE_T)( fileData->size ), MEM_COMMIT, PAGE_READWRITE );
+   fileData->fileSize = fileSize.LowPart;
+   fileData->contents = VirtualAlloc( 0, (SIZE_T)( fileData->fileSize ), MEM_COMMIT, PAGE_READWRITE );
 
 // not sure why it shows this warning, according to the docs the 5th param can be null
 #pragma warning(suppress : 6387)
-   if ( !ReadFileEx( hFile, fileData->contents, fileData->size, &overlapped, 0 ) )
+   if ( !ReadFileEx( hFile, fileData->contents, fileData->fileSize, &overlapped, 0 ) )
    {
       Platform_ClearFileData( fileData );
       CloseHandle( hFile );
@@ -413,7 +420,7 @@ cBool_t Platform_WriteFileData( const char* filePath, cFileData_t* fileData )
 
 // again, not sure why it shows this warning, according to the docs the 5th param can be null
 #pragma warning(suppress : 6387)
-   if ( !WriteFileEx( hFile, fileData->contents, fileData->size, &overlapped, 0 ) )
+   if ( !WriteFileEx( hFile, fileData->contents, fileData->fileSize, &overlapped, 0 ) )
    {
       CloseHandle( hFile );
       return cFalse;
@@ -425,7 +432,11 @@ cBool_t Platform_WriteFileData( const char* filePath, cFileData_t* fileData )
 
 void Platform_ClearFileData( cFileData_t* fileData )
 {
-   VirtualFree( fileData->contents, 0, MEM_RELEASE );
+   if ( fileData->contents )
+   {
+      VirtualFree( fileData->contents, 0, MEM_RELEASE );
+   }
+
    fileData->contents = 0;
-   fileData->size = 0;
+   fileData->fileSize = 0;
 }

@@ -6,7 +6,8 @@
 
 typedef struct
 {
-   uint32_t size;
+   char filePath[STRING_SIZE_DEFAULT];
+   uint32_t fileSize;
    void* contents;
 }
 cFileData_t;

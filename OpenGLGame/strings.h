@@ -11,9 +11,14 @@
 #define STR_WINERR_UNSUITABLEPIXELFORMAT  "No suitable OpenGL pixel format found."
 #define STR_WINERR_RENDERINGCONTEXT       "Failed to make OpenGL rendering context current."
 
-#define STR_WIN_WINDOWTITLE               "Testing"
+#define STR_FILEERR_OPENFILEFAILED        "File error: could not open file: %s"
+#define STR_FILEERR_GETFILESIZEFAILED     "File error: could not get file size: %s"
 
-#define STR_BMPERR_OPENFILEFAILED         "BMP error: could not open file: %s"
+#define STR_BMPERR_FILECORRUPT            "BMP error: file is corrupt: %s"
+#define STR_BMPERR_INVALIDTYPE            "BMP error: invalid type in header, only BM is allowed: %s"
+#define STR_BMPERR_HEADERCORRUPT          "BMP error: header section is corrupt: %s"
+
+#define STR_WIN_WINDOWTITLE               "Testing"
 
 #endif
 
