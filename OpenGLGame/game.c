@@ -83,7 +83,7 @@ internal void cGame_Tick( cGameData_t* gameData )
 
 internal void cGame_Render( cGameData_t* gameData )
 {
-   // NOTE: the pixel layout is 0xAARRGGBB
+   // NOTE: the pixel layout is ARGB
    uint32_t* pixel;
    uint8_t* rowBuffer;
    cScreenBuffer_t* buffer;

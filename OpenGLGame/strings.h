@@ -21,6 +21,9 @@
 #define STR_BMPERR_INVALIDCOLORPLANES     "BMP error: invalid number of color planes: %s"
 #define STR_BMPERR_INVALIDBPP             "BMP error: invalid number of bits per pixel: %s"
 #define STR_BMPERR_ISCOMPRESSED           "BMP error: compression is not currently supported: %s"
+#define STR_BMPERR_INVALIDIMAGESIZE       "BMP error: invalid image size: %s"
+#define STR_BMPERR_INVALIDPALETTECOUNT    "BMP error: invalid number of palette colors: %s"
+#define STR_BMPERR_PALETTECORRUPT         "BMP error: palette is corrupt: %s"
 
 #define STR_WIN_WINDOWTITLE               "Testing"
 
