@@ -250,7 +250,7 @@ internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, FileData_t* fileData, uint8
 
    for ( i = 0; i < bmpData->numPaletteColors; i++ )
    {
-      // convert RGBA to our ARGB format
+      // convert RGBA to ARGB format
       bmpData->paletteColors[i] = 0 |
                                   ( (uint32_t)( filePos[3] ) << 24 ) |
                                   ( (uint32_t)( filePos[2] ) << 16 ) |
@@ -266,7 +266,7 @@ internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, FileData_t* fileData )
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   if ( ( fileData->fileSize - bmpData->imageOffset ) != ( bmpData->scanlineSize * bmpData->imageHeight ) )
+   if ( ( fileData->fileSize - bmpData->imageOffset ) != ( bmpData->scanlineSize * (uint32_t)abs( bmpData->imageHeight ) ) )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
    }
@@ -276,50 +276,45 @@ internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, FileData_t* fileData )
 
 internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos, PixelBuffer_t* pixelBuffer )
 {
-   int8_t scanlineIncrement, paddingBytes, i;
+   uint8_t paddingBytes, i;
    uint16_t paletteIndex;
-   uint32_t scanlineNum, scanlineStart, imageHeight, scanlinePixelsUnread, pixelBufferIndex, scanlineByteNum, color;
+   uint32_t scanlineIndex, imageHeight, scanlinePixelsUnread, pixelBufferRowIndex, scanlineByteNum, color;
    uint32_t* pixelBuffer32;
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   scanlineIncrement = ( bmpData->imageHeight < 0 ) ? -1 : 1;
-   scanlineStart = ( bmpData->imageHeight < 0 ) ? bmpData->imageHeight - 1 : 0;
-   // TODO: test this with a negative image height
    imageHeight = (uint32_t)abs( bmpData->imageHeight );
    paddingBytes = bmpData->paddingBits / 8;
 
    pixelBuffer->width = bmpData->imageWidth;
    pixelBuffer->height = imageHeight;
    pixelBuffer->buffer = (uint8_t*)Platform_MemAlloc( bmpData->imageWidth * imageHeight * GRAPHICS_BPP );
-   pixelBuffer32 = (uint32_t*)( pixelBuffer->buffer );
 
-   scanlineNum = scanlineStart;
-   pixelBufferIndex = 0;
-
-   // TODO: is there any real way this could hang?
-   while ( 1 )
+   for ( scanlineIndex = 0; scanlineIndex < imageHeight; scanlineIndex++ )
    {
+      pixelBuffer32 = ( bmpData->imageHeight < 0 )
+         ? (uint32_t*)( pixelBuffer->buffer ) + ( bmpData->imageWidth * ( imageHeight - scanlineIndex - 1 ) )
+         : (uint32_t*)( pixelBuffer->buffer ) + ( bmpData->imageWidth * scanlineIndex );
+      pixelBufferRowIndex = 0;
       scanlinePixelsUnread = bmpData->imageWidth;
       scanlineByteNum = 0;
 
       while ( scanlineByteNum < bmpData->scanlineSize )
       {
-
          switch ( bmpData->bitsPerPixel )
          {
             case 1:
-               for ( i = 0; i < 8; i++, pixelBufferIndex++ )
+               for ( i = 0; i < 8; i++, pixelBufferRowIndex++ )
                {
                   paletteIndex = 1 & ( filePos[0] >> ( 8 - ( i + 1 ) ) );
                   if ( paletteIndex >= bmpData->numPaletteColors )
                   {
                      ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
                   }
-                  pixelBuffer32[pixelBufferIndex] = bmpData->paletteColors[paletteIndex];
+                  pixelBuffer32[pixelBufferRowIndex] = bmpData->paletteColors[paletteIndex];
                   scanlinePixelsUnread--;
                   if ( scanlinePixelsUnread == 0 )
                   {
-                     pixelBufferIndex++;
+                     pixelBufferRowIndex++;
                      break;
                   }
                }
@@ -334,8 +329,8 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
                   {
                      ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
                   }
-                  pixelBuffer32[pixelBufferIndex] = bmpData->paletteColors[paletteIndex];
-                  pixelBufferIndex++;
+                  pixelBuffer32[pixelBufferRowIndex] = bmpData->paletteColors[paletteIndex];
+                  pixelBufferRowIndex++;
                   scanlinePixelsUnread--;
                   if ( scanlinePixelsUnread == 0 )
                   {
@@ -351,19 +346,19 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
                {
                   ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
                }
-               pixelBuffer32[pixelBufferIndex] = bmpData->paletteColors[paletteIndex];
+               pixelBuffer32[pixelBufferRowIndex] = bmpData->paletteColors[paletteIndex];
                scanlinePixelsUnread--;
                scanlineByteNum++;
-               pixelBufferIndex++;
+               pixelBufferRowIndex++;
                filePos++;
                break;
             case 24:
                color = 0xFF000000 | ( (uint32_t)filePos[2] << 16 ) | ( (uint32_t)filePos[1]  << 8 ) | (uint32_t)filePos[0];
-               pixelBuffer32[pixelBufferIndex] = color;
+               pixelBuffer32[pixelBufferRowIndex] = color;
                scanlinePixelsUnread--;
                filePos += 3;
                scanlineByteNum += 3;
-               pixelBufferIndex++;
+               pixelBufferRowIndex++;
                break;
          }
 
@@ -384,13 +379,6 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
       }
 
       filePos += paddingBytes;
-      scanlineNum += scanlineIncrement;
-
-      if ( ( bmpData->imageHeight < 0 && scanlineNum <= 0 ) ||
-           ( bmpData->imageHeight > 0 && scanlineNum >= (uint32_t)( bmpData->imageHeight ) ) )
-      {
-         break;
-      }
    }
 
    return True;
