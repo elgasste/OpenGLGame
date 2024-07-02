@@ -35,7 +35,9 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    TIMECAPS timeCaps;
    UINT timerResolution;
    WNDCLASSA mainWindowClass = { 0 };
-   int bytesPerPixel;
+   DWORD windowStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE;
+   RECT expectedWindowRect = { 0 };
+   LONG clientPaddingTop, clientPaddingRight;
 
    UNUSED_PARAM( hPrevInstance );
    UNUSED_PARAM( lpCmdLine );
@@ -54,10 +56,6 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    timerResolution = min( max( timeCaps.wPeriodMin, 1 ), timeCaps.wPeriodMax );
    timeBeginPeriod( timerResolution );
 
-   bytesPerPixel = GRAPHICS_BPP / 8;
-   g_globals.screenBuffer.buffer = VirtualAlloc( 0, (SIZE_T)( SCREEN_WIDTH * SCREEN_HEIGHT ) * bytesPerPixel, MEM_COMMIT, PAGE_READWRITE );
-   g_globals.screenBuffer.pitch = SCREEN_WIDTH * bytesPerPixel;
-
    mainWindowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
    mainWindowClass.lpfnWndProc = MainWindowProc;
    mainWindowClass.hInstance = hInstance;
@@ -68,14 +66,25 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
       FatalError( STR_WINERR_REGISTERWINDOW );
    }
 
+   expectedWindowRect.right = SCREEN_WIDTH;
+   expectedWindowRect.bottom = SCREEN_HEIGHT;
+
+   if ( !AdjustWindowRect( &expectedWindowRect, windowStyle, 0 ) )
+   {
+      FatalError( STR_WINERR_ADJUSTCLIENTRECT );
+   }
+
+   clientPaddingRight = ( expectedWindowRect.right - expectedWindowRect.left ) - SCREEN_WIDTH;
+   clientPaddingTop = ( expectedWindowRect.bottom - expectedWindowRect.top ) - SCREEN_HEIGHT;
+
    g_globals.hWndMain = CreateWindowExA( 0,
                                          mainWindowClass.lpszClassName,
                                          STR_WIN_WINDOWTITLE,
-                                         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE,
+                                         windowStyle,
                                          CW_USEDEFAULT,
                                          CW_USEDEFAULT,
-                                         SCREEN_WIDTH,
-                                         SCREEN_HEIGHT,
+                                         SCREEN_WIDTH + clientPaddingRight,
+                                         SCREEN_HEIGHT + clientPaddingTop,
                                          0,
                                          0,
                                          hInstance,
@@ -85,6 +94,8 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    {
       FatalError( STR_WINERR_CREATEWINDOW );
    }
+
+   g_globals.screenBuffer.buffer = (uint8_t*)Platform_MemAlloc( (SIZE_T)( SCREEN_WIDTH * SCREEN_HEIGHT * ( GRAPHICS_BPP / 8 ) ) );
 
    InitKeyCodeMap();
    InitOpenGL( g_globals.hWndMain );

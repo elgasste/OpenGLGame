@@ -45,8 +45,6 @@ cBool_t cBmp_LoadFromFile( const char* filePath, cPixelBuffer_t* pixelBuffer )
    pixelBuffer->buffer = 0;
    pixelBuffer->width = 0;
    pixelBuffer->height = 0;
-   pixelBuffer->pitch = 0;
-   pixelBuffer->stride = 0;
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
@@ -91,8 +89,6 @@ internal void cBmp_Cleanup( cBmpData_t* bmpData, cPixelBuffer_t* pixelBuffer )
       pixelBuffer->buffer = 0;
       pixelBuffer->width = 0;
       pixelBuffer->height = 0;
-      pixelBuffer->pitch = 0;
-      pixelBuffer->stride = 0;
    }
 }
 
@@ -293,8 +289,6 @@ internal cBool_t cBmp_ReadPixelBuffer( cBmpData_t* bmpData, cFileData_t* fileDat
 
    pixelBuffer->width = bmpData->imageWidth;
    pixelBuffer->height = imageHeight;
-   pixelBuffer->pitch = SCREEN_WIDTH / ( GRAPHICS_BPP / 8 );
-   pixelBuffer->stride = bmpData->strideBits / bmpData->bitsPerPixel;
    pixelBuffer->buffer = (uint8_t*)Platform_MemAlloc( bmpData->imageWidth * imageHeight * GRAPHICS_BPP );
    pixelBuffer32 = (uint32_t*)( pixelBuffer->buffer );
 
