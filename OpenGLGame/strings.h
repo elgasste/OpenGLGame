@@ -11,6 +11,7 @@
 #define STR_WINERR_UNSUITABLEPIXELFORMAT  "No suitable OpenGL pixel format found."
 #define STR_WINERR_RENDERINGCONTEXT       "Failed to make OpenGL rendering context current."
 #define STR_WINERR_ADJUSTCLIENTRECT       "Failed to adjust the main window client size."
+#define STR_WINERR_LOGMESSAGE             "Windows error: %s"
 
 #define STR_FILEERR_OPENFILEFAILED        "File error: could not open file: %s"
 #define STR_FILEERR_GETFILESIZEFAILED     "File error: could not get file size: %s"

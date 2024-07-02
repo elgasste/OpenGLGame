@@ -107,7 +107,11 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 internal void FatalError( const char* message )
 {
-   // TODO: logging
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_WINERR_LOGMESSAGE, message );
+   Platform_Log( errorMsg );
+
    Game_EmergencySave( &( g_globals.gameData ) );
    MessageBoxA( 0, message, STR_WINERR_HEADER, MB_OK | MB_ICONERROR );
    exit( 1 );
