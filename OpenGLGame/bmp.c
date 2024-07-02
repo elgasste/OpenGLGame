@@ -177,6 +177,7 @@ internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uin
    // next 2 bytes are the number of bits per pixel
    bmpData->bitsPerPixel = ( (uint16_t*) filePos )[0];
 
+   // TODO: add support for 32 bpp bitmaps
    if ( bmpData->bitsPerPixel != 1 && bmpData->bitsPerPixel != 4 && bmpData->bitsPerPixel != 8 && bmpData->bitsPerPixel != 24 )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDBPP );
