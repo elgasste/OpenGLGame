@@ -131,6 +131,7 @@ internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_
 
 internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos )
 {
+   uint8_t leftoverBits;
    char errorMsg[STRING_SIZE_DEFAULT];
 
    if ( fileData->fileSize < ( BMP_HEADER_SIZE + 4 ) )
@@ -215,7 +216,8 @@ internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uin
    }
 
    bmpData->strideBits = bmpData->imageWidth * bmpData->bitsPerPixel;
-   bmpData->paddingBits = bmpData->strideBits % 32;
+   leftoverBits = (uint8_t)( bmpData->strideBits % 32 );
+   bmpData->paddingBits = ( leftoverBits == 0 ) ? 0 : 32 - leftoverBits;
    bmpData->scanlineSize = ( bmpData->strideBits + bmpData->paddingBits ) / 8;
 
    return True;
@@ -272,8 +274,6 @@ internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, FileData_t* fileData )
    return True;
 }
 
-// TODO: test this function with width and heigh values that need padding bytes.
-// TODO: it seems that we're not drawing the entire bitmap, the right side gets cut off, figure that out.
 internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos, PixelBuffer_t* pixelBuffer )
 {
    int8_t scanlineIncrement, paddingBytes, i;
@@ -304,10 +304,6 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
 
       while ( scanlineByteNum < bmpData->scanlineSize )
       {
-         if ( scanlinePixelsUnread == 0 )
-         {
-            ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
-         }
 
          switch ( bmpData->bitsPerPixel )
          {
@@ -331,7 +327,6 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
                filePos++;
                break;
             case 4:
-               // TODO: test this with a width that has padding bits
                for ( i = 0; i < 2; i++ )
                {
                   paletteIndex = ( i == 0 ) ? ( filePos[0] >> 4 ) : ( filePos[0] & 0xF );
@@ -351,7 +346,6 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
                filePos++;
                break;
             case 8:
-               // TODO: test this with a width that has padding bits
                paletteIndex = filePos[0];
                if ( paletteIndex >= bmpData->numPaletteColors )
                {
@@ -364,7 +358,6 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
                filePos++;
                break;
             case 24:
-               // TODO: test this with a width that has padding bits
                color = 0xFF000000 | ( (uint32_t)filePos[2] << 16 ) | ( (uint32_t)filePos[1]  << 8 ) | (uint32_t)filePos[0];
                pixelBuffer32[pixelBufferIndex] = color;
                scanlinePixelsUnread--;
@@ -372,6 +365,16 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
                scanlineByteNum += 3;
                pixelBufferIndex++;
                break;
+         }
+
+         if ( scanlinePixelsUnread == 0 )
+         {
+            scanlineByteNum += paddingBytes;
+
+            if ( scanlineByteNum != bmpData->scanlineSize )
+            {
+               ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+            }
          }
       }
 
