@@ -46,13 +46,10 @@
     <ClInclude Include="input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="screen_buffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="bmp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="image_buffer.h">
+    <ClInclude Include="pixel_buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

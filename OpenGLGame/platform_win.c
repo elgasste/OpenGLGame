@@ -13,7 +13,7 @@
 typedef struct
 {
    HWND hWndMain;
-   cScreenBuffer_t screenBuffer;
+   cPixelBuffer_t screenBuffer;
    GLuint screenTexture;
    cGameData_t gameData;
    LARGE_INTEGER performanceFrequency;
@@ -55,8 +55,8 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    timeBeginPeriod( timerResolution );
 
    bytesPerPixel = GRAPHICS_BPP / 8;
-   g_globals.screenBuffer.memory = VirtualAlloc( 0, (SIZE_T)( SCREEN_BUFFER_WIDTH * SCREEN_BUFFER_HEIGHT ) * bytesPerPixel, MEM_COMMIT, PAGE_READWRITE );
-   g_globals.screenBuffer.pitch = SCREEN_BUFFER_WIDTH * bytesPerPixel;
+   g_globals.screenBuffer.buffer = VirtualAlloc( 0, (SIZE_T)( SCREEN_WIDTH * SCREEN_HEIGHT ) * bytesPerPixel, MEM_COMMIT, PAGE_READWRITE );
+   g_globals.screenBuffer.pitch = SCREEN_WIDTH * bytesPerPixel;
 
    mainWindowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
    mainWindowClass.lpfnWndProc = MainWindowProc;
@@ -74,8 +74,8 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                                          WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE,
                                          CW_USEDEFAULT,
                                          CW_USEDEFAULT,
-                                         SCREEN_BUFFER_WIDTH,
-                                         SCREEN_BUFFER_HEIGHT,
+                                         SCREEN_WIDTH,
+                                         SCREEN_HEIGHT,
                                          0,
                                          0,
                                          hInstance,
@@ -196,24 +196,24 @@ internal void RenderWindow( HDC dc )
 {
    GLfloat modelMatrix[] = 
    {
-      2.0f / SCREEN_BUFFER_WIDTH, 0.0f, 0.0f, 0.0f,
-      0.0f, 2.0f / SCREEN_BUFFER_HEIGHT, 0.0f, 0.0f,
+      2.0f / SCREEN_WIDTH, 0.0f, 0.0f, 0.0f,
+      0.0f, 2.0f / SCREEN_HEIGHT, 0.0f, 0.0f,
       0.0f, 0.0f, 1.0f, 0.0f,
       -1.0f, -1.0f, 0.0f, 1.0f
    };
 
-   glViewport( 0, 0, SCREEN_BUFFER_WIDTH, SCREEN_BUFFER_HEIGHT );
+   glViewport( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
 
    glBindTexture( GL_TEXTURE_2D, g_globals.screenTexture );
    glTexImage2D( GL_TEXTURE_2D,
                  0,
                  GL_RGBA8,
-                 SCREEN_BUFFER_WIDTH,
-                 SCREEN_BUFFER_HEIGHT,
+                 SCREEN_WIDTH,
+                 SCREEN_HEIGHT,
                  0,
                  GL_BGRA_EXT,
                  GL_UNSIGNED_BYTE,
-                 g_globals.screenBuffer.memory );
+                 (GLvoid*)( g_globals.screenBuffer.buffer ) );
 
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
@@ -244,17 +244,17 @@ internal void RenderWindow( HDC dc )
    glTexCoord2f( 0.0f, 0.0f );
    glVertex2f( 0.0f, 0.0f );
    glTexCoord2f( 1.0f, 0.0f );
-   glVertex2f( SCREEN_BUFFER_WIDTH, 0.0f );
+   glVertex2f( SCREEN_WIDTH, 0.0f );
    glTexCoord2f( 1.0f, 1.0f );
-   glVertex2f( SCREEN_BUFFER_WIDTH, SCREEN_BUFFER_HEIGHT );
+   glVertex2f( SCREEN_WIDTH, SCREEN_HEIGHT );
 
    // upper triangle
    glTexCoord2f( 0.0f, 0.0f );
    glVertex2f( 0.0f, 0.0f );
    glTexCoord2f( 1.0f, 1.0f );
-   glVertex2f( SCREEN_BUFFER_WIDTH, SCREEN_BUFFER_HEIGHT );
+   glVertex2f( SCREEN_WIDTH, SCREEN_HEIGHT );
    glTexCoord2f( 0.0f, 1.0f );
-   glVertex2f( 0.0f, SCREEN_BUFFER_HEIGHT );
+   glVertex2f( 0.0f, SCREEN_HEIGHT );
 
    glEnd();
 
@@ -329,7 +329,7 @@ void Platform_Tick()
    }
 }
 
-cScreenBuffer_t* Platform_GetScreenBuffer()
+cPixelBuffer_t* Platform_GetScreenBuffer()
 {
    return &( g_globals.screenBuffer );
 }

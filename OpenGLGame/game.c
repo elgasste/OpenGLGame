@@ -86,30 +86,30 @@ internal void cGame_Render( cGameData_t* gameData )
    // NOTE: the pixel layout is ARGB
    uint32_t* pixel;
    uint8_t* rowBuffer;
-   cScreenBuffer_t* buffer;
+   cPixelBuffer_t* screenBuffer;
    uint32_t r, g, b;
    int x, y;
 
    UNUSED_PARAM( gameData );
 
-   buffer = Platform_GetScreenBuffer();
-   rowBuffer = (uint8_t*)buffer->memory;
+   screenBuffer = Platform_GetScreenBuffer();
+   rowBuffer = screenBuffer->buffer;
 
-   for ( y = 0; y < SCREEN_BUFFER_HEIGHT; y++ )
+   for ( y = 0; y < SCREEN_HEIGHT; y++ )
    {
-      b = (int)( (float)y / ( SCREEN_BUFFER_HEIGHT + 1 ) * 255 );
+      b = (int)( (float)y / ( SCREEN_HEIGHT + 1 ) * 255 );
       r = 255 - b;
       pixel = (uint32_t*)rowBuffer;
 
-      for ( x = 0; x < SCREEN_BUFFER_WIDTH; x++ )
+      for ( x = 0; x < SCREEN_WIDTH; x++ )
       {
-         g = (int)( (float)x / ( SCREEN_BUFFER_WIDTH + 1 ) * 255 );
+         g = (int)( (float)x / ( SCREEN_WIDTH + 1 ) * 255 );
 
          *pixel = 0xFF000000 | b | ( g << 8 ) | ( r << 16 );
          pixel++;
       }
 
-      rowBuffer += buffer->pitch;
+      rowBuffer += screenBuffer->pitch;
    }
 
    Platform_RenderScreen();
