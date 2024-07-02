@@ -2,6 +2,7 @@
 #define BMP_H
 
 #include "common.h"
+#include "image_buffer.h"
 
 #define BMP_HEADER_SIZE                14
 #define BMP_BITMAPINFOHEADER_SIZE      40
@@ -11,12 +12,17 @@ typedef struct
 {
    uint32_t dibHeaderSize;
    uint32_t imageOffset;
-   int32_t width;
-   int32_t height;
+   int32_t imageWidth;
+   int32_t imageHeight;
    uint16_t bitsPerPixel;
+   uint32_t strideBits;
+   uint8_t paddingBits;
+   uint32_t scanlineSize;
    uint32_t imageBytes;
    uint32_t numPaletteColors;
    uint32_t* paletteColors;
+
+   cImageBuffer_t imageBuffer;
 }
 cBmpData_t;
 

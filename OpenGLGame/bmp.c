@@ -11,13 +11,17 @@
 internal cBool_t cBmp_ReadHeader( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos );
 internal cBool_t cBmp_ReadDIBHeader( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos );
 internal cBool_t cBmp_ReadPalette( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos );
+internal cBool_t cBmp_VerifyDataSize( cBmpData_t* bmpData, cFileData_t* fileData );
+internal cBool_t cBmp_ReadImageBuffer( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos );
 
 cBool_t cBmp_LoadFromFile( cBmpData_t* bmpData, const char* filePath )
 {
    cFileData_t fileData;
+   uint8_t* fileStartPos;
    uint8_t* filePos;
 
    bmpData->paletteColors = 0;
+   bmpData->imageBuffer.buffer = 0;
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
@@ -25,34 +29,26 @@ cBool_t cBmp_LoadFromFile( cBmpData_t* bmpData, const char* filePath )
    }
 
    filePos = (uint8_t*)fileData.contents;
+   fileStartPos = filePos;
 
-   if ( !cBmp_ReadHeader( bmpData, &fileData, filePos ) )
+   if ( !cBmp_ReadHeader( bmpData, &fileData, filePos ) ||
+        !cBmp_ReadDIBHeader( bmpData, &fileData, filePos + BMP_HEADER_SIZE ) )
    {
+      Platform_ClearFileData( &fileData );
       return cFalse;
    }
 
-   filePos += BMP_HEADER_SIZE;
+   filePos += BMP_HEADER_SIZE + bmpData->dibHeaderSize;
 
-   if ( !cBmp_ReadDIBHeader( bmpData, &fileData, filePos ) )
-   {
-      return cFalse;
-   }
-
-   filePos += bmpData->dibHeaderSize;
-
-   if ( !cBmp_ReadPalette( bmpData, &fileData, filePos ) )
+   if ( !cBmp_ReadPalette( bmpData, &fileData, filePos ) ||
+        !cBmp_VerifyDataSize( bmpData, &fileData ) ||
+        !cBmp_ReadImageBuffer( bmpData, &fileData, ( fileStartPos + bmpData->imageOffset ) ) )
    {
       cBmp_Cleanup( bmpData );
+      Platform_ClearFileData( &fileData );
       return cFalse;
    }
 
-   // TODO:
-   //
-   // - calculate the stride and padding bytes
-   // - verify the file size matches what we'd expect from the DIB header
-   // - read the image data into a pixel buffer in our 0xAARRGGBB format
-
-   Platform_ClearFileData( &fileData );
    return cTrue;
 }
 
@@ -62,6 +58,12 @@ void cBmp_Cleanup( cBmpData_t* bmpData )
    {
       Platform_MemFree( bmpData->paletteColors );
       bmpData->paletteColors = 0;
+   }
+
+   if ( bmpData->imageBuffer.buffer )
+   {
+      Platform_MemFree( bmpData->imageBuffer.buffer );
+      bmpData->imageBuffer.buffer = 0;
    }
 }
 
@@ -129,10 +131,10 @@ internal cBool_t cBmp_ReadDIBHeader( cBmpData_t* bmpData, cFileData_t* fileData,
    filePos += 4;
 
    // next 8 bytes are the width and height, respectively (height can be negative)
-   bmpData->width = ( (int32_t*)filePos )[0];
-   bmpData->height = ( (int32_t*)filePos )[1];
+   bmpData->imageWidth = ( (int32_t*)filePos )[0];
+   bmpData->imageHeight = ( (int32_t*)filePos )[1];
 
-   if ( bmpData->width <= 0 || bmpData->height == 0 )
+   if ( bmpData->imageWidth <= 0 || bmpData->imageHeight == 0 )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDIMAGESIZE );
    }
@@ -186,6 +188,10 @@ internal cBool_t cBmp_ReadDIBHeader( cBmpData_t* bmpData, cFileData_t* fileData,
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDPALETTECOUNT );
    }
 
+   bmpData->strideBits = bmpData->imageWidth * bmpData->bitsPerPixel;
+   bmpData->paddingBits = bmpData->strideBits % 32;
+   bmpData->scanlineSize = ( bmpData->strideBits + bmpData->paddingBits ) / 8;
+
    return cTrue;
 }
 
@@ -219,10 +225,145 @@ internal cBool_t cBmp_ReadPalette( cBmpData_t* bmpData, cFileData_t* fileData, u
       // convert RGBA to our ARGB format
       bmpData->paletteColors[i] = 0 |
                                   ( (uint32_t)( filePos[3] ) << 24 ) |
-                                  ( (uint32_t)( filePos[0] ) << 16 ) |
+                                  ( (uint32_t)( filePos[2] ) << 16 ) |
                                   ( (uint32_t)( filePos[1] ) << 8 ) |
-                                  (uint32_t)( filePos[2] );
+                                  (uint32_t)( filePos[0] );
       filePos += 4;
+   }
+
+   return cTrue;
+}
+
+internal cBool_t cBmp_VerifyDataSize( cBmpData_t* bmpData, cFileData_t* fileData )
+{
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   if ( ( fileData->fileSize - bmpData->imageOffset ) != ( bmpData->scanlineSize * bmpData->imageHeight ) )
+   {
+      ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+   }
+
+   return cTrue;
+}
+
+// TODO: test this function with width and heigh values that need padding bytes
+internal cBool_t cBmp_ReadImageBuffer( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos )
+{
+   int8_t scanlineIncrement, paddingBytes, i;
+   uint16_t paletteIndex;
+   uint32_t scanlineNum, scanlineStart, imageHeight, scanlinePixelsUnread, imageBufferIndex, scanlineByteNum, color;
+   uint32_t* imageBuffer32;
+   char errorMsg[STRING_SIZE_DEFAULT];
+
+   scanlineIncrement = ( bmpData->imageHeight < 0 ) ? -1 : 1;
+   scanlineStart = ( bmpData->imageHeight < 0 ) ? bmpData->imageHeight - 1 : 0;
+   // TODO: test this with a negative image height
+   imageHeight = (uint32_t)abs( bmpData->imageHeight );
+   paddingBytes = bmpData->paddingBits / 8;
+
+   bmpData->imageBuffer.buffer = (uint8_t*)Platform_MemAlloc( bmpData->imageWidth * imageHeight * GRAPHICS_BPP );
+   imageBuffer32 = (uint32_t*)( bmpData->imageBuffer.buffer );
+
+   scanlineNum = scanlineStart;
+   imageBufferIndex = 0;
+
+   // TODO: is there any real way this could hang?
+   while ( 1 )
+   {
+      scanlinePixelsUnread = bmpData->imageWidth;
+      scanlineByteNum = 0;
+
+      while ( scanlineByteNum < bmpData->scanlineSize )
+      {
+         if ( scanlinePixelsUnread == 0 )
+         {
+            cBmp_Cleanup( bmpData );
+            ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+         }
+
+         switch ( bmpData->bitsPerPixel )
+         {
+            case 1:
+               for ( i = 0; i < 8; i++, imageBufferIndex++ )
+               {
+                  paletteIndex = 1 & ( filePos[0] >> ( 8 - ( i + 1 ) ) );
+                  if ( paletteIndex >= bmpData->numPaletteColors )
+                  {
+                     cBmp_Cleanup( bmpData );
+                     ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+                  }
+                  imageBuffer32[imageBufferIndex] = bmpData->paletteColors[paletteIndex];
+                  scanlinePixelsUnread--;
+                  if ( scanlinePixelsUnread == 0 )
+                  {
+                     imageBufferIndex++;
+                     break;
+                  }
+               }
+               scanlineByteNum++;
+               filePos++;
+               break;
+            case 4:
+               // TODO: test this with a width that has padding bits
+               for ( i = 0; i < 2; i++ )
+               {
+                  paletteIndex = ( i == 0 ) ? ( filePos[0] >> 4 ) : ( filePos[0] & 0xF );
+                  if ( paletteIndex >= bmpData->numPaletteColors )
+                  {
+                     cBmp_Cleanup( bmpData );
+                     ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+                  }
+                  imageBuffer32[imageBufferIndex] = bmpData->paletteColors[paletteIndex];
+                  imageBufferIndex++;
+                  scanlinePixelsUnread--;
+                  if ( scanlinePixelsUnread == 0 )
+                  {
+                     break;
+                  }
+               }
+               scanlineByteNum++;
+               filePos++;
+               break;
+            case 8:
+               // TODO: test this with a width that has padding bits
+               paletteIndex = filePos[0];
+               if ( paletteIndex >= bmpData->numPaletteColors )
+               {
+                  cBmp_Cleanup( bmpData );
+                  ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+               }
+               imageBuffer32[imageBufferIndex] = bmpData->paletteColors[paletteIndex];
+               scanlinePixelsUnread--;
+               scanlineByteNum++;
+               imageBufferIndex++;
+               filePos++;
+               break;
+            case 24:
+               // TODO: test this with a width that has padding bits
+               color = 0xFF000000 | ( (uint32_t)filePos[2] << 16 ) | ( (uint32_t)filePos[1]  << 8 ) | (uint32_t)filePos[0];
+               imageBuffer32[imageBufferIndex] = color;
+               scanlinePixelsUnread--;
+               filePos += 3;
+               scanlineByteNum += 3;
+               imageBufferIndex++;
+               break;
+         }
+      }
+
+      if ( scanlinePixelsUnread != 0 )
+      {
+         cBmp_Cleanup( bmpData );
+         ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+      }
+
+      filePos += paddingBytes;
+      scanlineNum += scanlineIncrement;
+
+      if ( ( bmpData->imageHeight < 0 && scanlineNum <= 0 ) ||
+           ( bmpData->imageHeight > 0 && scanlineNum >= (uint32_t)( bmpData->imageHeight ) ) )
+      {
+         break;
+      }
    }
 
    return cTrue;
