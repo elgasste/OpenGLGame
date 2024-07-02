@@ -5,31 +5,31 @@
 
 typedef enum
 {
-   cKeyCode_Left = 0,
-   cKeyCode_Up,
-   cKeyCode_Right,
-   cKeyCode_Down,
+   KeyCode_Left = 0,
+   KeyCode_Up,
+   KeyCode_Right,
+   KeyCode_Down,
 
-   cKeyCode_Escape,
+   KeyCode_Escape,
 
-   cKeyCode_Count
+   KeyCode_Count
 }
-cKeyCode_t;
+KeyCode_t;
 
 typedef struct
 {
-   cBool_t isDown;
-   cBool_t wasDown;
+   Bool_t isDown;
+   Bool_t wasDown;
 }
-cKeyState_t;
+KeyState_t;
 
-void cInput_Init( cKeyState_t* keyStates );
-void cInput_UpdateStates( cKeyState_t* keyStates );
-void cInput_PressKey( cKeyState_t* keyStates, cKeyCode_t keyCode );
-void cInput_ReleaseKey( cKeyState_t* keyStates, cKeyCode_t keyCode );
-cBool_t cInput_WasKeyPressed( cKeyState_t* keyStates, cKeyCode_t keyCode );
-cBool_t cInput_WasKeyReleased( cKeyState_t* keyStates, cKeyCode_t keyCode );
-cBool_t cInput_IsAnyKeyDown( cKeyState_t* keyStates );
-cBool_t cInput_WasAnyKeyPressed( cKeyState_t* keyStates );
+void Input_Init( KeyState_t* keyStates );
+void Input_UpdateStates( KeyState_t* keyStates );
+void Input_PressKey( KeyState_t* keyStates, KeyCode_t keyCode );
+void Input_ReleaseKey( KeyState_t* keyStates, KeyCode_t keyCode );
+Bool_t Input_WasKeyPressed( KeyState_t* keyStates, KeyCode_t keyCode );
+Bool_t Input_WasKeyReleased( KeyState_t* keyStates, KeyCode_t keyCode );
+Bool_t Input_IsAnyKeyDown( KeyState_t* keyStates );
+Bool_t Input_WasAnyKeyPressed( KeyState_t* keyStates );
 
 #endif

@@ -1,34 +1,34 @@
 #include "game.h"
 #include "platform.h"
 
-internal void cGame_HandleInput( cGameData_t* gameData );
-internal void cGame_Tick( cGameData_t* gameData );
-internal void cGame_Render( cGameData_t* gameData );
+internal void Game_HandleInput( GameData_t* gameData );
+internal void Game_Tick( GameData_t* gameData );
+internal void Game_Render( GameData_t* gameData );
 
-void cGame_Init( cGameData_t* gameData )
+void Game_Init( GameData_t* gameData )
 {
-   cClock_Init( &( gameData->clock ) );
-   cInput_Init( gameData->keyStates );
+   Clock_Init( &( gameData->clock ) );
+   Input_Init( gameData->keyStates );
 
-   gameData->isRunning = cFalse;
-   gameData->isEngineRunning = cTrue;
+   gameData->isRunning = False;
+   gameData->isEngineRunning = True;
 }
 
-void cGame_Run( cGameData_t* gameData )
+void Game_Run( GameData_t* gameData )
 {
-   gameData->isRunning = cTrue;
+   gameData->isRunning = True;
 
    while ( gameData->isRunning )
    {
       if ( gameData->isEngineRunning )
       {
-         cClock_StartFrame( &( gameData->clock ) );
-         cInput_UpdateStates( gameData->keyStates );
+         Clock_StartFrame( &( gameData->clock ) );
+         Input_UpdateStates( gameData->keyStates );
          Platform_Tick();
-         cGame_HandleInput( gameData );
-         cGame_Tick( gameData );
-         cGame_Render( gameData );
-         cClock_EndFrame( &( gameData->clock ) );
+         Game_HandleInput( gameData );
+         Game_Tick( gameData );
+         Game_Render( gameData );
+         Clock_EndFrame( &( gameData->clock ) );
       }
       else
       {
@@ -37,55 +37,55 @@ void cGame_Run( cGameData_t* gameData )
    }
 }
 
-void cGame_PauseEngine( cGameData_t* gameData )
+void Game_PauseEngine( GameData_t* gameData )
 {
    if ( gameData->isEngineRunning )
    {
-      cClock_Pause( &( gameData->clock ) );
-      gameData->isEngineRunning = cFalse;
+      Clock_Pause( &( gameData->clock ) );
+      gameData->isEngineRunning = False;
    }
 }
 
-void cGame_ResumeEngine( cGameData_t* gameData )
+void Game_ResumeEngine( GameData_t* gameData )
 {
    if ( !gameData->isEngineRunning )
    {
-      gameData->isEngineRunning = cTrue;
-      cClock_Resume( &( gameData->clock ) );
+      gameData->isEngineRunning = True;
+      Clock_Resume( &( gameData->clock ) );
    }
 }
 
-void cGame_EmergencySave( cGameData_t* gameData )
+void Game_EmergencySave( GameData_t* gameData )
 {
    // NOTE: this means something went wrong, we should try to salvage whatever we can
-   gameData->isRunning = cFalse;
+   gameData->isRunning = False;
 }
 
-void cGame_TryClose( cGameData_t* gameData )
+void Game_TryClose( GameData_t* gameData )
 {
    // NOTE: the user could be trying to exit the game prematurely,
    // so give them the chance to save or whatever before it happens.
-   gameData->isRunning = cFalse;
+   gameData->isRunning = False;
 }
 
-internal void cGame_HandleInput( cGameData_t* gameData )
+internal void Game_HandleInput( GameData_t* gameData )
 {
-   if ( cInput_WasKeyPressed( gameData->keyStates, cKeyCode_Escape ) )
+   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
    {
-      cGame_TryClose( gameData );
+      Game_TryClose( gameData );
    }
 }
 
-internal void cGame_Tick( cGameData_t* gameData )
+internal void Game_Tick( GameData_t* gameData )
 {
    UNUSED_PARAM( gameData );
 }
 
-internal void cGame_Render( cGameData_t* gameData )
+internal void Game_Render( GameData_t* gameData )
 {
    // NOTE: the pixel layout is ARGB
    uint32_t* pixel;
-   cPixelBuffer_t* screenBuffer;
+   PixelBuffer_t* screenBuffer;
    uint32_t r, g, b;
    int x, y;
 

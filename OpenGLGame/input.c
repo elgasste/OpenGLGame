@@ -1,76 +1,76 @@
 #include "input.h"
 
-void cInput_Init( cKeyState_t* keyStates )
+void Input_Init( KeyState_t* keyStates )
 {
    int i;
-   cKeyState_t* state = keyStates;
+   KeyState_t* state = keyStates;
 
-   for ( i = 0; i < (int)cKeyCode_Count; i++ )
+   for ( i = 0; i < (int)KeyCode_Count; i++ )
    {
-      state->isDown = cFalse;
-      state->wasDown = cFalse;
+      state->isDown = False;
+      state->wasDown = False;
       state++;
    }
 }
 
-void cInput_UpdateStates( cKeyState_t* keyStates )
+void Input_UpdateStates( KeyState_t* keyStates )
 {
    int i;
-   cKeyState_t* state = keyStates;
+   KeyState_t* state = keyStates;
 
-   for ( i = 0; i < (int)cKeyCode_Count; i++ )
+   for ( i = 0; i < (int)KeyCode_Count; i++ )
    {
       state->wasDown = state->isDown;
       state++;
    }
 }
 
-void cInput_PressKey( cKeyState_t* keyStates, cKeyCode_t keyCode )
+void Input_PressKey( KeyState_t* keyStates, KeyCode_t keyCode )
 {
-   keyStates[(int)keyCode].isDown = cTrue;
+   keyStates[(int)keyCode].isDown = True;
 }
 
-void cInput_ReleaseKey( cKeyState_t* keyStates, cKeyCode_t keyCode )
+void Input_ReleaseKey( KeyState_t* keyStates, KeyCode_t keyCode )
 {
-   keyStates[(int)keyCode].isDown = cFalse;
+   keyStates[(int)keyCode].isDown = False;
 }
 
-cBool_t cInput_WasKeyPressed( cKeyState_t* keyStates, cKeyCode_t keyCode )
+Bool_t Input_WasKeyPressed( KeyState_t* keyStates, KeyCode_t keyCode )
 {
    return keyStates[(int)keyCode].isDown && !keyStates[(int)keyCode].wasDown;
 }
 
-cBool_t cInput_WasKeyReleased( cKeyState_t* keyStates, cKeyCode_t keyCode )
+Bool_t Input_WasKeyReleased( KeyState_t* keyStates, KeyCode_t keyCode )
 {
    return !keyStates[(int)keyCode].isDown && keyStates[(int)keyCode].wasDown;
 }
 
-cBool_t cInput_IsAnyKeyDown( cKeyState_t* keyStates )
+Bool_t Input_IsAnyKeyDown( KeyState_t* keyStates )
 {
    int i;
 
-   for ( i = 0; i < (int)cKeyCode_Count; i++ )
+   for ( i = 0; i < (int)KeyCode_Count; i++ )
    {
       if ( keyStates[i].isDown )
       {
-         return cTrue;
+         return True;
       }
    }
 
-   return cFalse;
+   return False;
 }
 
-cBool_t cInput_WasAnyKeyPressed( cKeyState_t* keyStates )
+Bool_t Input_WasAnyKeyPressed( KeyState_t* keyStates )
 {
    int i;
 
-   for ( i = 0; i < (int)cKeyCode_Count; i++ )
+   for ( i = 0; i < (int)KeyCode_Count; i++ )
    {
-      if ( cInput_WasKeyPressed( keyStates, (cKeyCode_t)i ) )
+      if ( Input_WasKeyPressed( keyStates, (KeyCode_t)i ) )
       {
-         return cTrue;
+         return True;
       }
    }
 
-   return cFalse;
+   return False;
 }

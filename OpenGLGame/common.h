@@ -14,10 +14,10 @@
 // use this to suppress unused parameter warnings
 #define UNUSED_PARAM( x ) (void)x
 
-typedef int32_t cBool_t;
-#define cTrue 1
-#define cFalse 0
-#define TOGGLE_BOOL( x ) x = ( x ) ? cFalse : cTrue
+typedef int32_t Bool_t;
+#define True 1
+#define False 0
+#define TOGGLE_BOOL( x ) x = ( x ) ? False : True
 
 #define STRING_SIZE_DEFAULT      1024
 

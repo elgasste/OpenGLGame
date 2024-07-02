@@ -10,7 +10,7 @@
 #define ERROR_RETURN_FALSE( s ) \
    snprintf( errorMsg, STRING_SIZE_DEFAULT, s, fileData->filePath ); \
    Platform_Log( errorMsg ); \
-   return cFalse
+   return False
 
 typedef struct
 {
@@ -26,19 +26,19 @@ typedef struct
    uint32_t numPaletteColors;
    uint32_t* paletteColors;
 }
-cBmpData_t;
+BmpData_t;
 
-internal void cBmp_Cleanup( cBmpData_t* bmpData, cPixelBuffer_t* pixelBuffer );
-internal cBool_t cBmp_ReadHeader( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos );
-internal cBool_t cBmp_ReadDIBHeader( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos );
-internal cBool_t cBmp_ReadPalette( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos );
-internal cBool_t cBmp_VerifyDataSize( cBmpData_t* bmpData, cFileData_t* fileData );
-internal cBool_t cBmp_ReadPixelBuffer( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos, cPixelBuffer_t* pixelBuffer );
+internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer );
+internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos );
+internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos );
+internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos );
+internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, FileData_t* fileData );
+internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos, PixelBuffer_t* pixelBuffer );
 
-cBool_t cBmp_LoadFromFile( const char* filePath, cPixelBuffer_t* pixelBuffer )
+Bool_t Bmp_LoadFromFile( const char* filePath, PixelBuffer_t* pixelBuffer )
 {
-   cFileData_t fileData;
-   cBmpData_t bmpData = { 0 };
+   FileData_t fileData;
+   BmpData_t bmpData = { 0 };
    uint8_t* fileStartPos;
    uint8_t* filePos;
 
@@ -48,34 +48,34 @@ cBool_t cBmp_LoadFromFile( const char* filePath, cPixelBuffer_t* pixelBuffer )
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
-      return cFalse;
+      return False;
    }
 
    filePos = (uint8_t*)fileData.contents;
    fileStartPos = filePos;
 
-   if ( !cBmp_ReadHeader( &bmpData, &fileData, filePos ) ||
-        !cBmp_ReadDIBHeader( &bmpData, &fileData, filePos + BMP_HEADER_SIZE ) )
+   if ( !Bmp_ReadHeader( &bmpData, &fileData, filePos ) ||
+        !Bmp_ReadDIBHeader( &bmpData, &fileData, filePos + BMP_HEADER_SIZE ) )
    {
       Platform_ClearFileData( &fileData );
-      return cFalse;
+      return False;
    }
 
    filePos += BMP_HEADER_SIZE + bmpData.dibHeaderSize;
 
-   if ( !cBmp_ReadPalette( &bmpData, &fileData, filePos ) ||
-        !cBmp_VerifyDataSize( &bmpData, &fileData ) ||
-        !cBmp_ReadPixelBuffer( &bmpData, &fileData, ( fileStartPos + bmpData.imageOffset ), pixelBuffer ) )
+   if ( !Bmp_ReadPalette( &bmpData, &fileData, filePos ) ||
+        !Bmp_VerifyDataSize( &bmpData, &fileData ) ||
+        !Bmp_ReadPixelBuffer( &bmpData, &fileData, ( fileStartPos + bmpData.imageOffset ), pixelBuffer ) )
    {
-      cBmp_Cleanup( &bmpData, pixelBuffer );
+      Bmp_Cleanup( &bmpData, pixelBuffer );
       Platform_ClearFileData( &fileData );
-      return cFalse;
+      return False;
    }
 
-   return cTrue;
+   return True;
 }
 
-internal void cBmp_Cleanup( cBmpData_t* bmpData, cPixelBuffer_t* pixelBuffer )
+internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer )
 {
    if ( bmpData->paletteColors )
    {
@@ -92,7 +92,7 @@ internal void cBmp_Cleanup( cBmpData_t* bmpData, cPixelBuffer_t* pixelBuffer )
    }
 }
 
-internal cBool_t cBmp_ReadHeader( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos )
+internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos )
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
@@ -126,10 +126,10 @@ internal cBool_t cBmp_ReadHeader( cBmpData_t* bmpData, cFileData_t* fileData, ui
       ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
    }
 
-   return cTrue;
+   return True;
 }
 
-internal cBool_t cBmp_ReadDIBHeader( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos )
+internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos )
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
@@ -217,10 +217,10 @@ internal cBool_t cBmp_ReadDIBHeader( cBmpData_t* bmpData, cFileData_t* fileData,
    bmpData->paddingBits = bmpData->strideBits % 32;
    bmpData->scanlineSize = ( bmpData->strideBits + bmpData->paddingBits ) / 8;
 
-   return cTrue;
+   return True;
 }
 
-internal cBool_t cBmp_ReadPalette( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos )
+internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos )
 {
    uint32_t i;
    uint32_t paletteSize;
@@ -228,7 +228,7 @@ internal cBool_t cBmp_ReadPalette( cBmpData_t* bmpData, cFileData_t* fileData, u
 
    if ( bmpData->numPaletteColors == 0 )
    {
-      return cTrue;
+      return True;
    }
 
    paletteSize = bmpData->imageOffset - ( BMP_HEADER_SIZE + bmpData->dibHeaderSize );
@@ -256,10 +256,10 @@ internal cBool_t cBmp_ReadPalette( cBmpData_t* bmpData, cFileData_t* fileData, u
       filePos += 4;
    }
 
-   return cTrue;
+   return True;
 }
 
-internal cBool_t cBmp_VerifyDataSize( cBmpData_t* bmpData, cFileData_t* fileData )
+internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, FileData_t* fileData )
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
@@ -268,12 +268,12 @@ internal cBool_t cBmp_VerifyDataSize( cBmpData_t* bmpData, cFileData_t* fileData
       ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
    }
 
-   return cTrue;
+   return True;
 }
 
 // TODO: test this function with width and heigh values that need padding bytes.
 // TODO: it seems that we're not drawing the entire bitmap, the right side gets cut off, figure that out.
-internal cBool_t cBmp_ReadPixelBuffer( cBmpData_t* bmpData, cFileData_t* fileData, uint8_t* filePos, cPixelBuffer_t* pixelBuffer )
+internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos, PixelBuffer_t* pixelBuffer )
 {
    int8_t scanlineIncrement, paddingBytes, i;
    uint16_t paletteIndex;
@@ -389,5 +389,5 @@ internal cBool_t cBmp_ReadPixelBuffer( cBmpData_t* bmpData, cFileData_t* fileDat
       }
    }
 
-   return cTrue;
+   return True;
 }

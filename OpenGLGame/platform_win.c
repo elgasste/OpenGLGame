@@ -13,11 +13,11 @@
 typedef struct
 {
    HWND hWndMain;
-   cPixelBuffer_t screenBuffer;
+   PixelBuffer_t screenBuffer;
    GLuint screenTexture;
-   cGameData_t gameData;
+   GameData_t gameData;
    LARGE_INTEGER performanceFrequency;
-   uint32_t keyCodeMap[(int)cKeyCode_Count];
+   uint32_t keyCodeMap[(int)KeyCode_Count];
 }
 cGlobalObjects_t;
 
@@ -99,8 +99,8 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
    InitKeyCodeMap();
    InitOpenGL( g_globals.hWndMain );
-   cGame_Init( &( g_globals.gameData ) );
-   cGame_Run( &( g_globals.gameData ) );
+   Game_Init( &( g_globals.gameData ) );
+   Game_Run( &( g_globals.gameData ) );
 
    return 0;
 }
@@ -108,18 +108,18 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 internal void FatalError( const char* message )
 {
    // TODO: logging
-   cGame_EmergencySave( &( g_globals.gameData ) );
+   Game_EmergencySave( &( g_globals.gameData ) );
    MessageBoxA( 0, message, STR_WINERR_HEADER, MB_OK | MB_ICONERROR );
    exit( 1 );
 }
 
 internal void InitKeyCodeMap()
 {
-   g_globals.keyCodeMap[(int)cKeyCode_Left] = VK_LEFT;
-   g_globals.keyCodeMap[(int)cKeyCode_Up] = VK_UP;
-   g_globals.keyCodeMap[(int)cKeyCode_Right] = VK_RIGHT;
-   g_globals.keyCodeMap[(int)cKeyCode_Down] = VK_DOWN;
-   g_globals.keyCodeMap[(int)cKeyCode_Escape] = VK_ESCAPE;
+   g_globals.keyCodeMap[(int)KeyCode_Left] = VK_LEFT;
+   g_globals.keyCodeMap[(int)KeyCode_Up] = VK_UP;
+   g_globals.keyCodeMap[(int)KeyCode_Right] = VK_RIGHT;
+   g_globals.keyCodeMap[(int)KeyCode_Down] = VK_DOWN;
+   g_globals.keyCodeMap[(int)KeyCode_Escape] = VK_ESCAPE;
 }
 
 internal void InitOpenGL( HWND hWnd )
@@ -173,13 +173,13 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
    {
       case WM_QUIT:
       case WM_CLOSE:
-         cGame_TryClose( &( g_globals.gameData ) );
+         Game_TryClose( &( g_globals.gameData ) );
          break;
       case WM_DESTROY:
          if ( g_globals.gameData.isRunning )
          {
-            cGame_EmergencySave( &( g_globals.gameData ) );
-            g_globals.gameData.isRunning = cFalse;
+            Game_EmergencySave( &( g_globals.gameData ) );
+            g_globals.gameData.isRunning = False;
          }
          break;
       case WM_KEYDOWN:
@@ -189,11 +189,11 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
          HandleKeyboardInput( (uint32_t)wParam, lParam );
          break;
       case WM_KILLFOCUS:
-         cGame_PauseEngine( &( g_globals.gameData ) );
+         Game_PauseEngine( &( g_globals.gameData ) );
          DefWindowProc( hWnd, uMsg, wParam, lParam );
          break;
       case WM_SETFOCUS:
-         cGame_ResumeEngine( &( g_globals.gameData ) );
+         Game_ResumeEngine( &( g_globals.gameData ) );
          DefWindowProc( hWnd, uMsg, wParam, lParam );
          break;
       default:
@@ -274,8 +274,8 @@ internal void RenderWindow( HDC dc )
 
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
 {
-   cBool_t keyWasDown = ( flags & ( (LONG_PTR)1 << 30 ) ) != 0 ? cTrue : cFalse;
-   cBool_t keyIsDown = ( flags & ( (LONG_PTR)1 << 31 ) ) == 0 ? cTrue : cFalse;
+   Bool_t keyWasDown = ( flags & ( (LONG_PTR)1 << 30 ) ) != 0 ? True : False;
+   Bool_t keyIsDown = ( flags & ( (LONG_PTR)1 << 31 ) ) == 0 ? True : False;
    int i;
 
    // ignore repeat presses
@@ -286,26 +286,26 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
          // ensure alt+F4 still closes the window
          if ( keyCode == VK_F4 && ( flags & ( (LONG_PTR)1 << 29 ) ) )
          {
-            cGame_TryClose( &( g_globals.gameData ) );
+            Game_TryClose( &( g_globals.gameData ) );
             return;
          }
 
-         for ( i = 0; i < cKeyCode_Count; i++ )
+         for ( i = 0; i < KeyCode_Count; i++ )
          {
             if ( g_globals.keyCodeMap[i] == keyCode )
             {
-               cInput_PressKey( g_globals.gameData.keyStates, (cKeyCode_t)i );
+               Input_PressKey( g_globals.gameData.keyStates, (KeyCode_t)i );
                break;
             }
          }
       }
       else
       {
-         for ( i = 0; i < cKeyCode_Count; i++ )
+         for ( i = 0; i < KeyCode_Count; i++ )
          {
             if ( g_globals.keyCodeMap[i] == keyCode )
             {
-               cInput_ReleaseKey( g_globals.gameData.keyStates, (cKeyCode_t)i );
+               Input_ReleaseKey( g_globals.gameData.keyStates, (KeyCode_t)i );
                break;
             }
          }
@@ -340,7 +340,7 @@ void Platform_Tick()
    }
 }
 
-cPixelBuffer_t* Platform_GetScreenBuffer()
+PixelBuffer_t* Platform_GetScreenBuffer()
 {
    return &( g_globals.screenBuffer );
 }
@@ -372,7 +372,7 @@ void Platform_Sleep( uint64_t micro )
    }
 }
 
-cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
+Bool_t Platform_ReadFileData( const char* filePath, FileData_t* fileData )
 {
    HANDLE hFile;
    LARGE_INTEGER fileSize;
@@ -390,7 +390,7 @@ cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
       // TODO: maybe log the reason it couldn't be opened (file not found, etc)
       snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FILEERR_OPENFILEFAILED, filePath );
       Platform_Log( errorMsg );
-      return cFalse;
+      return False;
    }
 
    if ( !GetFileSizeEx( hFile, &fileSize ) )
@@ -398,7 +398,7 @@ cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
       snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FILEERR_GETFILESIZEFAILED, filePath );
       Platform_Log( errorMsg );
       CloseHandle( hFile );
-      return cFalse;
+      return False;
    }
 
    fileData->fileSize = fileSize.LowPart;
@@ -410,14 +410,14 @@ cBool_t Platform_ReadFileData( const char* filePath, cFileData_t* fileData )
    {
       Platform_ClearFileData( fileData );
       CloseHandle( hFile );
-      return cFalse;
+      return False;
    }
 
    CloseHandle( hFile );
-   return cTrue;
+   return True;
 }
 
-cBool_t Platform_WriteFileData( const char* filePath, cFileData_t* fileData )
+Bool_t Platform_WriteFileData( const char* filePath, FileData_t* fileData )
 {
    HANDLE hFile;
    OVERLAPPED overlapped = { 0 };
@@ -426,7 +426,7 @@ cBool_t Platform_WriteFileData( const char* filePath, cFileData_t* fileData )
 
    if ( !hFile )
    {
-      return cFalse;
+      return False;
    }
 
 // again, not sure why it shows this warning, according to the docs the 5th param can be null
@@ -434,14 +434,14 @@ cBool_t Platform_WriteFileData( const char* filePath, cFileData_t* fileData )
    if ( !WriteFileEx( hFile, fileData->contents, fileData->fileSize, &overlapped, 0 ) )
    {
       CloseHandle( hFile );
-      return cFalse;
+      return False;
    }
 
    CloseHandle( hFile );
-   return cTrue;
+   return True;
 }
 
-void Platform_ClearFileData( cFileData_t* fileData )
+void Platform_ClearFileData( FileData_t* fileData )
 {
    if ( fileData->contents )
    {
