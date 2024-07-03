@@ -131,18 +131,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bmp.c" />
     <ClCompile Include="game.c" />
     <ClCompile Include="clock.c" />
     <ClCompile Include="input.c" />
     <ClCompile Include="platform_win.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bmp.h" />
     <ClInclude Include="clock.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="game.h" />
+    <ClInclude Include="pixel_buffer.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="platform.h" />
-    <ClInclude Include="screen_buffer.h" />
     <ClInclude Include="strings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

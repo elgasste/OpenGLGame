@@ -7,18 +7,18 @@
 
 typedef struct
 {
-   cClock_t clock;
-   cKeyState_t keyStates[cKeyCode_Count];
-   cBool_t isRunning;
-   cBool_t isEngineRunning;
+   Clock_t clock;
+   KeyState_t keyStates[KeyCode_Count];
+   Bool_t isRunning;
+   Bool_t isEngineRunning;
 }
-cGameData_t;
+GameData_t;
 
-void cGame_Init( cGameData_t* gameData );
-void cGame_Run( cGameData_t* gameData );
-void cGame_PauseEngine( cGameData_t* gameData );
-void cGame_ResumeEngine( cGameData_t* gameData );
-void cGame_EmergencySave( cGameData_t* gameData );
-void cGame_TryClose( cGameData_t* gameData );
+void Game_Init( GameData_t* gameData );
+void Game_Run( GameData_t* gameData );
+void Game_PauseEngine( GameData_t* gameData );
+void Game_ResumeEngine( GameData_t* gameData );
+void Game_EmergencySave( GameData_t* gameData );
+void Game_TryClose( GameData_t* gameData );
 
 #endif

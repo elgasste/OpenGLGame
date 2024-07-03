@@ -1,9 +1,9 @@
 #include "clock.h"
 #include "platform.h"
 
-void cClock_Init( cClock_t* clock )
+void Clock_Init( Clock_t* clock )
 {
-   clock->isRunning = cTrue;
+   clock->isRunning = True;
    clock->pauseTimeMicro = 0;
 
    clock->totalFrames = 0;
@@ -15,7 +15,7 @@ void cClock_Init( cClock_t* clock )
    clock->lastFrameDurationMicro = 0;
 }
 
-void cClock_StartFrame( cClock_t* clock )
+void Clock_StartFrame( Clock_t* clock )
 {
    if ( clock->isRunning )
    {
@@ -28,7 +28,7 @@ void cClock_StartFrame( cClock_t* clock )
    }
 }
 
-void cClock_EndFrame( cClock_t* clock )
+void Clock_EndFrame( Clock_t* clock )
 {
    uint64_t frameStopMicro;
 
@@ -53,16 +53,16 @@ void cClock_EndFrame( cClock_t* clock )
    }
 }
 
-void cClock_Pause( cClock_t* clock )
+void Clock_Pause( Clock_t* clock )
 {
    if ( clock->isRunning )
    {
-      clock->isRunning = cFalse;
+      clock->isRunning = False;
       clock->pauseTimeMicro = Platform_GetTimeStampMicro();
    }
 }
 
-void cClock_Resume( cClock_t* clock )
+void Clock_Resume( Clock_t* clock )
 {
    uint64_t pauseDurationMicro;
 
@@ -72,6 +72,6 @@ void cClock_Resume( cClock_t* clock )
 
       clock->absoluteStartMicro += pauseDurationMicro;
       clock->frameStartMicro += pauseDurationMicro;
-      clock->isRunning = cTrue;
+      clock->isRunning = True;
    }
 }
