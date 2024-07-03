@@ -1,7 +1,6 @@
 #define VC_EXTRALEAN
 #define WIN32_LEAN_AND_MEAN
 
-#include <tchar.h>
 #include <windows.h>
 #include <mmsystem.h>
 #include <stdlib.h>
@@ -391,7 +390,7 @@ Bool_t Platform_ReadFileData( const char* filePath, FileData_t* fileData )
 
    if ( hFile == INVALID_HANDLE_VALUE )
    {
-      // TODO: maybe log the reason it couldn't be opened (file not found, etc)
+      // TODO: maybe log the reason it couldn't be opened (file not found, etc)6
       snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FILEERR_OPENFILEFAILED, filePath );
       Platform_Log( errorMsg );
       return False;
