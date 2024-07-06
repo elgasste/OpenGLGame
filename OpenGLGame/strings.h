@@ -26,6 +26,7 @@
 #define STR_BMPERR_INVALIDIMAGESIZE       "BMP error: invalid image size: %s"
 #define STR_BMPERR_INVALIDPALETTECOUNT    "BMP error: invalid number of palette colors: %s"
 #define STR_BMPERR_PALETTECORRUPT         "BMP error: palette is corrupt: %s"
+#define STR_BMPERR_INVALIDCOLORINDEXING   "BMP error: color indexing is not currently supported: %s"
 
 #define STR_WIN_WINDOWTITLE               "Testing"
 

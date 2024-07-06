@@ -5,7 +5,10 @@
 
 #define BMP_HEADER_SIZE                14
 #define BMP_BITMAPINFOHEADER_SIZE      40
-#define BMP_HEADER_TYPE                0x4D42
+#define BMP_BITMAPV5HEADER_SIZE        124
+#define BMP_HEADERTYPE_BM              0x4D42
+#define BMP_BI_NONE                    0
+#define BMP_BI_BITFIELDS               3
 
 #define ERROR_RETURN_FALSE( s ) \
    snprintf( errorMsg, STRING_SIZE_DEFAULT, s, fileData->filePath ); \
@@ -102,7 +105,7 @@ internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_
    }
 
    // first 2 bytes are the type, we currenly only support "BM"
-   if ( ( (uint16_t*)filePos )[0] != BMP_HEADER_TYPE )
+   if ( ( (uint16_t*)filePos )[0] != BMP_HEADERTYPE_BM )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDHEADERTYPE );
    }
@@ -132,6 +135,7 @@ internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_
 internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos )
 {
    uint8_t leftoverBits;
+   uint32_t compressionMethod;
    char errorMsg[STRING_SIZE_DEFAULT];
 
    if ( fileData->fileSize < ( BMP_HEADER_SIZE + 4 ) )
@@ -140,16 +144,15 @@ internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uin
    }
 
    // first 4 bytes are the header size
-   // TODO: 32-bit headers are coming in at 124 bytes, which is a BITMAPV5HEADER.
-   // we'll want to support alpha values though, so figure that one out.
    bmpData->dibHeaderSize = ( (uint32_t*)filePos )[0];
 
-   if ( bmpData->dibHeaderSize != BMP_BITMAPINFOHEADER_SIZE )
+   if ( ( bmpData->dibHeaderSize != BMP_BITMAPINFOHEADER_SIZE ) &&
+        ( bmpData->dibHeaderSize != BMP_BITMAPV5HEADER_SIZE ) )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDDIBHEADERTYPE );
    }
 
-   if ( fileData->fileSize < BMP_HEADER_SIZE + bmpData->dibHeaderSize )
+   if ( fileData->fileSize < ( BMP_HEADER_SIZE + bmpData->dibHeaderSize ) )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
    }
@@ -178,16 +181,26 @@ internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uin
    // next 2 bytes are the number of bits per pixel
    bmpData->bitsPerPixel = ( (uint16_t*) filePos )[0];
 
-   // TODO: add support for 32 bpp bitmaps
-   if ( bmpData->bitsPerPixel != 1 && bmpData->bitsPerPixel != 4 && bmpData->bitsPerPixel != 8 && bmpData->bitsPerPixel != 24 )
+   if ( bmpData->bitsPerPixel != 1 &&
+        bmpData->bitsPerPixel != 4 &&
+        bmpData->bitsPerPixel != 8 &&
+        bmpData->bitsPerPixel != 24 &&
+        bmpData->bitsPerPixel != 32 )
+   {
+      ERROR_RETURN_FALSE( STR_BMPERR_INVALIDBPP );
+   }
+   else if ( ( ( bmpData->bitsPerPixel == 32 ) && ( bmpData->dibHeaderSize != BMP_BITMAPV5HEADER_SIZE ) ) ||
+             ( ( bmpData->bitsPerPixel != 32 ) && ( bmpData->dibHeaderSize != BMP_BITMAPINFOHEADER_SIZE ) ) )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDBPP );
    }
 
    filePos += 2;
 
-   // next 4 bytes are the compression method, we only support uncompressed images for now
-   if ( ( (uint32_t*)filePos )[0] != 0 )
+   // next 4 bytes are the compression method, we only support uncompressed or BI_BITFIELDS for now
+   compressionMethod = ( (uint32_t*)filePos )[0];
+
+   if ( ( compressionMethod != BMP_BI_NONE ) && ( compressionMethod != BMP_BI_BITFIELDS ) )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_ISCOMPRESSED );
    }
@@ -202,24 +215,30 @@ internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uin
       ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
    }
 
-   filePos += 12;
-
-   // next 8 bytes after the image size are the horizontal and vertical resolution,
-   // which we don't care about. next 4 bytes after that are the number of palette
-   // colors. for BPP values less than 24, this should be 2^BPP.
-   bmpData->numPaletteColors = ( (uint32_t*)filePos )[0];
-
-   if ( ( bmpData->bitsPerPixel == 24 && bmpData->numPaletteColors != 0 ) ||
-        bmpData->numPaletteColors > (uint32_t)pow( 2, (double)( bmpData->bitsPerPixel ) ) )
-   {
-      ERROR_RETURN_FALSE( STR_BMPERR_INVALIDPALETTECOUNT );
-   }
-
    bmpData->strideBits = bmpData->imageWidth * bmpData->bitsPerPixel;
    leftoverBits = (uint8_t)( bmpData->strideBits % 32 );
    bmpData->paddingBits = ( leftoverBits == 0 ) ? 0 : 32 - leftoverBits;
    bmpData->scanlineSize = ( bmpData->strideBits + bmpData->paddingBits ) / 8;
 
+   // next 8 bytes after the image size are the horizontal and vertical resolution,
+   // which we don't care about
+   filePos += 12;
+
+   if ( bmpData->bitsPerPixel < 32 )
+   {
+      // next 4 bytes after that are the number of palette
+      // colors. for BPP values less than 24, this should be 2^BPP.
+      bmpData->numPaletteColors = ( (uint32_t*)filePos )[0];
+
+      if ( ( bmpData->bitsPerPixel == 24 && bmpData->numPaletteColors != 0 ) ||
+           ( bmpData->numPaletteColors > (uint32_t)pow( 2, (double)( bmpData->bitsPerPixel ) ) ) )
+      {
+         ERROR_RETURN_FALSE( STR_BMPERR_INVALIDPALETTECOUNT );
+      }
+   }
+
+   // 32bpp bitmaps should have ARGB pixel formats, so we shouldn't need to
+   // extract any more information (like color bitmasks) for now
    return True;
 }
 
@@ -358,6 +377,14 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
                scanlinePixelsUnread--;
                filePos += 3;
                scanlineByteNum += 3;
+               pixelBufferRowIndex++;
+               break;
+            case 32:
+               color = ( (uint32_t*)filePos )[0];
+               pixelBuffer32[pixelBufferRowIndex] = color;
+               scanlinePixelsUnread--;
+               filePos += 4;
+               scanlineByteNum += 4;
                pixelBufferRowIndex++;
                break;
          }
