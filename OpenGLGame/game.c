@@ -1,5 +1,4 @@
 #include "game.h"
-#include "platform.h"
 
 internal void Game_HandleInput( GameData_t* gameData );
 internal void Game_Tick( GameData_t* gameData );
@@ -9,6 +8,7 @@ void Game_Init( GameData_t* gameData )
 {
    Clock_Init( &( gameData->clock ) );
    Input_Init( gameData->keyStates );
+   Render_Init( &( gameData->renderData ) );
 
    gameData->isRunning = False;
    gameData->isEngineRunning = True;
@@ -83,29 +83,26 @@ internal void Game_Tick( GameData_t* gameData )
 
 internal void Game_Render( GameData_t* gameData )
 {
-   // NOTE: the pixel layout is ARGB
    uint32_t* pixel;
-   PixelBuffer_t* screenBuffer;
-   uint32_t r, g, b;
-   int x, y;
+   uint32_t r, g, b, x, y;
+   PixelBuffer_t* pixelBuffer = &( gameData->renderData.backgroundTexture.pixelBuffer );
 
-   UNUSED_PARAM( gameData );
+   pixel = (uint32_t*)( pixelBuffer->buffer );
 
-   screenBuffer = Platform_GetScreenBuffer();
-   pixel = (uint32_t*)screenBuffer->buffer;
-
-   for ( y = 0; y < SCREEN_HEIGHT; y++ )
+   for ( y = 0; y < pixelBuffer->height; y++ )
    {
-      b = (int)( (float)y / ( SCREEN_HEIGHT + 1 ) * 255 );
+      b = (int)( (float)y / ( pixelBuffer->height + 1 ) * 255 );
       r = 255 - b;
 
-      for ( x = 0; x < SCREEN_WIDTH; x++ )
+      for ( x = 0; x < pixelBuffer->width; x++ )
       {
-         g = (int)( (float)x / ( SCREEN_WIDTH + 1 ) * 255 );
+         g = (int)( (float)x / ( pixelBuffer->width + 1 ) * 255 );
          *pixel = 0xFF000000 | b | ( g << 8 ) | ( r << 16 );
          pixel++;
       }
    }
 
+   Render_Clear();
+   Render_DrawTexture( 0, 0, &( gameData->renderData.backgroundTexture ) );
    Platform_RenderScreen();
 }
