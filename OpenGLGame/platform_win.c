@@ -4,10 +4,10 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <stdlib.h>
-#include <gl/GL.h>
 
 #include "game.h"
 #include "platform.h"
+#include "platform_gl.h"
 
 typedef struct
 {
@@ -271,6 +271,8 @@ internal void RenderWindow( HDC dc )
    glVertex2f( 0.0f, SCREEN_HEIGHT );
 
    glEnd();
+
+   // MUFFINS: try blitting a bitmap texture here
 
    SwapBuffers( dc );
 }

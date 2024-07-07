@@ -145,6 +145,7 @@
     <ClInclude Include="pixel_buffer.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="platform.h" />
+    <ClInclude Include="platform_gl.h" />
     <ClInclude Include="strings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
