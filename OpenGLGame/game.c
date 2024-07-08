@@ -24,11 +24,17 @@ Bool_t Game_Init( GameData_t* gameData )
       star = &( gameData->stars[i] );
 
       star->isResting = Random_Bool();
+
+      if ( star->isResting )
+      {
+         star->restElapsedSeconds = 0.0f;
+         star->restSeconds = ( Random_UInt32( 0, STAR_MAX_RESTSECONDS * 1000 ) ) / 1000.0f;
+      }
+
       star->movingLeft = Random_Bool();
       star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
-      star->position.x = Random_UInt32( 0, SCREEN_WIDTH - 1 );
-      star->position.y = Random_UInt32( STAR_MIN_Y, SCREEN_HEIGHT - 1 );
-      star->restSeconds = 2;
+      star->position.x = (float)Random_UInt32( 0, SCREEN_WIDTH - 1 );
+      star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
    }
 
    gameData->isRunning = False;
@@ -124,9 +130,39 @@ internal void Game_HandleInput( GameData_t* gameData )
 
 internal void Game_Tick( GameData_t* gameData )
 {
-   UNUSED_PARAM( gameData );
+   uint32_t i;
 
-   // TODO: update the positions of the stars
+   for ( i = 0; i < STAR_COUNT; i++ )
+   {
+      Star_t* star = &( gameData->stars[i] );
+
+      if ( star->isResting )
+      {
+         star->restElapsedSeconds += gameData->clock.frameDeltaSeconds;
+
+         if ( star->restElapsedSeconds > star->restSeconds )
+         {
+            star->isResting = False;
+            star->movingLeft = Random_Bool();
+            star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
+            star->position.x = star->movingLeft ? SCREEN_WIDTH : -(float)( gameData->renderData.starTexture.pixelBuffer.width - 1 );
+            star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
+            star->restSeconds = 2;
+         }
+      }
+      else
+      {
+         star->position.x = star->movingLeft
+            ? star->position.x - (float)star->pixelsPerSecond * gameData->clock.frameDeltaSeconds
+            : star->position.x + (float)star->pixelsPerSecond * gameData->clock.frameDeltaSeconds;
+         
+         if ( star->position.x < -(float)( gameData->renderData.starTexture.pixelBuffer.width ) ||
+              star->position.x > SCREEN_WIDTH )
+         {
+            star->isResting = True;
+         }
+      }
+   }
 }
 
 internal void Game_Render( GameData_t* gameData )
@@ -140,7 +176,7 @@ internal void Game_Render( GameData_t* gameData )
    for ( i = 0; i < STAR_COUNT; i++ )
    {
       star = &( gameData->stars[i] );
-      Render_DrawTexture( star->position.x, star->position.y, &( gameData->renderData.starTexture ) );
+      Render_DrawTexture( (uint32_t)( star->position.x ), (uint32_t)( star->position.y ), &( gameData->renderData.starTexture ) );
    }
 
    Platform_RenderScreen();

@@ -5,9 +5,9 @@
 
 typedef struct
 {
-   int32_t x;
-   int32_t y;
+   float x;
+   float y;
 }
-Point_t;
+PointF_t;
 
 #endif
