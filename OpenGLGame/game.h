@@ -12,11 +12,11 @@
 #include "clock.h"
 #include "input.h"
 #include "render.h"
-#include "data_types.h"
+#include "vector.h"
 
 typedef struct
 {
-   PointF_t position;
+   Vector2f_t position;
    uint32_t pixelsPerSecond;
    Bool_t movingLeft;
    Bool_t isResting;
