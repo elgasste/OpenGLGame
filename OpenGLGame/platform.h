@@ -22,5 +22,6 @@ void Platform_Sleep( uint64_t micro );
 Bool_t Platform_ReadFileData( const char* filePath, FileData_t* fileData );
 Bool_t Platform_WriteFileData( const char* filePath, FileData_t* fileData );
 void Platform_ClearFileData( FileData_t* fileData );
+Bool_t Platform_GetAppDirectory( char* directory, uint32_t stringSize );
 
 #endif

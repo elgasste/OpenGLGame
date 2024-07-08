@@ -1,6 +1,8 @@
 #if !defined( STRINGS_H )
 #define STRINGS_H
 
+#define STR_WIN_WINDOWTITLE               "Testing"
+
 #define STR_WINERR_HEADER                 "Windows Error"
 #define STR_WINERR_PERFORMANCEFREQUENCY   "Failed to query performance frequency."
 #define STR_WINERR_TIMERRESOLUTION        "Failed to set timer resolution."
@@ -12,6 +14,8 @@
 #define STR_WINERR_RENDERINGCONTEXT       "Failed to make OpenGL rendering context current."
 #define STR_WINERR_ADJUSTCLIENTRECT       "Failed to adjust the main window client size."
 #define STR_WINERR_LOGMESSAGE             "Windows error: %s"
+#define STR_WINERR_APPDIRECTORY           "Failed to get the app's base directory."
+#define STR_WINERR_INITGAME               "Failed to initialize game."
 
 #define STR_FILEERR_OPENFILEFAILED        "File error: could not open file: %s"
 #define STR_FILEERR_GETFILESIZEFAILED     "File error: could not get file size: %s"
@@ -27,8 +31,6 @@
 #define STR_BMPERR_INVALIDPALETTECOUNT    "BMP error: invalid number of palette colors: %s"
 #define STR_BMPERR_PALETTECORRUPT         "BMP error: palette is corrupt: %s"
 #define STR_BMPERR_INVALIDCOLORINDEXING   "BMP error: color indexing is not currently supported: %s"
-
-#define STR_WIN_WINDOWTITLE               "Testing"
 
 #endif
 

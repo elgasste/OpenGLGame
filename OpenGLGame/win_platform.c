@@ -1,3 +1,5 @@
+#include <Shlwapi.h>
+
 #include "game.h"
 
 typedef struct
@@ -84,7 +86,12 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
    InitKeyCodeMap();
    InitOpenGL( g_globals.hWndMain );
-   Game_Init( &( g_globals.gameData ) );
+
+   if ( !Game_Init( &( g_globals.gameData ) ) )
+   {
+      FatalError( STR_WINERR_INITGAME );
+   }
+
    Game_Run( &( g_globals.gameData ) );
 
    return 0;
@@ -363,4 +370,22 @@ void Platform_ClearFileData( FileData_t* fileData )
 
    fileData->contents = 0;
    fileData->fileSize = 0;
+}
+
+Bool_t Platform_GetAppDirectory( char* directory, uint32_t stringSize )
+{
+   LPSTR fileName;
+   DWORD stringLength = GetModuleFileNameA( NULL, directory, stringSize );
+
+   if ( stringLength != strlen( directory ) )
+   {
+      // TODO: maybe better logging, GetLastError could be enlightening
+      Platform_Log( STR_WINERR_APPDIRECTORY );
+      return False;
+   }
+
+   fileName = PathFindFileNameA( directory );
+   directory[stringLength - strlen( fileName )] = '\0';
+
+   return True;
 }

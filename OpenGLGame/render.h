@@ -15,10 +15,11 @@ Texture_t;
 typedef struct
 {
    Texture_t backgroundTexture;
+   Texture_t starTexture;
 }
 RenderData_t;
 
-void Render_Init( RenderData_t* renderData );
+Bool_t Render_LoadTextureFromFile( Texture_t* texture, const char* filePath );
 void Render_Clear();
 void Render_DrawTexture( int32_t x, int32_t y, Texture_t* texture );
 
