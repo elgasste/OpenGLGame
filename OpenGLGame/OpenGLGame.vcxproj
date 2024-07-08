@@ -143,6 +143,7 @@ xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
     <ClCompile Include="game.c" />
     <ClCompile Include="clock.c" />
     <ClCompile Include="input.c" />
+    <ClCompile Include="random.c" />
     <ClCompile Include="win_platform.c" />
     <ClCompile Include="render.c" />
   </ItemGroup>
@@ -155,6 +156,7 @@ xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
     <ClInclude Include="pixel_buffer.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="platform.h" />
+    <ClInclude Include="random.h" />
     <ClInclude Include="win_platform_headers.h" />
     <ClInclude Include="render.h" />
     <ClInclude Include="strings.h" />
