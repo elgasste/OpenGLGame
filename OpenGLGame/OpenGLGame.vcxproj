@@ -111,6 +111,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies)winmm.lib;opengl32.lib;Shlwapi.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>rmdir "$(OutDir)assets" /S /Q
+xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -129,6 +133,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies)winmm.lib;opengl32.lib;Shlwapi.lib</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>rmdir "$(OutDir)assets" /S /Q
+xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bmp.c" />

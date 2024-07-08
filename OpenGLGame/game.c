@@ -31,7 +31,7 @@ Bool_t Game_LoadAssets( GameData_t* gameData )
       return False;
    }
 
-   snprintf( backgroundFilePath, STRING_SIZE_DEFAULT, "%sbackground.bmp", appDirectory );
+   snprintf( backgroundFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
 
    if ( !Render_LoadTextureFromFile( &( gameData->renderData.backgroundTexture ), backgroundFilePath ) )
    {
@@ -110,25 +110,6 @@ internal void Game_Tick( GameData_t* gameData )
 
 internal void Game_Render( GameData_t* gameData )
 {
-   uint32_t* pixel;
-   uint32_t r, g, b, x, y;
-   PixelBuffer_t* pixelBuffer = &( gameData->renderData.backgroundTexture.pixelBuffer );
-
-   pixel = (uint32_t*)( pixelBuffer->buffer );
-
-   for ( y = 0; y < pixelBuffer->height; y++ )
-   {
-      b = (int)( (float)y / ( pixelBuffer->height + 1 ) * 255 );
-      r = 255 - b;
-
-      for ( x = 0; x < pixelBuffer->width; x++ )
-      {
-         g = (int)( (float)x / ( pixelBuffer->width + 1 ) * 255 );
-         *pixel = 0xFF000000 | b | ( g << 8 ) | ( r << 16 );
-         pixel++;
-      }
-   }
-
    Render_Clear();
    Render_DrawTexture( 0, 0, &( gameData->renderData.backgroundTexture ) );
    Platform_RenderScreen();
