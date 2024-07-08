@@ -4,11 +4,14 @@
 #include "common.h"
 #include "clock.h"
 #include "input.h"
+#include "render.h"
 
 typedef struct
 {
    Clock_t clock;
    KeyState_t keyStates[KeyCode_Count];
+   RenderData_t renderData;
+
    Bool_t isRunning;
    Bool_t isEngineRunning;
 }

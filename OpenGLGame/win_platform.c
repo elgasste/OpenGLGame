@@ -1,19 +1,8 @@
-#define VC_EXTRALEAN
-#define WIN32_LEAN_AND_MEAN
-
-#include <windows.h>
-#include <mmsystem.h>
-#include <stdlib.h>
-#include <gl/GL.h>
-
 #include "game.h"
-#include "platform.h"
 
 typedef struct
 {
    HWND hWndMain;
-   PixelBuffer_t screenBuffer;
-   GLuint screenTexture;
    GameData_t gameData;
    LARGE_INTEGER performanceFrequency;
    uint32_t keyCodeMap[(int)KeyCode_Count];
@@ -26,7 +15,6 @@ internal void FatalError( const char* message );
 internal void InitKeyCodeMap();
 internal void InitOpenGL( HWND hWnd );
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
-internal void RenderWindow( HDC dc );
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags );
 
 int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow )
@@ -93,8 +81,6 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    {
       FatalError( STR_WINERR_CREATEWINDOW );
    }
-
-   g_globals.screenBuffer.buffer = (uint8_t*)Platform_MemAlloc( (SIZE_T)( SCREEN_WIDTH * SCREEN_HEIGHT * ( GRAPHICS_BPP / 8 ) ) );
 
    InitKeyCodeMap();
    InitOpenGL( g_globals.hWndMain );
@@ -163,8 +149,6 @@ internal void InitOpenGL( HWND hWnd )
       FatalError( STR_WINERR_RENDERINGCONTEXT );
    }
 
-   glGenTextures( 1, &( g_globals.screenTexture ) );
-
    ReleaseDC( hWnd, dc );
 }
 
@@ -206,80 +190,11 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
    return result;
 }
 
-internal void RenderWindow( HDC dc )
-{
-   GLfloat modelMatrix[] = 
-   {
-      2.0f / SCREEN_WIDTH, 0.0f, 0.0f, 0.0f,
-      0.0f, 2.0f / SCREEN_HEIGHT, 0.0f, 0.0f,
-      0.0f, 0.0f, 1.0f, 0.0f,
-      -1.0f, -1.0f, 0.0f, 1.0f
-   };
-
-   glViewport( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
-
-   glBindTexture( GL_TEXTURE_2D, g_globals.screenTexture );
-   glTexImage2D( GL_TEXTURE_2D,
-                 0,
-                 GL_RGBA8,
-                 SCREEN_WIDTH,
-                 SCREEN_HEIGHT,
-                 0,
-                 GL_BGRA_EXT,
-                 GL_UNSIGNED_BYTE,
-                 (GLvoid*)( g_globals.screenBuffer.buffer ) );
-
-   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
-   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
-   glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-
-   glEnable( GL_TEXTURE_2D );
-
-   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-   glEnable( GL_BLEND );
-
-   glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
-   glClear( GL_COLOR_BUFFER_BIT );
-
-   glMatrixMode( GL_TEXTURE );
-   glLoadIdentity();
-
-   glMatrixMode( GL_MODELVIEW );
-   glLoadIdentity();
-
-   glMatrixMode( GL_PROJECTION );
-   glLoadMatrixf( modelMatrix );
-
-   glBegin( GL_TRIANGLES );
-
-   // lower triangle
-   glTexCoord2f( 0.0f, 0.0f );
-   glVertex2f( 0.0f, 0.0f );
-   glTexCoord2f( 1.0f, 0.0f );
-   glVertex2f( SCREEN_WIDTH, 0.0f );
-   glTexCoord2f( 1.0f, 1.0f );
-   glVertex2f( SCREEN_WIDTH, SCREEN_HEIGHT );
-
-   // upper triangle
-   glTexCoord2f( 0.0f, 0.0f );
-   glVertex2f( 0.0f, 0.0f );
-   glTexCoord2f( 1.0f, 1.0f );
-   glVertex2f( SCREEN_WIDTH, SCREEN_HEIGHT );
-   glTexCoord2f( 0.0f, 1.0f );
-   glVertex2f( 0.0f, SCREEN_HEIGHT );
-
-   glEnd();
-
-   SwapBuffers( dc );
-}
-
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
 {
    Bool_t keyWasDown = ( flags & ( (LONG_PTR)1 << 30 ) ) != 0 ? True : False;
    Bool_t keyIsDown = ( flags & ( (LONG_PTR)1 << 31 ) ) == 0 ? True : False;
-   int i;
+   uint32_t i;
 
    // ignore repeat presses
    if ( keyWasDown != keyIsDown )
@@ -343,15 +258,10 @@ void Platform_Tick()
    }
 }
 
-PixelBuffer_t* Platform_GetScreenBuffer()
-{
-   return &( g_globals.screenBuffer );
-}
-
 void Platform_RenderScreen()
 {
    HDC dc = GetDC( g_globals.hWndMain );
-   RenderWindow( dc );
+   SwapBuffers( dc );
    ReleaseDC( g_globals.hWndMain, dc );
 }
 
