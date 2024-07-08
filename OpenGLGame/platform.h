@@ -4,7 +4,7 @@
 #include "common.h"
 #include "win_platform_headers.h"
 
-typedef struct
+typedef struct FileData_t
 {
    char filePath[STRING_SIZE_DEFAULT];
    uint32_t fileSize;

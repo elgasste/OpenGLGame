@@ -14,7 +14,7 @@
 #include "render.h"
 #include "vector.h"
 
-typedef struct
+typedef struct Star_t
 {
    Vector2f_t position;
    uint32_t pixelsPerSecond;
@@ -25,7 +25,7 @@ typedef struct
 }
 Star_t;
 
-typedef struct
+typedef struct GameData_t
 {
    Clock_t clock;
    KeyState_t keyStates[KeyCode_Count];

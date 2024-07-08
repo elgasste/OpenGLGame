@@ -1,17 +1,4 @@
 #include "render.h"
-#include "platform.h"
-#include "bmp.h"
-
-Bool_t Render_LoadTextureFromFile( Texture_t* texture, const char* filePath )
-{
-   if ( !Bmp_LoadFromFile( filePath, &( texture->pixelBuffer ) ) )
-   {
-      return False;
-   }
-
-   glGenTextures( 1, &( texture->textureHandle ) );
-   return True;
-}
 
 void Render_Clear()
 {
@@ -21,14 +8,14 @@ void Render_Clear()
 
 void Render_DrawTexture( int32_t x, int32_t y, Texture_t* texture )
 {
-   uint32_t w = texture->pixelBuffer.width;
-   uint32_t h = texture->pixelBuffer.height;
+   uint32_t w = texture->pixelBuffer.dimensions.x;
+   uint32_t h = texture->pixelBuffer.dimensions.y;
    float fw = (float)w;
    float fh = (float)h;
    GLfloat modelMatrix[] = 
    {
-      2.0f / texture->pixelBuffer.width, 0.0f, 0.0f, 0.0f,
-      0.0f, 2.0f / texture->pixelBuffer.height, 0.0f, 0.0f,
+      2.0f / texture->pixelBuffer.dimensions.x, 0.0f, 0.0f, 0.0f,
+      0.0f, 2.0f / texture->pixelBuffer.dimensions.y, 0.0f, 0.0f,
       0.0f, 0.0f, 1.0f, 0.0f,
       -1.0f, -1.0f, 0.0f, 1.0f
    };

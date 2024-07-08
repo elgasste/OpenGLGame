@@ -58,8 +58,8 @@ Bool_t Game_LoadAssets( GameData_t* gameData )
    snprintf( backgroundFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
    snprintf( starFilePath, STRING_SIZE_DEFAULT, "%sassets\\star.bmp", appDirectory );
 
-   if ( !Render_LoadTextureFromFile( &( gameData->renderData.backgroundTexture ), backgroundFilePath ) ||
-        !Render_LoadTextureFromFile( &( gameData->renderData.starTexture ), starFilePath ) )
+   if ( !Texture_LoadFromFile( &( gameData->renderData.backgroundTexture ), backgroundFilePath ) ||
+        !Texture_LoadFromFile( &( gameData->renderData.starTexture ), starFilePath ) )
    {
       return False;
    }
@@ -146,7 +146,7 @@ internal void Game_Tick( GameData_t* gameData )
             star->isResting = False;
             star->movingLeft = Random_Bool();
             star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
-            star->position.x = star->movingLeft ? SCREEN_WIDTH : -(float)( gameData->renderData.starTexture.pixelBuffer.width - 1 );
+            star->position.x = star->movingLeft ? SCREEN_WIDTH : -(float)( gameData->renderData.starTexture.pixelBuffer.dimensions.x - 1 );
             star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
             star->restSeconds = ( Random_UInt32( 0, STAR_MAX_RESTSECONDS * 1000 ) ) / 1000.0f;
          }
@@ -157,7 +157,7 @@ internal void Game_Tick( GameData_t* gameData )
             ? star->position.x - (float)star->pixelsPerSecond * gameData->clock.frameDeltaSeconds
             : star->position.x + (float)star->pixelsPerSecond * gameData->clock.frameDeltaSeconds;
          
-         if ( star->position.x < -(float)( gameData->renderData.starTexture.pixelBuffer.width ) ||
+         if ( star->position.x < -(float)( gameData->renderData.starTexture.pixelBuffer.dimensions.x ) ||
               star->position.x > SCREEN_WIDTH )
          {
             star->isResting = True;

@@ -2,24 +2,15 @@
 #define RENDER_H
 
 #include "common.h"
-#include "pixel_buffer.h"
-#include "platform.h"
+#include "texture.h"
 
-typedef struct
-{
-   PixelBuffer_t pixelBuffer;
-   GLuint textureHandle;
-}
-Texture_t;
-
-typedef struct
+typedef struct RenderData_t
 {
    Texture_t backgroundTexture;
    Texture_t starTexture;
 }
 RenderData_t;
 
-Bool_t Render_LoadTextureFromFile( Texture_t* texture, const char* filePath );
 void Render_Clear();
 void Render_DrawTexture( int32_t x, int32_t y, Texture_t* texture );
 
