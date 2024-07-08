@@ -31,16 +31,22 @@ Bool_t Sprite_LoadFromFile( Sprite_t* sprite, const char* filePath, uint32_t fra
 void Sprite_Reset( Sprite_t* sprite )
 {
    sprite->frameIndex = 0;
-   sprite->secondsElapsed = 0;
+   sprite->secondsElapsed = 0.0f;
+   Sprite_ScaleSpeed( sprite, 1.0f );
+}
+
+void Sprite_ScaleSpeed( Sprite_t* sprite, float scalar )
+{
+   sprite->scaledFrameSeconds = sprite->frameSeconds * scalar;
 }
 
 void Sprite_Tick( Sprite_t* sprite, Clock_t* clock )
 {
    sprite->secondsElapsed += clock->frameDeltaSeconds;
 
-   while ( sprite->secondsElapsed > sprite->frameSeconds )
+   while ( sprite->secondsElapsed > sprite->scaledFrameSeconds )
    {
-      sprite->secondsElapsed -= sprite->frameSeconds;
+      sprite->secondsElapsed -= sprite->scaledFrameSeconds;
       sprite->frameIndex++;
 
       if ( sprite->frameIndex >= sprite->numFrames )
