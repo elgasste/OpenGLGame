@@ -1,4 +1,5 @@
 #include "game.h"
+#include "random.h"
 
 internal Bool_t Game_LoadAssets( GameData_t* gameData );
 internal void Game_HandleInput( GameData_t* gameData );
@@ -7,12 +8,27 @@ internal void Game_Render( GameData_t* gameData );
 
 Bool_t Game_Init( GameData_t* gameData )
 {
+   uint32_t i;
+   Star_t* star;
+
    Clock_Init( &( gameData->clock ) );
    Input_Init( gameData->keyStates );
 
    if ( !Game_LoadAssets( gameData ) )
    {
       return False;
+   }
+
+   for ( i = 0; i < STAR_COUNT; i++ )
+   {
+      star = &( gameData->stars[i] );
+
+      star->isResting = Random_Bool();
+      star->movingLeft = Random_Bool();
+      star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
+      star->position.x = Random_UInt32( 0, SCREEN_WIDTH - 1 );
+      star->position.y = Random_UInt32( STAR_MIN_Y, SCREEN_HEIGHT - 1 );
+      star->restSeconds = 2;
    }
 
    gameData->isRunning = False;
@@ -109,11 +125,23 @@ internal void Game_HandleInput( GameData_t* gameData )
 internal void Game_Tick( GameData_t* gameData )
 {
    UNUSED_PARAM( gameData );
+
+   // TODO: update the positions of the stars
 }
 
 internal void Game_Render( GameData_t* gameData )
 {
+   uint32_t i;
+   Star_t* star;
+
    Render_Clear();
    Render_DrawTexture( 0, 0, &( gameData->renderData.backgroundTexture ) );
+
+   for ( i = 0; i < STAR_COUNT; i++ )
+   {
+      star = &( gameData->stars[i] );
+      Render_DrawTexture( star->position.x, star->position.y, &( gameData->renderData.starTexture ) );
+   }
+
    Platform_RenderScreen();
 }

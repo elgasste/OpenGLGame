@@ -1,10 +1,27 @@
 #if !defined( GAME_H )
 #define GAME_H
 
+#define STAR_COUNT            8
+#define STAR_MIN_Y            146
+#define STAR_MAX_Y            767
+#define STAR_MIN_VELOCITY     10
+#define STAR_MAX_VELOCITY     500
+
 #include "common.h"
 #include "clock.h"
 #include "input.h"
 #include "render.h"
+#include "data_types.h"
+
+typedef struct
+{
+   Point_t position;
+   uint32_t pixelsPerSecond;
+   Bool_t movingLeft;
+   Bool_t isResting;
+   float restSeconds;
+}
+Star_t;
 
 typedef struct
 {
@@ -14,6 +31,8 @@ typedef struct
 
    Bool_t isRunning;
    Bool_t isEngineRunning;
+
+   Star_t stars[STAR_COUNT];
 }
 GameData_t;
 
