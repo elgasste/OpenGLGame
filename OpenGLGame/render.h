@@ -2,7 +2,7 @@
 #define RENDER_H
 
 #include "common.h"
-#include "texture.h"
+#include "sprite.h"
 
 typedef struct RenderData_t
 {
@@ -13,5 +13,6 @@ RenderData_t;
 
 void Render_Clear();
 void Render_DrawTexture( Texture_t* texture, int32_t x, int32_t y );
+void Render_DrawSprite( Sprite_t* sprite, int32_t x, int32_t y );
 
 #endif
