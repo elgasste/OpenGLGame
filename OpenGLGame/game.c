@@ -147,7 +147,7 @@ internal void Game_Tick( GameData_t* gameData )
             star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
             star->position.x = star->movingLeft ? SCREEN_WIDTH : -(float)( gameData->renderData.starTexture.pixelBuffer.width - 1 );
             star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
-            star->restSeconds = 2;
+            star->restSeconds = ( Random_UInt32( 0, STAR_MAX_RESTSECONDS * 1000 ) ) / 1000.0f;
          }
       }
       else
