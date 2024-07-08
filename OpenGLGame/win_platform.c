@@ -1,3 +1,5 @@
+#include <Shlwapi.h>
+
 #include "game.h"
 
 typedef struct
@@ -29,6 +31,10 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    UNUSED_PARAM( hPrevInstance );
    UNUSED_PARAM( lpCmdLine );
    UNUSED_PARAM( nCmdShow );
+
+   // MUFFINS
+   char test[STRING_SIZE_DEFAULT];
+   Platform_GetAppDirectory( test, STRING_SIZE_DEFAULT );
 
    if ( !QueryPerformanceFrequency( &( g_globals.performanceFrequency ) ) )
    {
@@ -363,4 +369,21 @@ void Platform_ClearFileData( FileData_t* fileData )
 
    fileData->contents = 0;
    fileData->fileSize = 0;
+}
+
+Bool_t Platform_GetAppDirectory( char* directory, uint32_t stringSize )
+{
+   LPSTR fileName;
+   DWORD stringLength = GetModuleFileNameA( NULL, directory, stringSize );
+
+   if ( stringLength != strlen( directory ) )
+   {
+      // TODO: maybe try some logging, GetLastError could be enlightening
+      return False;
+   }
+
+   fileName = PathFindFileNameA( directory );
+   directory[stringLength - strlen( fileName )] = '\0';
+
+   return True;
 }
