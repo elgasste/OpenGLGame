@@ -194,7 +194,7 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
 {
    Bool_t keyWasDown = ( flags & ( (LONG_PTR)1 << 30 ) ) != 0 ? True : False;
    Bool_t keyIsDown = ( flags & ( (LONG_PTR)1 << 31 ) ) == 0 ? True : False;
-   int i;
+   uint32_t i;
 
    // ignore repeat presses
    if ( keyWasDown != keyIsDown )
