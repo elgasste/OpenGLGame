@@ -6,7 +6,7 @@ void Render_Clear()
    glClear( GL_COLOR_BUFFER_BIT );
 }
 
-void Render_DrawTexture( int32_t x, int32_t y, Texture_t* texture )
+void Render_DrawTexture( Texture_t* texture, int32_t x, int32_t y )
 {
    uint32_t w = texture->pixelBuffer.dimensions.x;
    uint32_t h = texture->pixelBuffer.dimensions.y;

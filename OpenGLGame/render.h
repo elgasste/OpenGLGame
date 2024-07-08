@@ -12,6 +12,6 @@ typedef struct RenderData_t
 RenderData_t;
 
 void Render_Clear();
-void Render_DrawTexture( int32_t x, int32_t y, Texture_t* texture );
+void Render_DrawTexture( Texture_t* texture, int32_t x, int32_t y );
 
 #endif
