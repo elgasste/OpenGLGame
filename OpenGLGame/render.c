@@ -1,13 +1,16 @@
 #include "render.h"
 #include "platform.h"
+#include "bmp.h"
 
-void Render_Init( RenderData_t* renderData )
+Bool_t Render_LoadTextureFromFile( Texture_t* texture, const char* filePath )
 {
-   renderData->backgroundTexture.pixelBuffer.width = SCREEN_WIDTH;
-   renderData->backgroundTexture.pixelBuffer.height = SCREEN_HEIGHT;
-   renderData->backgroundTexture.pixelBuffer.buffer = (uint8_t*)Platform_MemAlloc( (uint64_t)( SCREEN_WIDTH * SCREEN_HEIGHT * ( GRAPHICS_BPP / 8 ) ) );
+   if ( !Bmp_LoadFromFile( filePath, &( texture->pixelBuffer ) ) )
+   {
+      return False;
+   }
 
-   glGenTextures( 1, &( renderData->backgroundTexture.textureHandle ) );
+   glGenTextures( 1, &( texture->textureHandle ) );
+   return True;
 }
 
 void Render_Clear()

@@ -17,7 +17,7 @@ typedef struct
 }
 GameData_t;
 
-void Game_Init( GameData_t* gameData );
+Bool_t Game_Init( GameData_t* gameData );
 void Game_Run( GameData_t* gameData );
 void Game_PauseEngine( GameData_t* gameData );
 void Game_ResumeEngine( GameData_t* gameData );

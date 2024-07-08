@@ -1,17 +1,44 @@
 #include "game.h"
 
+internal Bool_t Game_LoadAssets( GameData_t* gameData );
 internal void Game_HandleInput( GameData_t* gameData );
 internal void Game_Tick( GameData_t* gameData );
 internal void Game_Render( GameData_t* gameData );
 
-void Game_Init( GameData_t* gameData )
+Bool_t Game_Init( GameData_t* gameData )
 {
    Clock_Init( &( gameData->clock ) );
    Input_Init( gameData->keyStates );
-   Render_Init( &( gameData->renderData ) );
+
+   if ( !Game_LoadAssets( gameData ) )
+   {
+      return False;
+   }
 
    gameData->isRunning = False;
    gameData->isEngineRunning = True;
+
+   return True;
+}
+
+Bool_t Game_LoadAssets( GameData_t* gameData )
+{
+   char appDirectory[STRING_SIZE_DEFAULT];
+   char backgroundFilePath[STRING_SIZE_DEFAULT];
+
+   if ( !Platform_GetAppDirectory( appDirectory, STRING_SIZE_DEFAULT ) )
+   {
+      return False;
+   }
+
+   snprintf( backgroundFilePath, STRING_SIZE_DEFAULT, "%sbackground.bmp", appDirectory );
+
+   if ( !Render_LoadTextureFromFile( &( gameData->renderData.backgroundTexture ), backgroundFilePath ) )
+   {
+      return False;
+   }
+
+   return True;
 }
 
 void Game_Run( GameData_t* gameData )
