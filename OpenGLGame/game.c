@@ -11,6 +11,7 @@ Bool_t Game_Init( GameData_t* gameData )
    uint32_t i;
    Star_t* star;
 
+   Random_Seed();
    Clock_Init( &( gameData->clock ) );
    Input_Init( gameData->keyStates );
 
