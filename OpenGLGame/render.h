@@ -15,6 +15,7 @@ Texture_t;
 typedef struct
 {
    Texture_t backgroundTexture;
+   Texture_t starTexture;
 }
 RenderData_t;
 

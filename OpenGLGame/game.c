@@ -25,6 +25,7 @@ Bool_t Game_LoadAssets( GameData_t* gameData )
 {
    char appDirectory[STRING_SIZE_DEFAULT];
    char backgroundFilePath[STRING_SIZE_DEFAULT];
+   char starFilePath[STRING_SIZE_DEFAULT];
 
    if ( !Platform_GetAppDirectory( appDirectory, STRING_SIZE_DEFAULT ) )
    {
@@ -32,8 +33,10 @@ Bool_t Game_LoadAssets( GameData_t* gameData )
    }
 
    snprintf( backgroundFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
+   snprintf( starFilePath, STRING_SIZE_DEFAULT, "%sassets\\star.bmp", appDirectory );
 
-   if ( !Render_LoadTextureFromFile( &( gameData->renderData.backgroundTexture ), backgroundFilePath ) )
+   if ( !Render_LoadTextureFromFile( &( gameData->renderData.backgroundTexture ), backgroundFilePath ) ||
+        !Render_LoadTextureFromFile( &( gameData->renderData.starTexture ), starFilePath ) )
    {
       return False;
    }
