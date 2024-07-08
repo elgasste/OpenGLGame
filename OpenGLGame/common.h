@@ -20,6 +20,8 @@ typedef int32_t Bool_t;
 #define False 0
 #define TOGGLE_BOOL( x ) x = ( x ) ? False : True
 
+#define LOG_FILE_NAME            "log.txt"
+
 #define STRING_SIZE_DEFAULT      1024
 
 #define GRAPHICS_BPP             32

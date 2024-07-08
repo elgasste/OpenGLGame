@@ -1,4 +1,5 @@
 #include <Shlwapi.h>
+#include <time.h>
 
 #include "game.h"
 
@@ -240,8 +241,43 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
 
 void Platform_Log( const char* message )
 {
-   // TODO: write to a log file with a time stamp, probably
-   UNUSED_PARAM( message );
+   HANDLE hFile;
+   time_t now;
+   struct tm timeInfo;
+   char formattedTime[STRING_SIZE_DEFAULT];
+   char timestampedMessage[STRING_SIZE_DEFAULT];
+   char appDirectory[STRING_SIZE_DEFAULT];
+   char logFilePath[STRING_SIZE_DEFAULT];
+   DWORD bytesToWrite;
+   DWORD bytesWritten;
+
+   if ( !Platform_GetAppDirectory( appDirectory, STRING_SIZE_DEFAULT ) )
+   {
+      return;
+   }
+
+   time( &now );
+   localtime_s( &timeInfo, &now );
+   strftime( formattedTime, STRING_SIZE_DEFAULT, "%d-%m-%Y %H:%M:%S", &timeInfo );
+   snprintf( timestampedMessage, STRING_SIZE_DEFAULT, "%s - %s\n", formattedTime, message );
+   snprintf( logFilePath, STRING_SIZE_DEFAULT, "%s%s", appDirectory, LOG_FILE_NAME );
+   hFile = CreateFileA( logFilePath, FILE_APPEND_DATA, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
+
+   if ( hFile == INVALID_HANDLE_VALUE )
+   {
+      MessageBoxA( 0, STR_WINERR_CREATELOGFILE, STR_WINERR_HEADER, MB_OK | MB_ICONERROR );
+      return;
+   }
+
+   bytesToWrite = (DWORD)strlen( timestampedMessage );
+
+   if ( !WriteFile( hFile, timestampedMessage, bytesToWrite, &bytesWritten, 0 ) || bytesWritten != bytesToWrite )
+   {
+      MessageBoxA( 0, STR_WINERR_WRITELOGFILE, STR_WINERR_HEADER, MB_OK | MB_ICONERROR );
+   }
+
+   CloseHandle( hFile );
+   return;
 }
 
 void* Platform_MemAlloc( uint64_t size )
@@ -379,8 +415,7 @@ Bool_t Platform_GetAppDirectory( char* directory, uint32_t stringSize )
 
    if ( stringLength != strlen( directory ) )
    {
-      // TODO: maybe better logging, GetLastError could be enlightening
-      Platform_Log( STR_WINERR_APPDIRECTORY );
+      MessageBoxA( 0, STR_WINERR_APPDIRECTORY, STR_WINERR_HEADER, MB_OK | MB_ICONERROR );
       return False;
    }
 
