@@ -12,20 +12,21 @@
 #include "clock.h"
 #include "input.h"
 #include "render.h"
-#include "data_types.h"
+#include "vector.h"
 
-typedef struct
+typedef struct Star_t
 {
-   PointF_t position;
+   Vector2f_t position;
    uint32_t pixelsPerSecond;
    Bool_t movingLeft;
    Bool_t isResting;
    float restSeconds;
    float restElapsedSeconds;
+   Sprite_t sprite;
 }
 Star_t;
 
-typedef struct
+typedef struct GameData_t
 {
    Clock_t clock;
    KeyState_t keyStates[KeyCode_Count];

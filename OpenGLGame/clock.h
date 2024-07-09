@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-typedef struct
+typedef struct Clock_t
 {
    Bool_t isRunning;
    uint64_t pauseTimeMicro;

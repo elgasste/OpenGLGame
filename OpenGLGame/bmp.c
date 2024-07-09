@@ -46,8 +46,8 @@ Bool_t Bmp_LoadFromFile( const char* filePath, PixelBuffer_t* pixelBuffer )
    uint8_t* filePos;
 
    pixelBuffer->buffer = 0;
-   pixelBuffer->width = 0;
-   pixelBuffer->height = 0;
+   pixelBuffer->dimensions.x = 0;
+   pixelBuffer->dimensions.y = 0;
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
@@ -90,8 +90,8 @@ internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer )
    {
       Platform_MemFree( pixelBuffer->buffer );
       pixelBuffer->buffer = 0;
-      pixelBuffer->width = 0;
-      pixelBuffer->height = 0;
+      pixelBuffer->dimensions.x = 0;
+      pixelBuffer->dimensions.y = 0;
    }
 }
 
@@ -304,8 +304,8 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
    imageHeight = (uint32_t)abs( bmpData->imageHeight );
    paddingBytes = bmpData->paddingBits / 8;
 
-   pixelBuffer->width = bmpData->imageWidth;
-   pixelBuffer->height = imageHeight;
+   pixelBuffer->dimensions.x = bmpData->imageWidth;
+   pixelBuffer->dimensions.y = imageHeight;
    pixelBuffer->buffer = (uint8_t*)Platform_MemAlloc( bmpData->imageWidth * imageHeight * GRAPHICS_BPP );
 
    for ( scanlineIndex = 0; scanlineIndex < imageHeight; scanlineIndex++ )

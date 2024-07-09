@@ -2,12 +2,12 @@
 #define PIXEL_BUFFER_H
 
 #include "common.h"
+#include "vector.h"
 
-typedef struct
+typedef struct PixelBuffer_t
 {
    uint8_t* buffer;
-   uint32_t width;
-   uint32_t height;
+   Vector2ui32_t dimensions;
 }
 PixelBuffer_t;
 

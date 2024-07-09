@@ -16,7 +16,7 @@ typedef enum
 }
 KeyCode_t;
 
-typedef struct
+typedef struct KeyState_t
 {
    Bool_t isDown;
    Bool_t wasDown;
