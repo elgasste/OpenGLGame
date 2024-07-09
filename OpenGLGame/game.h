@@ -22,6 +22,7 @@ typedef struct Star_t
    Bool_t isResting;
    float restSeconds;
    float restElapsedSeconds;
+   Sprite_t sprite;
 }
 Star_t;
 

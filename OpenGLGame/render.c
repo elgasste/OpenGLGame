@@ -10,8 +10,9 @@ void Render_Clear()
    glClear( GL_COLOR_BUFFER_BIT );
 }
 
-void Render_DrawTexture( Texture_t* texture, int32_t x, int32_t y )
+void Render_DrawTexture( RenderData_t* renderData, TextureID_t textureID, int32_t x, int32_t y )
 {
+   Texture_t* texture = &( renderData->textures[textureID] );
    uint32_t w = texture->pixelBuffer.dimensions.x;
    uint32_t h = texture->pixelBuffer.dimensions.y;
    float fw = (float)w;
@@ -44,34 +45,35 @@ void Render_DrawSprite( Sprite_t* sprite, int32_t x, int32_t y )
 {
    float frameW = (float)( sprite->frameDimensions.x );
    float frameH = (float)( sprite->frameDimensions.y );
-   uint32_t rowIndex = sprite->frameIndex / sprite->frameStride;
-   uint32_t colIndex = sprite->frameIndex % sprite->frameStride;
-   float fx = colIndex * frameW;
-   float fy = rowIndex * frameH;
-   float fw = fx + frameW;
-   float fh = fy + frameH;
+   uint32_t numRows = sprite->texture->pixelBuffer.dimensions.y / sprite->frameDimensions.y;
+   uint32_t rowIndex = ( sprite->frameIndex ) / sprite->frameStride;
+   uint32_t colIndex = ( sprite->frameIndex ) % sprite->frameStride;
+   float frameSizeX = 1.0f / sprite->frameStride;
+   float frameSizeY = 1.0f / numRows;
+   float textureX = frameSizeX * colIndex;
+   float textureY = frameSizeY * rowIndex;
+   float textureW = textureX + frameSizeX;
+   float textureH = textureY + frameSizeY;
 
-   Render_PrepareTextureForDrawing( &( sprite->texture ),
-                                    x, y,
-                                    sprite->frameDimensions.x, sprite->frameDimensions.y ); 
+   Render_PrepareTextureForDrawing( sprite->texture, x, y, sprite->frameDimensions.x, sprite->frameDimensions.y );
 
    glBegin( GL_TRIANGLES );
 
    // lower triangle
-   glTexCoord2f( 0.0f, 0.0f );
-   glVertex2f( fx, fy );
-   glTexCoord2f( 1.0f, 0.0f );
-   glVertex2f( fw, fy );
-   glTexCoord2f( 1.0f, 1.0f );
-   glVertex2f( fw, fh );
+   glTexCoord2f( textureX, textureY );
+   glVertex2f( 0.0f, 0.0f );
+   glTexCoord2f( textureW, textureY );
+   glVertex2f( frameW, 0.0f );
+   glTexCoord2f( textureW, textureH );
+   glVertex2f( frameW, frameH );
 
    // upper triangle
-   glTexCoord2f( 0.0f, 0.0f );
-   glVertex2f( fx, fy );
-   glTexCoord2f( 1.0f, 1.0f );
-   glVertex2f( fw, fh );
-   glTexCoord2f( 0.0f, 1.0f );
-   glVertex2f( fx, fh );
+   glTexCoord2f( textureX, textureY );
+   glVertex2f( 0.0f, 0.0f );
+   glTexCoord2f( textureW, textureH );
+   glVertex2f( frameW, frameH );
+   glTexCoord2f( textureX, textureH );
+   glVertex2f( 0.0f, frameH );
 
    glEnd();
 }
@@ -82,8 +84,8 @@ internal void Render_PrepareTextureForDrawing( Texture_t* texture,
 {
    GLfloat modelMatrix[] = 
    {
-      2.0f / texture->pixelBuffer.dimensions.x, 0.0f, 0.0f, 0.0f,
-      0.0f, 2.0f / texture->pixelBuffer.dimensions.y, 0.0f, 0.0f,
+      2.0f / viewportWidth, 0.0f, 0.0f, 0.0f,
+      0.0f, 2.0f / viewportHeight, 0.0f, 0.0f,
       0.0f, 0.0f, 1.0f, 0.0f,
       -1.0f, -1.0f, 0.0f, 1.0f
    };

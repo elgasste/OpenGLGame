@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "enums.h"
 #include "strings.h"
 
 // not really necessary, but makes things easier to distinguish

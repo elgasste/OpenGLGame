@@ -24,18 +24,12 @@ Bool_t Game_Init( GameData_t* gameData )
    {
       star = &( gameData->stars[i] );
 
-      star->isResting = Random_Bool();
-
-      if ( star->isResting )
+      if ( !Sprite_Init( &( star->sprite ), &( gameData->renderData.textures[TextureID_Star] ), 6, 6, 0.1f ) )
       {
-         star->restElapsedSeconds = 0.0f;
-         star->restSeconds = ( Random_UInt32( 0, STAR_MAX_RESTSECONDS * 1000 ) ) / 1000.0f;
+         return False;
       }
 
-      star->movingLeft = Random_Bool();
-      star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
-      star->position.x = (float)Random_UInt32( 0, SCREEN_WIDTH - 1 );
-      star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
+      star->isResting = True;
    }
 
    gameData->isRunning = False;
@@ -47,19 +41,19 @@ Bool_t Game_Init( GameData_t* gameData )
 Bool_t Game_LoadAssets( GameData_t* gameData )
 {
    char appDirectory[STRING_SIZE_DEFAULT];
-   char backgroundFilePath[STRING_SIZE_DEFAULT];
-   char starFilePath[STRING_SIZE_DEFAULT];
+   char backgroundBmpFilePath[STRING_SIZE_DEFAULT];
+   char starBmpFilePath[STRING_SIZE_DEFAULT];
 
    if ( !Platform_GetAppDirectory( appDirectory, STRING_SIZE_DEFAULT ) )
    {
       return False;
    }
 
-   snprintf( backgroundFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
-   snprintf( starFilePath, STRING_SIZE_DEFAULT, "%sassets\\star.bmp", appDirectory );
+   snprintf( backgroundBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
+   snprintf( starBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\star.bmp", appDirectory );
 
-   if ( !Texture_LoadFromFile( &( gameData->renderData.backgroundTexture ), backgroundFilePath ) ||
-        !Texture_LoadFromFile( &( gameData->renderData.starTexture ), starFilePath ) )
+   if ( !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Background] ), backgroundBmpFilePath) ||
+        !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Star] ), starBmpFilePath ) )
    {
       return False;
    }
@@ -132,6 +126,7 @@ internal void Game_HandleInput( GameData_t* gameData )
 internal void Game_Tick( GameData_t* gameData )
 {
    uint32_t i;
+   float frameTimeAdjustment;
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {
@@ -146,9 +141,13 @@ internal void Game_Tick( GameData_t* gameData )
             star->isResting = False;
             star->movingLeft = Random_Bool();
             star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
-            star->position.x = star->movingLeft ? SCREEN_WIDTH : -(float)( gameData->renderData.starTexture.pixelBuffer.dimensions.x - 1 );
+            star->position.x = star->movingLeft ? SCREEN_WIDTH : -(float)( star->sprite.frameDimensions.x - 1 );
             star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
             star->restSeconds = ( Random_UInt32( 0, STAR_MAX_RESTSECONDS * 1000 ) ) / 1000.0f;
+
+            Sprite_Reset( &( star->sprite ) );
+            frameTimeAdjustment = ( (float)Random_Percent() / 100 ) * 0.5f;
+            Sprite_ScaleFrameTime( &( star->sprite ), 1.0f + ( Random_Bool() ? frameTimeAdjustment : -frameTimeAdjustment ) );
          }
       }
       else
@@ -157,10 +156,14 @@ internal void Game_Tick( GameData_t* gameData )
             ? star->position.x - (float)star->pixelsPerSecond * gameData->clock.frameDeltaSeconds
             : star->position.x + (float)star->pixelsPerSecond * gameData->clock.frameDeltaSeconds;
          
-         if ( star->position.x < -(float)( gameData->renderData.starTexture.pixelBuffer.dimensions.x ) ||
+         if ( star->position.x < -(float)( star->sprite.frameDimensions.x ) ||
               star->position.x > SCREEN_WIDTH )
          {
             star->isResting = True;
+         }
+         else
+         {
+            Sprite_Tick( &( star->sprite ), &( gameData->clock ) );
          }
       }
    }
@@ -172,12 +175,12 @@ internal void Game_Render( GameData_t* gameData )
    Star_t* star;
 
    Render_Clear();
-   Render_DrawTexture( &( gameData->renderData.backgroundTexture ), 0, 0 );
+   Render_DrawTexture( &( gameData->renderData ), TextureID_Background, 0, 0 );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {
       star = &( gameData->stars[i] );
-      Render_DrawTexture( &( gameData->renderData.starTexture ), (uint32_t)( star->position.x ), (uint32_t)( star->position.y ) );
+      Render_DrawSprite( &( star->sprite ), (uint32_t)( star->position.x ), (uint32_t)( star->position.y ) );
    }
 
    Platform_RenderScreen();

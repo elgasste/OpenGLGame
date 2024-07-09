@@ -1,26 +1,21 @@
 #include "sprite.h"
 #include "clock.h"
 
-Bool_t Sprite_LoadFromFile( Sprite_t* sprite, const char* filePath, uint32_t frameWidth, uint32_t frameHeight, float frameSeconds )
+Bool_t Sprite_Init( Sprite_t* sprite, Texture_t* texture, uint32_t frameWidth, uint32_t frameHeight, float frameSeconds )
 {
-   char errorMsg[STRING_SIZE_DEFAULT];
-
-   if ( !Texture_LoadFromFile( &( sprite->texture ), filePath ) )
+   if ( ( texture->pixelBuffer.dimensions.x % frameWidth != 0 ) ||
+        ( texture->pixelBuffer.dimensions.y % frameHeight != 0 ) )
    {
-      return False;
-   }
-   else if ( ( sprite->texture.pixelBuffer.dimensions.x % frameWidth != 0 ) ||
-             ( sprite->texture.pixelBuffer.dimensions.y % frameHeight != 0 ) )
-   {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_SPRITEERR_FRAMEDIMENSIONS, filePath );
-      Platform_Log( errorMsg );
+      // TODO: log the texture ID?
+      Platform_Log( STR_SPRITEERR_FRAMEDIMENSIONS );
       return False;
    }
 
+   sprite->texture = texture;
    sprite->frameDimensions.x = frameWidth;
    sprite->frameDimensions.y = frameHeight;
-   sprite->frameStride = sprite->texture.pixelBuffer.dimensions.x / frameWidth;
-   sprite->numFrames = sprite->frameStride * ( sprite->texture.pixelBuffer.dimensions.y / frameHeight );
+   sprite->frameStride = sprite->texture->pixelBuffer.dimensions.x / frameWidth;
+   sprite->numFrames = sprite->frameStride * ( sprite->texture->pixelBuffer.dimensions.y / frameHeight );
    sprite->frameSeconds = frameSeconds;
 
    Sprite_Reset( sprite );
@@ -32,10 +27,10 @@ void Sprite_Reset( Sprite_t* sprite )
 {
    sprite->frameIndex = 0;
    sprite->secondsElapsed = 0.0f;
-   Sprite_ScaleSpeed( sprite, 1.0f );
+   Sprite_ScaleFrameTime( sprite, 1.0f );
 }
 
-void Sprite_ScaleSpeed( Sprite_t* sprite, float scalar )
+void Sprite_ScaleFrameTime( Sprite_t* sprite, float scalar )
 {
    sprite->scaledFrameSeconds = sprite->frameSeconds * scalar;
 }
