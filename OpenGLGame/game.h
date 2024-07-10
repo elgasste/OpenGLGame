@@ -1,7 +1,7 @@
 #if !defined( GAME_H )
 #define GAME_H
 
-#define STAR_COUNT            8
+#define STAR_COUNT            1024
 #define STAR_MIN_Y            146
 #define STAR_MAX_Y            767
 #define STAR_MIN_VELOCITY     20
@@ -23,6 +23,7 @@ typedef struct Star_t
    float restSeconds;
    float restElapsedSeconds;
    Sprite_t sprite;
+   float scale;
 }
 Star_t;
 

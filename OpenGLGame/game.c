@@ -147,6 +147,7 @@ internal void Game_Tick( GameData_t* gameData )
 
             Sprite_Reset( &( star->sprite ) );
             frameTimeAdjustment = ( (float)Random_Percent() / 100 ) * 0.5f;
+            star->scale = ( (float)Random_Percent() / 100 );
             Sprite_ScaleFrameTime( &( star->sprite ), 1.0f + ( Random_Bool() ? frameTimeAdjustment : -frameTimeAdjustment ) );
          }
       }
@@ -180,7 +181,7 @@ internal void Game_Render( GameData_t* gameData )
    for ( i = 0; i < STAR_COUNT; i++ )
    {
       star = &( gameData->stars[i] );
-      Render_DrawSprite( &( star->sprite ), 1.0f, (uint32_t)( star->position.x ), (uint32_t)( star->position.y ) );
+      Render_DrawSprite( &( star->sprite ), star->scale, (uint32_t)( star->position.x ), (uint32_t)( star->position.y ) );
    }
 
    Platform_RenderScreen();
