@@ -10,7 +10,7 @@ void Render_Clear()
    glClear( GL_COLOR_BUFFER_BIT );
 }
 
-void Render_DrawTextureSection( Texture_t* texture,
+void Render_DrawTextureSection( Texture_t* texture, float scale,
                                 int32_t screenX, int32_t screenY,
                                 int32_t textureX, int32_t textureY,
                                 uint32_t sectionWidth, uint32_t sectionHeight )
@@ -21,8 +21,12 @@ void Render_DrawTextureSection( Texture_t* texture,
    float fny1 = (float)textureY / texture->pixelBuffer.dimensions.y;
    float fnx2 = fnx1 + ( fw / texture->pixelBuffer.dimensions.x );
    float fny2 = fny1 + ( fh / texture->pixelBuffer.dimensions.y );
+   float fsw = fw * scale;
+   float fsh = fh * scale;
 
-   Render_PrepareTextureForDrawing( texture, screenX, screenY, sectionWidth, sectionHeight );
+   Render_PrepareTextureForDrawing( texture,
+                                    screenX, screenY,
+                                    (uint32_t)( sectionWidth * scale), (uint32_t)( sectionHeight * scale ) );
 
    glBegin( GL_TRIANGLES );
 
@@ -30,35 +34,35 @@ void Render_DrawTextureSection( Texture_t* texture,
    glTexCoord2f( fnx1, fny1 );
    glVertex2f( 0.0f, 0.0f );
    glTexCoord2f( fnx2, fny1 );
-   glVertex2f( fw, 0.0f );
+   glVertex2f( fsw, 0.0f );
    glTexCoord2f( fnx2, fny2 );
-   glVertex2f( fw, fh );
+   glVertex2f( fsw, fsh );
 
    // upper triangle
    glTexCoord2f( fnx1, fny1 );
    glVertex2f( 0.0f, 0.0f );
    glTexCoord2f( fnx2, fny2 );
-   glVertex2f( fw, fh );
+   glVertex2f( fsw, fsh );
    glTexCoord2f( fnx1, fny2 );
-   glVertex2f( 0.0f, fh );
+   glVertex2f( 0.0f, fsh );
 
    glEnd();
 }
 
-void Render_DrawTexture( Texture_t* texture, int32_t screenX, int32_t screenY )
+void Render_DrawTexture( Texture_t* texture, float scale, int32_t screenX, int32_t screenY )
 {
-   Render_DrawTextureSection( texture,
+   Render_DrawTextureSection( texture, scale,
                               screenX, screenY,
                               0, 0,
                               texture->pixelBuffer.dimensions.x, texture->pixelBuffer.dimensions.y );
 }
 
-void Render_DrawSprite( Sprite_t* sprite, int32_t screenX, int32_t screenY )
+void Render_DrawSprite( Sprite_t* sprite, float scale, int32_t screenX, int32_t screenY )
 {
    uint32_t rowIndex = ( sprite->frameIndex ) / sprite->frameStride;
    uint32_t colIndex = ( sprite->frameIndex ) % sprite->frameStride;
 
-   Render_DrawTextureSection( sprite->texture,
+   Render_DrawTextureSection( sprite->texture, scale,
                               screenX, screenY,
                               sprite->frameDimensions.x * colIndex, sprite->frameDimensions.y * rowIndex,
                               sprite->frameDimensions.x, sprite->frameDimensions.y );

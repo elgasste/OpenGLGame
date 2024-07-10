@@ -175,12 +175,12 @@ internal void Game_Render( GameData_t* gameData )
    Star_t* star;
 
    Render_Clear();
-   Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 0, 0 );
+   Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 1.0f, 0, 0 );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {
       star = &( gameData->stars[i] );
-      Render_DrawSprite( &( star->sprite ), (uint32_t)( star->position.x ), (uint32_t)( star->position.y ) );
+      Render_DrawSprite( &( star->sprite ), 1.0f, (uint32_t)( star->position.x ), (uint32_t)( star->position.y ) );
    }
 
    Platform_RenderScreen();
