@@ -24,9 +24,9 @@ int main( int argc, char** argv )
 {
    Font_t font;
 
-   if ( argc < 2 )
+   if ( argc < 3 )
    {
-      printf( "ERROR: not enough arguments, expecting the path to a TTF file!\n\n" );
+      printf( "ERROR: not enough arguments, arg1 should be TTF file to read, arg2 should be GFF file to write.\n\n" );
       exit( 1 );
    }
 
