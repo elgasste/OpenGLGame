@@ -2,39 +2,44 @@
 #include "stb_truetype.h"
 
 #include "platform.h"
+#include "pixel_buffer.h"
 
-#define FONT_PIXEL_HEIGHT 128.0f
+#define FONT_RAWPIXELHEIGHT   128.0f
+
+// TODO: move all these defines and data structs into OpenGLGame
+#define FONT_STARTCODEPOINT   32       // space
+#define FONT_ENDCODEPOINT     126      // tilde
 
 typedef struct
 {
-   uint32_t codepoint;
-   uint8_t* bitmapData;
-   uint32_t width;
-   uint32_t height;
+   uint32_t codepointOffset;
+   uint32_t numGlyphs;
+   PixelBuffer_t* glyphBuffers;
 }
-FontCodepointData_t;
+Font_t;
 
-// from space (32) to tilde (126)
-global FontCodepointData_t g_codepointData[95];
-
-internal void LoadCodepointDataFromFile( const char* filePath );
+internal void LoadFontFromFile( const char* filePath, Font_t* font );
 
 int main( int argc, char** argv )
 {
+   Font_t font;
+
    if ( argc < 2 )
    {
       printf( "ERROR: not enough arguments, expecting the path to a TTF file!\n\n" );
       exit( 1 );
    }
 
-   printf( "Loading codepoint data..." );
-   LoadCodepointDataFromFile( argv[1] );
-   printf( "done!\n" );
+   font.codepointOffset = FONT_STARTCODEPOINT;
+   font.numGlyphs = (uint32_t)( ( FONT_ENDCODEPOINT - FONT_STARTCODEPOINT ) + 1 );
+   font.glyphBuffers = (PixelBuffer_t*)Platform_MemAlloc( font.numGlyphs * sizeof( PixelBuffer_t ) );
+
+   LoadFontFromFile( argv[1], &font );
 
    return 0;
 }
 
-internal void LoadCodepointDataFromFile( const char* filePath )
+internal void LoadFontFromFile( const char* filePath, Font_t* font )
 {
    FileData_t fileData;
    uint8_t* fileDataPos;
@@ -57,15 +62,16 @@ internal void LoadCodepointDataFromFile( const char* filePath )
 
    if ( !stbtt_InitFont( &fontInfo, fileDataPos, stbtt_GetFontOffsetForIndex( fileDataPos, 0 ) ) )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, "ERROR: could not initialize font: %s\n\n", filePath );
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, "ERROR: could not load font data: %s\n\n", filePath );
       printf( errorMsg );
       exit( 1 );
    }
 
-   // from space to tilde, should be everything we would need
-   for ( codepoint = 32; codepoint <= 126; codepoint++ )
+   printf( "Reading glyphs..." );
+
+   for ( codepoint = FONT_STARTCODEPOINT; codepoint <= FONT_ENDCODEPOINT; codepoint++ )
    {
-      scaleForPixelHeight = stbtt_ScaleForPixelHeight( &fontInfo, FONT_PIXEL_HEIGHT );
+      scaleForPixelHeight = stbtt_ScaleForPixelHeight( &fontInfo, FONT_RAWPIXELHEIGHT );
       monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scaleForPixelHeight, codepoint, &width, &height, &xOffset, &yOffset );
       pitch = width * ( GRAPHICS_BPP / 8 );
       codepointMemory = Platform_MemAlloc( height * pitch );
@@ -87,13 +93,16 @@ internal void LoadCodepointDataFromFile( const char* filePath )
          destRow -= pitch;
       }
 
-      g_codepointData[codepoint - 32].codepoint = codepoint;
-      g_codepointData[codepoint - 32].bitmapData = (uint8_t*)codepointMemory;
-      g_codepointData[codepoint - 32].width = (uint32_t)width;
-      g_codepointData[codepoint - 32].height = (uint32_t)height;
+      font->glyphBuffers[codepoint - FONT_STARTCODEPOINT].buffer = (uint8_t*)codepointMemory;
+      font->glyphBuffers[codepoint - FONT_STARTCODEPOINT].dimensions.x = (uint32_t)width;
+      font->glyphBuffers[codepoint - FONT_STARTCODEPOINT].dimensions.y = (uint32_t)height;
 
       stbtt_FreeBitmap( monoCodepointMemory, 0 );
    }
+
+   printf( "done!\n" );
+
+   // TODO: write this data to a file, basically in the order the struct is laid out.
 
    Platform_ClearFileData( &fileData );
 }
