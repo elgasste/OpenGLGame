@@ -3,25 +3,35 @@
 
 #include "platform.h"
 
-internal void LoadCodepoint( const char* filePath, uint8_t codepoint );
+#define FONT_PIXEL_HEIGHT 128.0f
+
+internal void LoadCodepoints( const char* filePath );
 
 int main( int argc, char** argv )
 {
-   UNUSED_PARAM( argc );
-   UNUSED_PARAM( argv );
+   if ( argc < 2 )
+   {
+      printf( "ERROR: not enough arguments, expecting the path to a TTF file!\n\n" );
+      exit( 1 );
+   }
+
+   printf( "Loading codepoints..." );
+   LoadCodepoints( argv[1] );
+   printf( "done!\n" );
 
    return 0;
 }
 
-internal void LoadCodepoint( const char* filePath, uint8_t codepoint )
+internal void LoadCodepoints( const char* filePath )
 {
    FileData_t fileData;
    uint8_t* fileDataPos;
    stbtt_fontinfo fontInfo;
-   int32_t width, height, xOffset, yOffset, pitch, x, y;
+   int32_t width, height, xOffset, yOffset, pitch, x, y, codepoint;
    uint8_t *monoCodepointMemory, *codepointMemory, *source, *destRow;
    uint32_t* dest;
    uint8_t alpha;
+   float scaleForPixelHeight;
    char errorMsg[STRING_SIZE_DEFAULT];
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
@@ -40,32 +50,37 @@ internal void LoadCodepoint( const char* filePath, uint8_t codepoint )
       exit( 1 );
    }
 
-   // TODO: we'll probably want several different size variations, for now let's just go with 128
-   monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, stbtt_ScaleForPixelHeight( &fontInfo, 128.0f ), codepoint, &width, &height, &xOffset, &yOffset );
-   pitch = width * ( GRAPHICS_BPP / 8 );
-   codepointMemory = Platform_MemAlloc( height * pitch );
-   source = monoCodepointMemory;
-   destRow = codepointMemory + ( (height - 1 ) * pitch );
-
-   for ( y = 0; y < height; y++ )
+   // from space to tilde, should be everything we would need
+   for ( codepoint = 32; codepoint <= 126; codepoint++ )
    {
-      dest = (uint32_t*)destRow;
+      scaleForPixelHeight = stbtt_ScaleForPixelHeight( &fontInfo, FONT_PIXEL_HEIGHT );
+      monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scaleForPixelHeight, codepoint, &width, &height, &xOffset, &yOffset );
+      pitch = width * ( GRAPHICS_BPP / 8 );
+      codepointMemory = Platform_MemAlloc( height * pitch );
+      source = monoCodepointMemory;
+      destRow = codepointMemory + ( ( height - 1 ) * pitch );
 
-      for ( x = 0; x < width; x++ )
+      for ( y = 0; y < height; y++ )
       {
-         alpha = *source;
-         source++;
-         *dest = ( (uint32_t)alpha << 24 ) | ( (uint32_t)alpha << 16 ) | ( (uint32_t)alpha << 8 ) | (uint32_t)alpha;
-         dest++;
+         dest = (uint32_t*)destRow;
+
+         for ( x = 0; x < width; x++ )
+         {
+            alpha = *source;
+            source++;
+            *dest = ( (uint32_t)alpha << 24 ) | ( (uint32_t)alpha << 16 ) | ( (uint32_t)alpha << 8 ) | (uint32_t)alpha;
+            dest++;
+         }
+
+         destRow -= pitch;
       }
 
-      destRow -= pitch;
+      // TODO: we have the codepoint image, what do we do with it?
+
+      Platform_MemFree( codepointMemory );
+      stbtt_FreeBitmap( monoCodepointMemory, 0 );
    }
 
-   // TODO: we have codepoint memory, do something with it
-
-   Platform_MemFree( codepointMemory );
-   stbtt_FreeBitmap( monoCodepointMemory, 0 );
    Platform_ClearFileData( &fileData );
 }
 
@@ -84,7 +99,6 @@ Bool_t Platform_ReadFileData( const char* filePath, FileData_t* fileData )
    HANDLE hFile;
    LARGE_INTEGER fileSize;
    OVERLAPPED overlapped = { 0 };
-   char errorMsg[STRING_SIZE_DEFAULT];
 
    strcpy_s( fileData->filePath, STRING_SIZE_DEFAULT, filePath );
    fileData->contents = 0;
@@ -94,16 +108,11 @@ Bool_t Platform_ReadFileData( const char* filePath, FileData_t* fileData )
 
    if ( hFile == INVALID_HANDLE_VALUE )
    {
-      // TODO: maybe log the reason it couldn't be opened (file not found, etc)6
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FILEERR_OPENFILEFAILED, filePath );
-      Platform_Log( errorMsg );
       return False;
    }
 
    if ( !GetFileSizeEx( hFile, &fileSize ) )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FILEERR_GETFILESIZEFAILED, filePath );
-      Platform_Log( errorMsg );
       CloseHandle( hFile );
       return False;
    }
