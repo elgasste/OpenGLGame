@@ -5,7 +5,19 @@
 
 #define FONT_PIXEL_HEIGHT 128.0f
 
-internal void LoadCodepoints( const char* filePath );
+typedef struct
+{
+   uint32_t codepoint;
+   uint8_t* bitmapData;
+   uint32_t width;
+   uint32_t height;
+}
+FontCodepointData_t;
+
+// from space (32) to tilde (126)
+global FontCodepointData_t g_codepointData[95];
+
+internal void LoadCodepointDataFromFile( const char* filePath );
 
 int main( int argc, char** argv )
 {
@@ -15,14 +27,14 @@ int main( int argc, char** argv )
       exit( 1 );
    }
 
-   printf( "Loading codepoints..." );
-   LoadCodepoints( argv[1] );
+   printf( "Loading codepoint data..." );
+   LoadCodepointDataFromFile( argv[1] );
    printf( "done!\n" );
 
    return 0;
 }
 
-internal void LoadCodepoints( const char* filePath )
+internal void LoadCodepointDataFromFile( const char* filePath )
 {
    FileData_t fileData;
    uint8_t* fileDataPos;
@@ -75,9 +87,11 @@ internal void LoadCodepoints( const char* filePath )
          destRow -= pitch;
       }
 
-      // TODO: we have the codepoint image, what do we do with it?
+      g_codepointData[codepoint - 32].codepoint = codepoint;
+      g_codepointData[codepoint - 32].bitmapData = (uint8_t*)codepointMemory;
+      g_codepointData[codepoint - 32].width = (uint32_t)width;
+      g_codepointData[codepoint - 32].height = (uint32_t)height;
 
-      Platform_MemFree( codepointMemory );
       stbtt_FreeBitmap( monoCodepointMemory, 0 );
    }
 
