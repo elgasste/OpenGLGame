@@ -1,24 +1,11 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 
+#include "font.h"
 #include "platform.h"
-#include "pixel_buffer.h"
 
-#define FONT_RAWPIXELHEIGHT   128.0f
-
-// TODO: move all these defines and data structs into OpenGLGame
-#define FONT_STARTCODEPOINT   32       // space
-#define FONT_ENDCODEPOINT     126      // tilde
-
-typedef struct
-{
-   uint32_t codepointOffset;
-   uint32_t numGlyphs;
-   PixelBuffer_t* glyphBuffers;
-}
-Font_t;
-
-internal void LoadFontFromFile( const char* filePath, Font_t* font );
+internal void LoadTTF( const char* filePath, Font_t* font );
+internal void WriteGFF( const char* filePath, Font_t* font );
 
 int main( int argc, char** argv )
 {
@@ -32,14 +19,15 @@ int main( int argc, char** argv )
 
    font.codepointOffset = FONT_STARTCODEPOINT;
    font.numGlyphs = (uint32_t)( ( FONT_ENDCODEPOINT - FONT_STARTCODEPOINT ) + 1 );
-   font.glyphBuffers = (PixelBuffer_t*)Platform_MemAlloc( font.numGlyphs * sizeof( PixelBuffer_t ) );
+   font.glyphs = (PixelBuffer_t*)Platform_MemAlloc( font.numGlyphs * sizeof( PixelBuffer_t ) );
 
-   LoadFontFromFile( argv[1], &font );
+   LoadTTF( argv[1], &font );
+   WriteGFF( argv[2], &font );
 
    return 0;
 }
 
-internal void LoadFontFromFile( const char* filePath, Font_t* font )
+internal void LoadTTF( const char* filePath, Font_t* font )
 {
    FileData_t fileData;
    uint8_t* fileDataPos;
@@ -93,17 +81,70 @@ internal void LoadFontFromFile( const char* filePath, Font_t* font )
          destRow -= pitch;
       }
 
-      font->glyphBuffers[codepoint - FONT_STARTCODEPOINT].buffer = (uint8_t*)codepointMemory;
-      font->glyphBuffers[codepoint - FONT_STARTCODEPOINT].dimensions.x = (uint32_t)width;
-      font->glyphBuffers[codepoint - FONT_STARTCODEPOINT].dimensions.y = (uint32_t)height;
+      font->glyphs[codepoint - FONT_STARTCODEPOINT].buffer = (uint8_t*)codepointMemory;
+      font->glyphs[codepoint - FONT_STARTCODEPOINT].dimensions.x = (uint32_t)width;
+      font->glyphs[codepoint - FONT_STARTCODEPOINT].dimensions.y = (uint32_t)height;
 
       stbtt_FreeBitmap( monoCodepointMemory, 0 );
    }
 
    printf( "done!\n" );
+   Platform_ClearFileData( &fileData );
+}
 
-   // TODO: write this data to a file, basically in the order the struct is laid out.
+internal void WriteGFF( const char* filePath, Font_t* font )
+{
+   FileData_t fileData = { 0 };
+   uint32_t i, j;
+   PixelBuffer_t* glyph = font->glyphs;
+   char errorMsg[STRING_SIZE_DEFAULT];
+   uint32_t* filePos;
 
+   printf( "Writing GFF data..." );
+
+   strcpy_s( fileData.filePath, STRING_SIZE_DEFAULT, filePath );
+
+   // codepoint offset and number of glyphs (both 4 bytes)
+   fileData.fileSize += 8;
+
+   for ( i = 0; i < font->numGlyphs; i++ )
+   {
+      // dimensions (8 bytes) and buffer size
+      fileData.fileSize += 8;
+      fileData.fileSize += glyph->dimensions.x * glyph->dimensions.y * ( GRAPHICS_BPP / 8 );
+      glyph++;
+   }
+
+   fileData.contents = Platform_MemAlloc( fileData.fileSize );
+
+   filePos = (uint32_t*)fileData.contents;
+   filePos[0] = font->codepointOffset;
+   filePos[1] = font->numGlyphs;
+   filePos += 2;
+
+   for ( i = 0; i < font->numGlyphs; i++ )
+   {
+      filePos[0] = glyph->dimensions.x;
+      filePos[1] = glyph->dimensions.y;
+      filePos += 2;
+
+      for ( j = 0; j < ( glyph->dimensions.x * glyph->dimensions.y ); j++ )
+      {
+         filePos[j] = glyph->buffer[j];
+      }
+
+      filePos += ( glyph->dimensions.x + glyph->dimensions.y );
+      glyph++;
+   }
+
+   if ( !Platform_WriteFileData( &fileData ) )
+   {
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, "ERROR: could write to file: %s\n\n", filePath );
+      printf( errorMsg );
+      exit( 1 );
+   }
+
+   printf( "done!\n\n" );
    Platform_ClearFileData( &fileData );
 }
 
@@ -156,12 +197,12 @@ Bool_t Platform_ReadFileData( const char* filePath, FileData_t* fileData )
    return True;
 }
 
-Bool_t Platform_WriteFileData( const char* filePath, FileData_t* fileData )
+Bool_t Platform_WriteFileData( FileData_t* fileData )
 {
    HANDLE hFile;
    OVERLAPPED overlapped = { 0 };
 
-   hFile = CreateFileA( filePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
+   hFile = CreateFileA( fileData->filePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
 
    if ( !hFile )
    {

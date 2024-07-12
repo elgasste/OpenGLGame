@@ -373,12 +373,12 @@ Bool_t Platform_ReadFileData( const char* filePath, FileData_t* fileData )
    return True;
 }
 
-Bool_t Platform_WriteFileData( const char* filePath, FileData_t* fileData )
+Bool_t Platform_WriteFileData( FileData_t* fileData )
 {
    HANDLE hFile;
    OVERLAPPED overlapped = { 0 };
 
-   hFile = CreateFileA( filePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
+   hFile = CreateFileA( fileData->filePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
 
    if ( !hFile )
    {
