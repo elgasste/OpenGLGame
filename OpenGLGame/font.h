@@ -3,12 +3,14 @@
 
 #include "common.h"
 #include "pixel_buffer.h"
+#include "platform.h"
 
 typedef struct
 {
    uint32_t codepointOffset;
    uint32_t numGlyphs;
    PixelBuffer_t* glyphs;
+   GLuint textureHandle;
 }
 Font_t;
 

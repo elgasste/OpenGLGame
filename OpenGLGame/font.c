@@ -77,5 +77,7 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
       return False;
    }
 
+   glGenTextures( 1, &( font->textureHandle ) );
+
    return True;
 }

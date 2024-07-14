@@ -1,6 +1,6 @@
 #include "render.h"
 
-internal void Render_PrepareTextureForDrawing( Texture_t* texture,
+internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
                                                int32_t screenX, int32_t screenY,
                                                uint32_t viewportWidth, uint32_t viewportHeight );
 
@@ -10,21 +10,21 @@ void Render_Clear()
    glClear( GL_COLOR_BUFFER_BIT );
 }
 
-void Render_DrawTextureSection( Texture_t* texture, float scale,
+void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
                                 int32_t screenX, int32_t screenY,
                                 int32_t textureX, int32_t textureY,
                                 uint32_t sectionWidth, uint32_t sectionHeight )
 {
    float fw = (float)sectionWidth;
    float fh = (float)sectionHeight;
-   float fnx1 = (float)textureX / texture->pixelBuffer.dimensions.x;
-   float fny1 = (float)textureY / texture->pixelBuffer.dimensions.y;
-   float fnx2 = fnx1 + ( fw / texture->pixelBuffer.dimensions.x );
-   float fny2 = fny1 + ( fh / texture->pixelBuffer.dimensions.y );
+   float fnx1 = (float)textureX / pixelBuffer->dimensions.x;
+   float fny1 = (float)textureY / pixelBuffer->dimensions.y;
+   float fnx2 = fnx1 + ( fw / pixelBuffer->dimensions.x );
+   float fny2 = fny1 + ( fh / pixelBuffer->dimensions.y );
    float fsw = fw * scale;
    float fsh = fh * scale;
 
-   Render_PrepareTextureForDrawing( texture,
+   Render_PrepareTextureForDrawing( textureHandle, pixelBuffer,
                                     screenX, screenY,
                                     (uint32_t)( sectionWidth * scale), (uint32_t)( sectionHeight * scale ) );
 
@@ -51,7 +51,7 @@ void Render_DrawTextureSection( Texture_t* texture, float scale,
 
 void Render_DrawTexture( Texture_t* texture, float scale, int32_t screenX, int32_t screenY )
 {
-   Render_DrawTextureSection( texture, scale,
+   Render_DrawTextureSection( texture->textureHandle, &( texture->pixelBuffer ), scale,
                               screenX, screenY,
                               0, 0,
                               texture->pixelBuffer.dimensions.x, texture->pixelBuffer.dimensions.y );
@@ -62,13 +62,49 @@ void Render_DrawSprite( Sprite_t* sprite, float scale, int32_t screenX, int32_t 
    uint32_t rowIndex = ( sprite->frameIndex ) / sprite->frameStride;
    uint32_t colIndex = ( sprite->frameIndex ) % sprite->frameStride;
 
-   Render_DrawTextureSection( sprite->texture, scale,
+   Render_DrawTextureSection( sprite->texture->textureHandle, &( sprite->texture->pixelBuffer ), scale,
                               screenX, screenY,
                               sprite->frameDimensions.x * colIndex, sprite->frameDimensions.y * rowIndex,
                               sprite->frameDimensions.x, sprite->frameDimensions.y );
 }
 
-internal void Render_PrepareTextureForDrawing( Texture_t* texture,
+void Render_DrawChar( char c, float scale, int32_t screenX, int32_t screenY, Font_t* font )
+{
+   PixelBuffer_t* glyph;
+   uint32_t c32 = (uint32_t)c;
+
+   if ( c32 < font->codepointOffset || c32 > ( font->codepointOffset + font->numGlyphs ) )
+   {
+      return;
+   }
+
+
+   glyph = &( font->glyphs[c32 - font->codepointOffset] );
+
+   Render_PrepareTextureForDrawing( font->textureHandle, glyph,
+                                    screenX, screenY,
+                                    (uint32_t)( glyph->dimensions.x * scale ), (uint32_t)( glyph->dimensions.y * scale ) );
+
+   Render_DrawTextureSection( font->textureHandle, glyph, scale,
+                              screenX, screenY,
+                              0, 0,
+                              glyph->dimensions.x, glyph->dimensions.y );
+}
+
+void Render_DrawText( const char* text, float scale, int32_t screenX, int32_t screenY, Font_t* font )
+{
+   uint32_t i, glyphIndex;
+   int32_t x = screenX;
+
+   for ( i = 0; i < strlen( text ); i++ )
+   {
+      Render_DrawChar( text[i], scale, x, screenY, font );
+      glyphIndex = (uint32_t)text[i] - font->codepointOffset;
+      x += (int32_t)( font->glyphs[glyphIndex].dimensions.x * scale );
+   }
+}
+
+internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
                                                int32_t screenX, int32_t screenY,
                                                uint32_t viewportWidth, uint32_t viewportHeight )
 {
@@ -82,16 +118,16 @@ internal void Render_PrepareTextureForDrawing( Texture_t* texture,
 
    glViewport( screenX, screenY, viewportWidth, viewportHeight );
 
-   glBindTexture( GL_TEXTURE_2D, texture->textureHandle );
+   glBindTexture( GL_TEXTURE_2D, textureHandle );
    glTexImage2D( GL_TEXTURE_2D,
                  0,
                  GL_RGBA8,
-                 texture->pixelBuffer.dimensions.x,
-                 texture->pixelBuffer.dimensions.y,
+                 pixelBuffer->dimensions.x,
+                 pixelBuffer->dimensions.y,
                  0,
                  GL_BGRA_EXT,
                  GL_UNSIGNED_BYTE,
-                 (GLvoid*)( texture->pixelBuffer.buffer ) );
+                 (GLvoid*)( pixelBuffer->buffer ) );
 
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );

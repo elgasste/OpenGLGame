@@ -13,11 +13,13 @@ typedef struct RenderData_t
 RenderData_t;
 
 void Render_Clear();
-void Render_DrawTextureSection( Texture_t* texture, float scale,
+void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
                                 int32_t screenX, int32_t screenY,
                                 int32_t textureX, int32_t textureY,
                                 uint32_t sectionWidth, uint32_t sectionHeight );
 void Render_DrawTexture( Texture_t* texture, float scale, int32_t screenX, int32_t screenY );
 void Render_DrawSprite( Sprite_t* sprite, float scale, int32_t screenX, int32_t screenY );
+void Render_DrawChar( char c, float scale, int32_t screenX, int32_t screenY, Font_t* font );
+void Render_DrawText( const char* text, float scale, int32_t screenX, int32_t screenY, Font_t* font );
 
 #endif
