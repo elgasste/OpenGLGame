@@ -36,5 +36,7 @@
 
 #define STR_SPRITEERR_FRAMEDIMENSIONS     "Sprite error: frame dimensions don't match texture"
 
+#define STR_FONTERR_FILECORRUPT           "Font error: file is corrupt: %s"
+
 #endif
 

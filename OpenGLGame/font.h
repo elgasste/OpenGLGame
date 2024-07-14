@@ -12,4 +12,6 @@ typedef struct
 }
 Font_t;
 
+Bool_t Font_LoadFromFile( Font_t* font, const char* filePath );
+
 #endif

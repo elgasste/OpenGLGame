@@ -140,6 +140,7 @@ xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bmp.c" />
+    <ClCompile Include="font.c" />
     <ClCompile Include="game.c" />
     <ClCompile Include="clock.c" />
     <ClCompile Include="input.c" />

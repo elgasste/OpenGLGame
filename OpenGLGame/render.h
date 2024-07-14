@@ -3,10 +3,12 @@
 
 #include "common.h"
 #include "sprite.h"
+#include "font.h"
 
 typedef struct RenderData_t
 {
    Texture_t textures[TextureID_Count];
+   Font_t font;
 }
 RenderData_t;
 

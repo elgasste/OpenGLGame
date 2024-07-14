@@ -81,7 +81,7 @@ int main( int argc, char** argv )
 internal void LoadTTF( const char* filePath, Font_t* font )
 {
    FileData_t fileData;
-   uint8_t* fileDataPos;
+   uint8_t* filePos;
    stbtt_fontinfo fontInfo;
    int32_t width, height, xOffset, yOffset, pitch, x, y, codepoint;
    uint8_t *monoCodepointMemory, *codepointMemory, *source, *destRow;
@@ -97,9 +97,9 @@ internal void LoadTTF( const char* filePath, Font_t* font )
       exit( 1 );
    }
 
-   fileDataPos = (uint8_t*)( fileData.contents );
+   filePos = (uint8_t*)( fileData.contents );
 
-   if ( !stbtt_InitFont( &fontInfo, fileDataPos, stbtt_GetFontOffsetForIndex( fileDataPos, 0 ) ) )
+   if ( !stbtt_InitFont( &fontInfo, filePos, stbtt_GetFontOffsetForIndex( filePos, 0 ) ) )
    {
       snprintf( errorMsg, STRING_SIZE_DEFAULT, "ERROR: could not load font data: %s\n\n", filePath );
       printf( errorMsg );
@@ -145,46 +145,49 @@ internal void LoadTTF( const char* filePath, Font_t* font )
 
 internal void WriteGFF( const char* filePath, Font_t* font )
 {
-   FileData_t fileData = { 0 };
+   FileData_t fileData;
    uint32_t i, j;
-   PixelBuffer_t* glyph = font->glyphs;
+   PixelBuffer_t* glyph;
    char errorMsg[STRING_SIZE_DEFAULT];
-   uint32_t* filePos;
+   uint32_t* filePos32;
 
    printf( "Writing GFF data..." );
 
    strcpy_s( fileData.filePath, STRING_SIZE_DEFAULT, filePath );
 
    // codepoint offset and number of glyphs (both 4 bytes)
-   fileData.fileSize += 8;
+   fileData.fileSize = 8;
+   glyph = font->glyphs;
 
    for ( i = 0; i < font->numGlyphs; i++ )
    {
-      // dimensions (8 bytes) and buffer size
+      // first 8 bytes are dimensions, then the glyph buffers
       fileData.fileSize += 8;
-      fileData.fileSize += glyph->dimensions.x * glyph->dimensions.y * ( GRAPHICS_BPP / 8 );
+      fileData.fileSize += ( ( glyph->dimensions.x * glyph->dimensions.y ) * ( GRAPHICS_BPP / 8 ) );
       glyph++;
    }
 
    fileData.contents = Platform_MemAlloc( fileData.fileSize );
 
-   filePos = (uint32_t*)fileData.contents;
-   filePos[0] = font->codepointOffset;
-   filePos[1] = font->numGlyphs;
-   filePos += 2;
+   filePos32 = (uint32_t*)fileData.contents;
+   filePos32[0] = font->codepointOffset;
+   filePos32[1] = font->numGlyphs;
+   filePos32 += 2;
+
+   glyph = font->glyphs;
 
    for ( i = 0; i < font->numGlyphs; i++ )
    {
-      filePos[0] = glyph->dimensions.x;
-      filePos[1] = glyph->dimensions.y;
-      filePos += 2;
+      filePos32[0] = glyph->dimensions.x;
+      filePos32[1] = glyph->dimensions.y;
+      filePos32 += 2;
 
       for ( j = 0; j < ( glyph->dimensions.x * glyph->dimensions.y ); j++ )
       {
-         filePos[j] = glyph->buffer[j];
+         filePos32[j] = ( (uint32_t*)( glyph->buffer ) )[j];
       }
 
-      filePos += ( glyph->dimensions.x + glyph->dimensions.y );
+      filePos32 += ( glyph->dimensions.x * glyph->dimensions.y );
       glyph++;
    }
 

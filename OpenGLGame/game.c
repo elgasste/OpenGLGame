@@ -43,6 +43,7 @@ Bool_t Game_LoadAssets( GameData_t* gameData )
    char appDirectory[STRING_SIZE_DEFAULT];
    char backgroundBmpFilePath[STRING_SIZE_DEFAULT];
    char starBmpFilePath[STRING_SIZE_DEFAULT];
+   char fontFilePath[STRING_SIZE_DEFAULT];
 
    if ( !Platform_GetAppDirectory( appDirectory, STRING_SIZE_DEFAULT ) )
    {
@@ -51,9 +52,11 @@ Bool_t Game_LoadAssets( GameData_t* gameData )
 
    snprintf( backgroundBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
    snprintf( starBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\star.bmp", appDirectory );
+   snprintf( fontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Consolas.gff", appDirectory );
 
    if ( !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Background] ), backgroundBmpFilePath) ||
-        !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Star] ), starBmpFilePath ) )
+        !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Star] ), starBmpFilePath ) ||
+        !Font_LoadFromFile( &( gameData->renderData.font ), fontFilePath ) )
    {
       return False;
    }
