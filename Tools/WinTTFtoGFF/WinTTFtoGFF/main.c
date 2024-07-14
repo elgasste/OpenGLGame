@@ -125,7 +125,7 @@ internal void LoadTTF( const char* filePath, Font_t* font )
          {
             alpha = *source;
             source++;
-            *dest = ( (uint32_t)alpha << 24 ) | ( (uint32_t)alpha << 16 ) | ( (uint32_t)alpha << 8 ) | (uint32_t)alpha;
+            *dest = 0x00FFFFFF | ( (uint32_t)alpha << 24 );
             dest++;
          }
 
