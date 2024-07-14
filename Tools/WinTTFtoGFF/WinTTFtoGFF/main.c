@@ -9,20 +9,71 @@ internal void WriteGFF( const char* filePath, Font_t* font );
 
 int main( int argc, char** argv )
 {
+   HANDLE hFile;
+   WIN32_FIND_DATAA findData;
+   char sourceDir[STRING_SIZE_DEFAULT];
+   char destDir[STRING_SIZE_DEFAULT];
+   char fileFilter[STRING_SIZE_DEFAULT];
+   char sourceFilePath[STRING_SIZE_DEFAULT];
+   char destFilePath[STRING_SIZE_DEFAULT];
    Font_t font;
 
    if ( argc < 3 )
    {
-      printf( "ERROR: not enough arguments, arg1 should be TTF file to read, arg2 should be GFF file to write.\n\n" );
+      printf( "ERROR: not enough arguments, arg1 should be source TTF directory, arg2 should be destination GFF directory.\n\n" );
       exit( 1 );
    }
 
-   font.codepointOffset = FONT_STARTCODEPOINT;
-   font.numGlyphs = (uint32_t)( ( FONT_ENDCODEPOINT - FONT_STARTCODEPOINT ) + 1 );
-   font.glyphs = (PixelBuffer_t*)Platform_MemAlloc( font.numGlyphs * sizeof( PixelBuffer_t ) );
+   strcpy_s( sourceDir, STRING_SIZE_DEFAULT, argv[1] );
+   if ( sourceDir[strlen( sourceDir - 1 )] != '\\' )
+   {
+      strcat_s( sourceDir, STRING_SIZE_DEFAULT, "\\" );
+   }
 
-   LoadTTF( argv[1], &font );
-   WriteGFF( argv[2], &font );
+   strcpy_s( destDir, STRING_SIZE_DEFAULT, argv[2] );
+   if ( destDir[strlen( destDir - 1 )] != '\\' )
+   {
+      strcat_s( destDir, STRING_SIZE_DEFAULT, "\\" );
+   }
+
+   strcpy_s( fileFilter, STRING_SIZE_DEFAULT, sourceDir );
+   strcat_s( fileFilter, STRING_SIZE_DEFAULT, "*.ttf" );
+   hFile = FindFirstFileA( fileFilter, &findData );
+
+   if ( hFile == INVALID_HANDLE_VALUE )
+   {
+      printf( "ERROR: could not find source folder, or no files exist in source folder.\n\n" );
+      exit( 1 );
+   }
+
+   font.glyphs = 0;
+
+   do
+   {
+      if ( !( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
+      {
+         font.codepointOffset = FONT_STARTCODEPOINT;
+         font.numGlyphs = (uint32_t)( ( FONT_ENDCODEPOINT - FONT_STARTCODEPOINT ) + 1 );
+         if ( font.glyphs )
+         {
+            Platform_MemFree( font.glyphs );
+         }
+         font.glyphs = (PixelBuffer_t*)Platform_MemAlloc( font.numGlyphs * sizeof( PixelBuffer_t ) );
+
+         strcpy_s( sourceFilePath, STRING_SIZE_DEFAULT, sourceDir );
+         strcat_s( sourceFilePath, STRING_SIZE_DEFAULT, findData.cFileName );
+         strcpy_s( destFilePath, STRING_SIZE_DEFAULT, destDir );
+         strcat_s( destFilePath, STRING_SIZE_DEFAULT, findData.cFileName );
+
+         destFilePath[strlen( destFilePath ) - 3] = 'g';
+         destFilePath[strlen( destFilePath ) - 2] = 'f';
+         destFilePath[strlen( destFilePath ) - 1] = 'f';
+
+         LoadTTF( sourceFilePath, &font );
+         WriteGFF( destFilePath, &font );
+      }
+   }
+   while( FindNextFileA( hFile, &findData ) != 0 );
 
    return 0;
 }
@@ -139,7 +190,7 @@ internal void WriteGFF( const char* filePath, Font_t* font )
 
    if ( !Platform_WriteFileData( &fileData ) )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, "ERROR: could write to file: %s\n\n", filePath );
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, "ERROR: could not write to file: %s\n\n", filePath );
       printf( errorMsg );
       exit( 1 );
    }
