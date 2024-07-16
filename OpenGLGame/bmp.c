@@ -45,7 +45,7 @@ Bool_t Bmp_LoadFromFile( const char* filePath, PixelBuffer_t* pixelBuffer )
    uint8_t* fileStartPos;
    uint8_t* filePos;
 
-   pixelBuffer->buffer = 0;
+   pixelBuffer->memory = 0;
    pixelBuffer->dimensions.x = 0;
    pixelBuffer->dimensions.y = 0;
 
@@ -86,10 +86,10 @@ internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer )
       bmpData->paletteColors = 0;
    }
 
-   if ( pixelBuffer->buffer )
+   if ( pixelBuffer->memory )
    {
-      Platform_MemFree( pixelBuffer->buffer );
-      pixelBuffer->buffer = 0;
+      Platform_MemFree( pixelBuffer->memory );
+      pixelBuffer->memory = 0;
       pixelBuffer->dimensions.x = 0;
       pixelBuffer->dimensions.y = 0;
    }
@@ -306,13 +306,13 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
 
    pixelBuffer->dimensions.x = bmpData->imageWidth;
    pixelBuffer->dimensions.y = imageHeight;
-   pixelBuffer->buffer = (uint8_t*)Platform_MemAlloc( bmpData->imageWidth * imageHeight * GRAPHICS_BPP );
+   pixelBuffer->memory = (uint8_t*)Platform_MemAlloc( bmpData->imageWidth * imageHeight * GRAPHICS_BPP );
 
    for ( scanlineIndex = 0; scanlineIndex < imageHeight; scanlineIndex++ )
    {
       pixelBuffer32 = ( bmpData->imageHeight < 0 )
-         ? (uint32_t*)( pixelBuffer->buffer ) + ( bmpData->imageWidth * ( imageHeight - scanlineIndex - 1 ) )
-         : (uint32_t*)( pixelBuffer->buffer ) + ( bmpData->imageWidth * scanlineIndex );
+         ? (uint32_t*)( pixelBuffer->memory ) + ( bmpData->imageWidth * ( imageHeight - scanlineIndex - 1 ) )
+         : (uint32_t*)( pixelBuffer->memory ) + ( bmpData->imageWidth * scanlineIndex );
       pixelBufferRowIndex = 0;
       scanlinePixelsUnread = bmpData->imageWidth;
       scanlineByteNum = 0;

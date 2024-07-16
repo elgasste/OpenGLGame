@@ -7,9 +7,16 @@
 
 typedef struct
 {
+   PixelBuffer_t pixelBuffer;
+   uint32_t baseline;
+}
+FontGlyph_t;
+
+typedef struct
+{
    uint32_t codepointOffset;
    uint32_t numGlyphs;
-   PixelBuffer_t* glyphs;
+   FontGlyph_t* glyphs;
    GLuint textureHandle;
 }
 Font_t;

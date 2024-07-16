@@ -3,7 +3,7 @@
 
 Bool_t Texture_LoadFromFile( Texture_t* texture, const char* filePath )
 {
-   texture->pixelBuffer.buffer = 0;
+   texture->pixelBuffer.memory = 0;
    texture->pixelBuffer.dimensions.x = 0;
    texture->pixelBuffer.dimensions.y = 0;
    texture->textureHandle = 0;
@@ -19,11 +19,11 @@ Bool_t Texture_LoadFromFile( Texture_t* texture, const char* filePath )
 
 void Texture_Cleanup( Texture_t* texture )
 {
-   if ( texture->pixelBuffer.buffer )
+   if ( texture->pixelBuffer.memory )
    {
-      Platform_MemFree( texture->pixelBuffer.buffer );
+      Platform_MemFree( texture->pixelBuffer.memory );
 
-      texture->pixelBuffer.buffer = 0;
+      texture->pixelBuffer.memory = 0;
       texture->pixelBuffer.dimensions.x = 0;
       texture->pixelBuffer.dimensions.y = 0;
       texture->textureHandle = 0;

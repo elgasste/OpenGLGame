@@ -7,6 +7,8 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
    uint32_t* filePos32;
    uint32_t bufferSize, bytesRead, i, j;
    int32_t k;
+   FontGlyph_t* glyph;
+   PixelBuffer_t* buffer;
    char errorMsg[STRING_SIZE_DEFAULT];
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
@@ -29,22 +31,25 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
    filePos32 += 2;
    bytesRead = 8;
 
-   font->glyphs = (PixelBuffer_t*)Platform_MemAlloc( sizeof( PixelBuffer_t ) * font->numGlyphs );
+   font->glyphs = (FontGlyph_t*)Platform_MemAlloc( sizeof( FontGlyph_t ) * font->numGlyphs );
+
+   glyph = font->glyphs;
+   buffer = &( glyph->pixelBuffer );
 
    for ( i = 0; i < font->numGlyphs; i++ )
    {
-      font->glyphs[i].dimensions.x = filePos32[0];
-      font->glyphs[i].dimensions.y = filePos32[1];
+      buffer->dimensions.x = filePos32[0];
+      buffer->dimensions.y = filePos32[1];
       filePos32 += 2;
       bytesRead += 8;
 
-      bufferSize = ( ( font->glyphs[i].dimensions.x * font->glyphs[i].dimensions.y ) * ( GRAPHICS_BPP / 8 ) );
+      bufferSize = ( ( buffer->dimensions.x * buffer->dimensions.y ) * ( GRAPHICS_BPP / 8 ) );
 
       if ( ( fileData.fileSize - bytesRead ) < bufferSize )
       {
          for ( k = (int32_t)i - 1; k >= 0; k-- )
          {
-            Platform_MemFree( font->glyphs[k].buffer );
+            Platform_MemFree( buffer->memory );
          }
          Platform_MemFree( font->glyphs );
 
@@ -53,22 +58,27 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
          return False;
       }
 
-      font->glyphs[i].buffer = (uint8_t*)Platform_MemAlloc( bufferSize );
+      buffer->memory = (uint8_t*)Platform_MemAlloc( bufferSize );
 
       for ( j = 0; j < bufferSize; j++ )
       {
-         font->glyphs[i].buffer[j] = ( (uint8_t*)filePos32 )[j];
+         buffer->memory[j] = ( (uint8_t*)filePos32 )[j];
       }
 
-      filePos32 += ( font->glyphs[i].dimensions.x * font->glyphs[i].dimensions.y );
+      filePos32 += ( buffer->dimensions.x * buffer->dimensions.y );
       bytesRead += bufferSize;
+
+      glyph++;
+      buffer = &( glyph->pixelBuffer );
    }
 
    if ( bytesRead != fileData.fileSize )
    {
+      glyph = font->glyphs;
       for ( i = 0; i < font->numGlyphs; i++ )
       {
-         Platform_MemFree( font->glyphs[i].buffer );
+         Platform_MemFree( glyph->pixelBuffer.memory );
+         glyph++;
       }
       Platform_MemFree( font->glyphs );
 

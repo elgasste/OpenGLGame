@@ -70,7 +70,8 @@ void Render_DrawSprite( Sprite_t* sprite, float scale, int32_t screenX, int32_t 
 
 void Render_DrawChar( char c, float scale, int32_t screenX, int32_t screenY, Font_t* font )
 {
-   PixelBuffer_t* glyph;
+   FontGlyph_t* glyph;
+   PixelBuffer_t* buffer;
    uint32_t c32 = (uint32_t)c;
 
    if ( c32 < font->codepointOffset || c32 > ( font->codepointOffset + font->numGlyphs ) )
@@ -80,15 +81,16 @@ void Render_DrawChar( char c, float scale, int32_t screenX, int32_t screenY, Fon
 
 
    glyph = &( font->glyphs[c32 - font->codepointOffset] );
+   buffer = &( glyph->pixelBuffer );
 
-   Render_PrepareTextureForDrawing( font->textureHandle, glyph,
+   Render_PrepareTextureForDrawing( font->textureHandle, buffer,
                                     screenX, screenY,
-                                    (uint32_t)( glyph->dimensions.x * scale ), (uint32_t)( glyph->dimensions.y * scale ) );
+                                    (uint32_t)( buffer->dimensions.x * scale ), (uint32_t)( buffer->dimensions.y * scale ) );
 
-   Render_DrawTextureSection( font->textureHandle, glyph, scale,
+   Render_DrawTextureSection( font->textureHandle, buffer, scale,
                               screenX, screenY,
                               0, 0,
-                              glyph->dimensions.x, glyph->dimensions.y );
+                              buffer->dimensions.x, buffer->dimensions.y );
 }
 
 void Render_DrawText( const char* text, float scale, int32_t screenX, int32_t screenY, Font_t* font )
@@ -100,7 +102,7 @@ void Render_DrawText( const char* text, float scale, int32_t screenX, int32_t sc
    {
       Render_DrawChar( text[i], scale, x, screenY, font );
       glyphIndex = (uint32_t)text[i] - font->codepointOffset;
-      x += (int32_t)( font->glyphs[glyphIndex].dimensions.x * scale );
+      x += (int32_t)( font->glyphs[glyphIndex].pixelBuffer.dimensions.x * scale );
    }
 }
 
@@ -127,7 +129,7 @@ internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer
                  0,
                  GL_BGRA_EXT,
                  GL_UNSIGNED_BYTE,
-                 (GLvoid*)( pixelBuffer->buffer ) );
+                 (GLvoid*)( pixelBuffer->memory ) );
 
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );

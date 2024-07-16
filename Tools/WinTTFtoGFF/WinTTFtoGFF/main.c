@@ -58,7 +58,7 @@ int main( int argc, char** argv )
          {
             Platform_MemFree( font.glyphs );
          }
-         font.glyphs = (PixelBuffer_t*)Platform_MemAlloc( font.numGlyphs * sizeof( PixelBuffer_t ) );
+         font.glyphs = (FontGlyph_t*)Platform_MemAlloc( font.numGlyphs * sizeof( PixelBuffer_t ) );
 
          strcpy_s( sourceFilePath, STRING_SIZE_DEFAULT, sourceDir );
          strcat_s( sourceFilePath, STRING_SIZE_DEFAULT, findData.cFileName );
@@ -132,9 +132,10 @@ internal void LoadTTF( const char* filePath, Font_t* font )
          destRow -= pitch;
       }
 
-      font->glyphs[codepoint - FONT_STARTCODEPOINT].buffer = (uint8_t*)codepointMemory;
-      font->glyphs[codepoint - FONT_STARTCODEPOINT].dimensions.x = (uint32_t)width;
-      font->glyphs[codepoint - FONT_STARTCODEPOINT].dimensions.y = (uint32_t)height;
+      font->glyphs[codepoint - FONT_STARTCODEPOINT].pixelBuffer.memory = (uint8_t*)codepointMemory;
+      font->glyphs[codepoint - FONT_STARTCODEPOINT].pixelBuffer.dimensions.x = (uint32_t)width;
+      font->glyphs[codepoint - FONT_STARTCODEPOINT].pixelBuffer.dimensions.y = (uint32_t)height;
+      font->glyphs[codepoint - FONT_STARTCODEPOINT].baseline = 0;
 
       stbtt_FreeBitmap( monoCodepointMemory, 0 );
    }
@@ -147,7 +148,7 @@ internal void WriteGFF( const char* filePath, Font_t* font )
 {
    FileData_t fileData;
    uint32_t i, j;
-   PixelBuffer_t* glyph;
+   FontGlyph_t* glyph;
    char errorMsg[STRING_SIZE_DEFAULT];
    uint32_t* filePos32;
 
@@ -163,7 +164,7 @@ internal void WriteGFF( const char* filePath, Font_t* font )
    {
       // first 8 bytes are dimensions, then the glyph buffers
       fileData.fileSize += 8;
-      fileData.fileSize += ( ( glyph->dimensions.x * glyph->dimensions.y ) * ( GRAPHICS_BPP / 8 ) );
+      fileData.fileSize += ( ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y ) * ( GRAPHICS_BPP / 8 ) );
       glyph++;
    }
 
@@ -178,16 +179,16 @@ internal void WriteGFF( const char* filePath, Font_t* font )
 
    for ( i = 0; i < font->numGlyphs; i++ )
    {
-      filePos32[0] = glyph->dimensions.x;
-      filePos32[1] = glyph->dimensions.y;
+      filePos32[0] = glyph->pixelBuffer.dimensions.x;
+      filePos32[1] = glyph->pixelBuffer.dimensions.y;
       filePos32 += 2;
 
-      for ( j = 0; j < ( glyph->dimensions.x * glyph->dimensions.y ); j++ )
+      for ( j = 0; j < ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y ); j++ )
       {
-         filePos32[j] = ( (uint32_t*)( glyph->buffer ) )[j];
+         filePos32[j] = ( (uint32_t*)( glyph->pixelBuffer.memory ) )[j];
       }
 
-      filePos32 += ( glyph->dimensions.x * glyph->dimensions.y );
+      filePos32 += ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y );
       glyph++;
    }
 
