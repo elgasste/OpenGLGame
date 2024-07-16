@@ -8,15 +8,19 @@
 typedef struct
 {
    PixelBuffer_t pixelBuffer;
-   uint32_t baseline;
+   Vector2i32_t offset;
+   int32_t advance;
 }
 FontGlyph_t;
 
 typedef struct
 {
    uint32_t codepointOffset;
+   int32_t descent;  // negative means below baseline
+   int32_t lineGap;
    uint32_t numGlyphs;
    FontGlyph_t* glyphs;
+
    GLuint textureHandle;
 }
 Font_t;

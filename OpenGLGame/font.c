@@ -16,9 +16,10 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
       return False;
    }
 
-   // first 8 bytes are the codepoint offset and number of glyphs, and we want to
-   // make sure there's at least one glyph, so make sure we can read another 8 bytes
-   if ( fileData.fileSize <= 16 )
+   // first 4 values are codepoint offset, descent, line gap, and number of glyphs.
+   // these are each 4 bytes, and we want to make sure there's at least one glyph,
+   // so make sure we can read another 20 bytes after that.
+   if ( fileData.fileSize <= 36 )
    {
       snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_FILECORRUPT, filePath );
       Platform_Log( errorMsg );
@@ -27,9 +28,11 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 
    filePos32 = (uint32_t*)( fileData.contents );
    font->codepointOffset = filePos32[0];
-   font->numGlyphs = filePos32[1];
-   filePos32 += 2;
-   bytesRead = 8;
+   font->descent = filePos32[1];
+   font->lineGap = filePos32[2];
+   font->numGlyphs = filePos32[3];
+   filePos32 += 4;
+   bytesRead = 16;
 
    font->glyphs = (FontGlyph_t*)Platform_MemAlloc( sizeof( FontGlyph_t ) * font->numGlyphs );
 
@@ -38,10 +41,13 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 
    for ( i = 0; i < font->numGlyphs; i++ )
    {
-      buffer->dimensions.x = filePos32[0];
-      buffer->dimensions.y = filePos32[1];
-      filePos32 += 2;
-      bytesRead += 8;
+      glyph->offset.x = filePos32[0];
+      glyph->offset.y = filePos32[1];
+      glyph->advance = filePos32[2];
+      buffer->dimensions.x = filePos32[3];
+      buffer->dimensions.y = filePos32[4];
+      filePos32 += 5;
+      bytesRead += 20;
 
       bufferSize = ( ( buffer->dimensions.x * buffer->dimensions.y ) * ( GRAPHICS_BPP / 8 ) );
 
