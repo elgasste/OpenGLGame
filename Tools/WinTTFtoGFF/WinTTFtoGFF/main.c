@@ -4,7 +4,7 @@
 #include "font.h"
 #include "platform.h"
 
-#define RAWPIXELHEIGHT      128.0f
+#define RAWPIXELHEIGHT      128
 #define STARTCODEPOINT      32       // space
 #define ENDCODEPOINT        126      // tilde
 
@@ -112,8 +112,9 @@ internal void LoadTTF( const char* filePath, Font_t* font )
 
    // TODO: we should probably offer the option of passing in a raw pixel height as a parameter,
    // or even allow several different glyph heights in the same font.
-   scale = stbtt_ScaleForPixelHeight( &fontInfo, RAWPIXELHEIGHT );
+   scale = stbtt_ScaleForPixelHeight( &fontInfo, (float)RAWPIXELHEIGHT );
    stbtt_GetFontVMetrics( &fontInfo, 0, &( font->baseline ), &( font->lineGap ) );
+   font->fullHeight = RAWPIXELHEIGHT;
    font->baseline = (int32_t)( -( font->baseline ) * scale );
    font->lineGap = (int32_t)( font->lineGap * scale );
 
@@ -174,8 +175,8 @@ internal void WriteGFF( const char* filePath, Font_t* font )
 
    strcpy_s( fileData.filePath, STRING_SIZE_DEFAULT, filePath );
 
-   // codepoint offset, baseline, line gap, and number of glyphs, all 4 bytes
-   fileData.fileSize = 16;
+   // codepoint offset, full height, baseline, line gap, and number of glyphs, each 4 bytes
+   fileData.fileSize = 20;
    glyph = font->glyphs;
 
    for ( i = 0; i < font->numGlyphs; i++ )
@@ -191,10 +192,11 @@ internal void WriteGFF( const char* filePath, Font_t* font )
 
    filePos32 = (uint32_t*)fileData.contents;
    filePos32[0] = font->codepointOffset;
-   filePos32[1] = font->baseline;
-   filePos32[2] = font->lineGap;
-   filePos32[3] = font->numGlyphs;
-   filePos32 += 4;
+   filePos32[1] = font->fullHeight;
+   filePos32[2] = font->baseline;
+   filePos32[3] = font->lineGap;
+   filePos32[4] = font->numGlyphs;
+   filePos32 += 5;
 
    glyph = font->glyphs;
 
