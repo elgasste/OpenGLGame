@@ -49,7 +49,7 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
       filePos32 += 5;
       bytesRead += 20;
 
-      bufferSize = ( ( buffer->dimensions.x * buffer->dimensions.y ) * ( GRAPHICS_BPP / 8 ) );
+      bufferSize = ( buffer->dimensions.x * buffer->dimensions.y * 4 );
 
       if ( ( fileData.fileSize - bytesRead ) < bufferSize )
       {

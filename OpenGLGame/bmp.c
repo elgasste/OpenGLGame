@@ -306,7 +306,7 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
 
    pixelBuffer->dimensions.x = bmpData->imageWidth;
    pixelBuffer->dimensions.y = imageHeight;
-   pixelBuffer->memory = (uint8_t*)Platform_MemAlloc( bmpData->imageWidth * imageHeight * GRAPHICS_BPP );
+   pixelBuffer->memory = (uint8_t*)Platform_MemAlloc( bmpData->imageWidth * imageHeight * 4 );
 
    for ( scanlineIndex = 0; scanlineIndex < imageHeight; scanlineIndex++ )
    {

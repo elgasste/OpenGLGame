@@ -25,14 +25,8 @@ typedef int32_t Bool_t;
 
 #define STRING_SIZE_DEFAULT      1024
 
-#define GRAPHICS_BPP             32
-#define GRAPHICS_ALPHABITS       8
 #define SCREEN_WIDTH             1280
 #define SCREEN_HEIGHT            720
-
-#define FONT_RAWPIXELHEIGHT      128.0f
-#define FONT_STARTCODEPOINT      32       // space
-#define FONT_ENDCODEPOINT        126      // tilde
 
 #define GAME_FPS                 60
 

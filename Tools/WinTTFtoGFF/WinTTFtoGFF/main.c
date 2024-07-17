@@ -4,6 +4,10 @@
 #include "font.h"
 #include "platform.h"
 
+#define RAWPIXELHEIGHT      128.0f
+#define STARTCODEPOINT      32       // space
+#define ENDCODEPOINT        126      // tilde
+
 internal void LoadTTF( const char* filePath, Font_t* font );
 internal void WriteGFF( const char* filePath, Font_t* font );
 
@@ -52,8 +56,8 @@ int main( int argc, char** argv )
    {
       if ( !( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
       {
-         font.codepointOffset = FONT_STARTCODEPOINT;
-         font.numGlyphs = (uint32_t)( ( FONT_ENDCODEPOINT - FONT_STARTCODEPOINT ) + 1 );
+         font.codepointOffset = STARTCODEPOINT;
+         font.numGlyphs = (uint32_t)( ( ENDCODEPOINT - STARTCODEPOINT ) + 1 );
          if ( font.glyphs )
          {
             Platform_MemFree( font.glyphs );
@@ -108,17 +112,17 @@ internal void LoadTTF( const char* filePath, Font_t* font )
 
    // TODO: we should probably offer the option of passing in a raw pixel height as a parameter,
    // or even allow several different glyph heights in the same font.
-   scale = stbtt_ScaleForPixelHeight( &fontInfo, FONT_RAWPIXELHEIGHT );
+   scale = stbtt_ScaleForPixelHeight( &fontInfo, RAWPIXELHEIGHT );
    stbtt_GetFontVMetrics( &fontInfo, 0, &( font->baseline ), &( font->lineGap ) );
    font->baseline = (int32_t)( -( font->baseline ) * scale );
    font->lineGap = (int32_t)( font->lineGap * scale );
 
    printf( "Reading glyphs..." );
 
-   for ( codepoint = FONT_STARTCODEPOINT; codepoint <= FONT_ENDCODEPOINT; codepoint++ )
+   for ( codepoint = STARTCODEPOINT; codepoint <= ENDCODEPOINT; codepoint++ )
    {
       monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scale, codepoint, &width, &height, &xOffset, &yOffset );
-      pitch = width * ( GRAPHICS_BPP / 8 );
+      pitch = width * 4;
       codepointMemory = Platform_MemAlloc( height * pitch );
       source = monoCodepointMemory;
       destRow = codepointMemory + ( ( height - 1 ) * pitch );
@@ -138,7 +142,7 @@ internal void LoadTTF( const char* filePath, Font_t* font )
          destRow -= pitch;
       }
 
-      glyphIndex = codepoint - FONT_STARTCODEPOINT;
+      glyphIndex = codepoint - STARTCODEPOINT;
 
       stbtt_GetCodepointBox( &fontInfo, codepoint, 0, &( font->glyphs[glyphIndex].baselineOffset ), 0, 0 );
       font->glyphs[glyphIndex].baselineOffset = (int32_t)( font->glyphs[glyphIndex].baselineOffset * scale );
@@ -179,7 +183,7 @@ internal void WriteGFF( const char* filePath, Font_t* font )
       // left bearing (4 bytes), baseline offset (4 bytes), advance (4 bytes),
       // pixel buffer dimensions (8 bytes), and pixel buffer size
       fileData.fileSize += 20;
-      fileData.fileSize += ( ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y ) * ( GRAPHICS_BPP / 8 ) );
+      fileData.fileSize += ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y * 4 );
       glyph++;
    }
 
