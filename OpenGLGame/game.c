@@ -195,7 +195,7 @@ internal void Game_Render( GameData_t* gameData )
       Render_DrawSprite( &( star->sprite ), star->scale, (uint32_t)( star->position.x ), (uint32_t)( star->position.y ) );
    }
 
-   Render_DrawTextLine( "Debug up here", 0.1f, 10, SCREEN_HEIGHT - (int32_t)( consolasFont->fullHeight * 0.1f ) - 10, consolasFont );
+   Render_DrawTextLine( "Debug up here", 0.1f, 10, SCREEN_HEIGHT - (int32_t)( consolasFont->height * 0.1f ) - 10, consolasFont );
 
    Platform_RenderScreen();
 }

@@ -17,7 +17,7 @@ FontGlyph_t;
 typedef struct
 {
    uint32_t codepointOffset;
-   uint32_t fullHeight;
+   uint32_t height;
    int32_t baseline;
    int32_t lineGap;
    uint32_t numGlyphs;

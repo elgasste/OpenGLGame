@@ -122,7 +122,7 @@ internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font 
    // or even allow several different glyph heights in the same font.
    scale = stbtt_ScaleForPixelHeight( &fontInfo, (float)RAWPIXELHEIGHT );
    stbtt_GetFontVMetrics( &fontInfo, 0, &( font->baseline ), &( font->lineGap ) );
-   font->fullHeight = RAWPIXELHEIGHT;
+   font->height = RAWPIXELHEIGHT;
    font->baseline = (int32_t)( -( font->baseline ) * scale );
    font->lineGap = (int32_t)( font->lineGap * scale );
 
@@ -185,7 +185,7 @@ internal void WriteGFF( const char* filePath, const char* fileName, Font_t* font
 
    strcpy_s( fileData.filePath, STRING_SIZE_DEFAULT, filePath );
 
-   // codepoint offset, full height, baseline, line gap, and number of glyphs, each 4 bytes
+   // codepoint offset, height, baseline, line gap, and number of glyphs, each 4 bytes
    fileData.fileSize = 20;
    glyph = font->glyphs;
 
@@ -202,7 +202,7 @@ internal void WriteGFF( const char* filePath, const char* fileName, Font_t* font
 
    filePos32 = (uint32_t*)fileData.contents;
    filePos32[0] = font->codepointOffset;
-   filePos32[1] = font->fullHeight;
+   filePos32[1] = font->height;
    filePos32[2] = font->baseline;
    filePos32[3] = font->lineGap;
    filePos32[4] = font->numGlyphs;

@@ -16,7 +16,7 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
       return False;
    }
 
-   // first 5 values are codepoint offset, full height, baseline, line gap, and
+   // first 5 values are codepoint offset, height, baseline, line gap, and
    // number of glyphs. these are each 4 bytes, and we want to make sure there's
    // at least one glyph, so make sure we can read another 20 bytes after that.
    if ( fileData.fileSize <= 40 )
@@ -28,7 +28,7 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 
    filePos32 = (uint32_t*)( fileData.contents );
    font->codepointOffset = filePos32[0];
-   font->fullHeight = filePos32[1];
+   font->height = filePos32[1];
    font->baseline = filePos32[2];
    font->lineGap = filePos32[3];
    font->numGlyphs = filePos32[4];
