@@ -43,7 +43,8 @@ Bool_t Game_LoadAssets( GameData_t* gameData )
    char appDirectory[STRING_SIZE_DEFAULT];
    char backgroundBmpFilePath[STRING_SIZE_DEFAULT];
    char starBmpFilePath[STRING_SIZE_DEFAULT];
-   char fontFilePath[STRING_SIZE_DEFAULT];
+   char consolasFontFilePath[STRING_SIZE_DEFAULT];
+   char papyrusFontFilePath[STRING_SIZE_DEFAULT];
 
    if ( !Platform_GetAppDirectory( appDirectory, STRING_SIZE_DEFAULT ) )
    {
@@ -52,16 +53,18 @@ Bool_t Game_LoadAssets( GameData_t* gameData )
 
    snprintf( backgroundBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
    snprintf( starBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\star.bmp", appDirectory );
-   snprintf( fontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Papyrus.gff", appDirectory );
+   snprintf( consolasFontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Consolas.gff", appDirectory );
+   snprintf( papyrusFontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Papyrus.gff", appDirectory );
 
    if ( !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Background] ), backgroundBmpFilePath) ||
         !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Star] ), starBmpFilePath ) ||
-        !Font_LoadFromFile( &( gameData->renderData.font ), fontFilePath ) )
+        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Consolas] ), consolasFontFilePath ) ||
+        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Papyrus] ), papyrusFontFilePath ) )
    {
       return False;
    }
 
-   Font_SetColor( &( gameData->renderData.font ), 0x003333CC );
+   Font_SetColor( &( gameData->renderData.fonts[FontID_Papyrus] ), 0x003333CC );
 
    return True;
 }
@@ -179,16 +182,20 @@ internal void Game_Render( GameData_t* gameData )
 {
    uint32_t i;
    Star_t* star;
+   Font_t* consolasFont = & ( gameData->renderData.fonts[FontID_Consolas] );
+   Font_t* papyrusFont = &( gameData->renderData.fonts[FontID_Papyrus] );
 
    Render_Clear();
    Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 1.0f, 0, 0 );
-   Render_DrawTextLine( STR_BRUSHTEETH, 0.35f, 65, 240, &( gameData->renderData.font ) );
+   Render_DrawTextLine( STR_BRUSHTEETH, 0.35f, 65, 240, papyrusFont );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {
       star = &( gameData->stars[i] );
       Render_DrawSprite( &( star->sprite ), star->scale, (uint32_t)( star->position.x ), (uint32_t)( star->position.y ) );
    }
+
+   Render_DrawTextLine( "Debug up here", 0.1f, 10, SCREEN_HEIGHT - (int32_t)( consolasFont->fullHeight * 0.1f ) - 10, consolasFont );
 
    Platform_RenderScreen();
 }

@@ -8,7 +8,7 @@
 typedef struct RenderData_t
 {
    Texture_t textures[TextureID_Count];
-   Font_t font;
+   Font_t fonts[FontID_Count];
 }
 RenderData_t;
 
