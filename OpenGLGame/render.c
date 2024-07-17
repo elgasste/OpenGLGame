@@ -68,19 +68,18 @@ void Render_DrawSprite( Sprite_t* sprite, float scale, int32_t screenX, int32_t 
                               sprite->frameDimensions.x, sprite->frameDimensions.y );
 }
 
-void Render_DrawChar( char c, float scale, int32_t screenX, int32_t screenY, Font_t* font )
+void Render_DrawChar( uint32_t codepoint, float scale, int32_t screenX, int32_t screenY, Font_t* font )
 {
    FontGlyph_t* glyph;
    PixelBuffer_t* buffer;
-   uint32_t c32 = (uint32_t)c;
    int32_t x, y;
 
-   if ( c32 < font->codepointOffset || c32 > ( font->codepointOffset + font->numGlyphs ) )
+   if ( !Font_ContainsChar( font, codepoint ) )
    {
       return;
    }
 
-   glyph = &( font->glyphs[c32 - font->codepointOffset] );
+   glyph = &( font->glyphs[codepoint - font->codepointOffset] );
    buffer = &( glyph->pixelBuffer );
    x = screenX + (int32_t)( glyph->leftBearing * scale );
    y = screenY + (int32_t)( ( font->baseline + glyph->baselineOffset ) * scale );
@@ -95,7 +94,7 @@ void Render_DrawChar( char c, float scale, int32_t screenX, int32_t screenY, Fon
                               buffer->dimensions.x, buffer->dimensions.y );
 }
 
-void Render_DrawText( const char* text, float scale, int32_t screenX, int32_t screenY, Font_t* font )
+void Render_DrawTextLine( const char* text, float scale, int32_t screenX, int32_t screenY, Font_t* font )
 {
    uint32_t i;
    int32_t x = screenX;
@@ -103,9 +102,12 @@ void Render_DrawText( const char* text, float scale, int32_t screenX, int32_t sc
 
    for ( i = 0; i < strlen( text ); i++ )
    {
-      glyph = font->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
-      Render_DrawChar( text[i], scale, x, screenY, font );
-      x += (int32_t)( glyph->advance * scale );
+      if ( Font_ContainsChar( font, text[i] ) )
+      {
+         glyph = font->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
+         Render_DrawChar( (uint32_t)( text[i] ), scale, x, screenY, font );
+         x += (int32_t)( glyph->advance * scale );
+      }
    }
 }
 

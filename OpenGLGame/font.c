@@ -97,3 +97,37 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 
    return True;
 }
+
+Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint )
+{
+   return ( codepoint < font->codepointOffset ) || ( codepoint > ( font->codepointOffset + font->numGlyphs ) )
+      ? False : True;
+}
+
+void Font_SetCharColor( Font_t* font, uint32_t codepoint, uint32_t color )
+{
+   uint32_t i;
+   PixelBuffer_t* buffer;
+   uint32_t* memory;
+
+   if ( Font_ContainsChar( font, codepoint ) )
+   {
+      buffer = &( font->glyphs[codepoint - font->codepointOffset].pixelBuffer );
+      memory = (uint32_t*)( buffer->memory );
+
+      for ( i = 0; i < ( buffer->dimensions.x * buffer->dimensions.y ); i++ )
+      {
+         memory[i] = ( memory[i] & 0xFF000000 ) | ( color & 0x00FFFFFF );
+      }
+   }
+}
+
+void Font_SetColor( Font_t* font, uint32_t color )
+{
+   uint32_t i;
+
+   for ( i = 0; i < font->numGlyphs; i++ )
+   {
+      Font_SetCharColor( font, i + font->codepointOffset, color );
+   }
+}

@@ -61,6 +61,8 @@ Bool_t Game_LoadAssets( GameData_t* gameData )
       return False;
    }
 
+   Font_SetColor( &( gameData->renderData.font ), 0x003333CC );
+
    return True;
 }
 
@@ -180,6 +182,7 @@ internal void Game_Render( GameData_t* gameData )
 
    Render_Clear();
    Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 1.0f, 0, 0 );
+   Render_DrawTextLine( "(...But don't forget to brush your teeth!)", 0.18f, 40, 240, &( gameData->renderData.font ) );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {

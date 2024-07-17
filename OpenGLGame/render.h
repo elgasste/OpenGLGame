@@ -19,7 +19,7 @@ void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer
                                 uint32_t sectionWidth, uint32_t sectionHeight );
 void Render_DrawTexture( Texture_t* texture, float scale, int32_t screenX, int32_t screenY );
 void Render_DrawSprite( Sprite_t* sprite, float scale, int32_t screenX, int32_t screenY );
-void Render_DrawChar( char c, float scale, int32_t screenX, int32_t screenY, Font_t* font );
-void Render_DrawText( const char* text, float scale, int32_t screenX, int32_t screenY, Font_t* font );
+void Render_DrawChar( uint32_t codepoint, float scale, int32_t screenX, int32_t screenY, Font_t* font );
+void Render_DrawTextLine( const char* text, float scale, int32_t screenX, int32_t screenY, Font_t* font );
 
 #endif
