@@ -10,4 +10,13 @@ typedef enum
 }
 TextureID_t;
 
+typedef enum
+{
+   FontID_Consolas = 0,
+   FontID_Papyrus,
+
+   FontID_Count
+}
+FontID_t;
+
 #endif

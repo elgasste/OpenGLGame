@@ -131,8 +131,8 @@ internal void InitOpenGL( HWND hWnd )
    desiredPixelFormat.nVersion = 1;
    desiredPixelFormat.iPixelType = PFD_TYPE_RGBA;
    desiredPixelFormat.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
-   desiredPixelFormat.cColorBits = GRAPHICS_BPP;
-   desiredPixelFormat.cAlphaBits = GRAPHICS_ALPHABITS;
+   desiredPixelFormat.cColorBits = 32;
+   desiredPixelFormat.cAlphaBits = 8;
    desiredPixelFormat.iLayerType = PFD_MAIN_PLANE;
 
    suggestedPixelFormatIndex = ChoosePixelFormat( dc, &desiredPixelFormat );
@@ -144,7 +144,7 @@ internal void InitOpenGL( HWND hWnd )
 
    DescribePixelFormat( dc, suggestedPixelFormatIndex, sizeof( suggestedPixelFormat ), &suggestedPixelFormat );
 
-   if ( suggestedPixelFormat.cColorBits != GRAPHICS_BPP || suggestedPixelFormat.cAlphaBits != GRAPHICS_ALPHABITS )
+   if ( suggestedPixelFormat.cColorBits != 32 || suggestedPixelFormat.cAlphaBits != 8 )
    {
       FatalError( STR_WINERR_UNSUITABLEPIXELFORMAT );
    }
@@ -373,12 +373,12 @@ Bool_t Platform_ReadFileData( const char* filePath, FileData_t* fileData )
    return True;
 }
 
-Bool_t Platform_WriteFileData( const char* filePath, FileData_t* fileData )
+Bool_t Platform_WriteFileData( FileData_t* fileData )
 {
    HANDLE hFile;
    OVERLAPPED overlapped = { 0 };
 
-   hFile = CreateFileA( filePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
+   hFile = CreateFileA( fileData->filePath, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
 
    if ( !hFile )
    {

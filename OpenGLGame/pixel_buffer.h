@@ -6,7 +6,7 @@
 
 typedef struct PixelBuffer_t
 {
-   uint8_t* buffer;
+   uint8_t* memory;
    Vector2ui32_t dimensions;
 }
 PixelBuffer_t;
