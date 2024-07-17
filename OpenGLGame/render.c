@@ -73,36 +73,39 @@ void Render_DrawChar( char c, float scale, int32_t screenX, int32_t screenY, Fon
    FontGlyph_t* glyph;
    PixelBuffer_t* buffer;
    uint32_t c32 = (uint32_t)c;
+   int32_t x, y;
 
    if ( c32 < font->codepointOffset || c32 > ( font->codepointOffset + font->numGlyphs ) )
    {
       return;
    }
 
-
    glyph = &( font->glyphs[c32 - font->codepointOffset] );
    buffer = &( glyph->pixelBuffer );
+   x = screenX + (int32_t)( glyph->leftBearing * scale );
+   y = screenY + (int32_t)( ( font->baseline + glyph->baselineOffset ) * scale );
 
    Render_PrepareTextureForDrawing( font->textureHandle, buffer,
-                                    screenX, screenY,
+                                    x, y,
                                     (uint32_t)( buffer->dimensions.x * scale ), (uint32_t)( buffer->dimensions.y * scale ) );
 
    Render_DrawTextureSection( font->textureHandle, buffer, scale,
-                              screenX, screenY,
+                              x, y,
                               0, 0,
                               buffer->dimensions.x, buffer->dimensions.y );
 }
 
 void Render_DrawText( const char* text, float scale, int32_t screenX, int32_t screenY, Font_t* font )
 {
-   uint32_t i, glyphIndex;
+   uint32_t i;
    int32_t x = screenX;
+   FontGlyph_t* glyph;
 
    for ( i = 0; i < strlen( text ); i++ )
    {
+      glyph = font->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
       Render_DrawChar( text[i], scale, x, screenY, font );
-      glyphIndex = (uint32_t)text[i] - font->codepointOffset;
-      x += (int32_t)( font->glyphs[glyphIndex].pixelBuffer.dimensions.x * scale );
+      x += (int32_t)( glyph->advance * scale );
    }
 }
 

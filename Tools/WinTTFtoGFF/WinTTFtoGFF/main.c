@@ -109,8 +109,8 @@ internal void LoadTTF( const char* filePath, Font_t* font )
    // TODO: we should probably offer the option of passing in a raw pixel height as a parameter,
    // or even allow several different glyph heights in the same font.
    scale = stbtt_ScaleForPixelHeight( &fontInfo, FONT_RAWPIXELHEIGHT );
-   stbtt_GetFontVMetrics( &fontInfo, 0, &( font->descent ), &( font->lineGap ) );
-   font->descent = (int32_t)( font->descent * scale );
+   stbtt_GetFontVMetrics( &fontInfo, 0, &( font->baseline ), &( font->lineGap ) );
+   font->baseline = (int32_t)( -( font->baseline ) * scale );
    font->lineGap = (int32_t)( font->lineGap * scale );
 
    printf( "Reading glyphs..." );
@@ -140,14 +140,12 @@ internal void LoadTTF( const char* filePath, Font_t* font )
 
       glyphIndex = codepoint - FONT_STARTCODEPOINT;
 
-      stbtt_GetGlyphHMetrics( &fontInfo, codepoint, &( font->glyphs[glyphIndex].advance ), 0);
-      font->glyphs[glyphIndex].advance = (int32_t)( font->glyphs[glyphIndex].advance * scale );
+      stbtt_GetCodepointBox( &fontInfo, codepoint, 0, &( font->glyphs[glyphIndex].baselineOffset ), 0, 0 );
+      font->glyphs[glyphIndex].baselineOffset = (int32_t)( font->glyphs[glyphIndex].baselineOffset * scale );
 
-      stbtt_GetGlyphBox( &fontInfo, codepoint,
-                         &( font->glyphs[glyphIndex].offset.x ), &( font->glyphs[glyphIndex].offset.y ),
-                         0, 0 );
-      font->glyphs[glyphIndex].offset.x = (int32_t)( font->glyphs[glyphIndex].offset.x * scale );
-      font->glyphs[glyphIndex].offset.y = (int32_t)( font->glyphs[glyphIndex].offset.y * scale );
+      stbtt_GetCodepointHMetrics( &fontInfo, codepoint, &( font->glyphs[glyphIndex].advance ), &( font->glyphs[glyphIndex].leftBearing ) );
+      font->glyphs[glyphIndex].advance = (int32_t)( font->glyphs[glyphIndex].advance * scale );
+      font->glyphs[glyphIndex].leftBearing = (int32_t)( font->glyphs[glyphIndex].leftBearing * scale );
 
       font->glyphs[glyphIndex].pixelBuffer.memory = (uint8_t*)codepointMemory;
       font->glyphs[glyphIndex].pixelBuffer.dimensions.x = (uint32_t)width;
@@ -172,13 +170,14 @@ internal void WriteGFF( const char* filePath, Font_t* font )
 
    strcpy_s( fileData.filePath, STRING_SIZE_DEFAULT, filePath );
 
-   // codepoint offset, descent, line gap, and number of glyphs, all 4 bytes
+   // codepoint offset, baseline, line gap, and number of glyphs, all 4 bytes
    fileData.fileSize = 16;
    glyph = font->glyphs;
 
    for ( i = 0; i < font->numGlyphs; i++ )
    {
-      // offset (8 bytes), advance (4 bytes), pixel buffer dimensions (8 bytes), and pixel buffer size
+      // left bearing (4 bytes), baseline offset (4 bytes), advance (4 bytes),
+      // pixel buffer dimensions (8 bytes), and pixel buffer size
       fileData.fileSize += 20;
       fileData.fileSize += ( ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y ) * ( GRAPHICS_BPP / 8 ) );
       glyph++;
@@ -188,7 +187,7 @@ internal void WriteGFF( const char* filePath, Font_t* font )
 
    filePos32 = (uint32_t*)fileData.contents;
    filePos32[0] = font->codepointOffset;
-   filePos32[1] = font->descent;
+   filePos32[1] = font->baseline;
    filePos32[2] = font->lineGap;
    filePos32[3] = font->numGlyphs;
    filePos32 += 4;
@@ -197,8 +196,8 @@ internal void WriteGFF( const char* filePath, Font_t* font )
 
    for ( i = 0; i < font->numGlyphs; i++ )
    {
-      filePos32[0] = glyph->offset.x;
-      filePos32[1] = glyph->offset.y;
+      filePos32[0] = glyph->leftBearing;
+      filePos32[1] = glyph->baselineOffset;
       filePos32[2] = glyph->advance;
       filePos32[3] = glyph->pixelBuffer.dimensions.x;
       filePos32[4] = glyph->pixelBuffer.dimensions.y;
