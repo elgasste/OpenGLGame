@@ -52,7 +52,7 @@ Bool_t Game_LoadAssets( GameData_t* gameData )
 
    snprintf( backgroundBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
    snprintf( starBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\star.bmp", appDirectory );
-   snprintf( fontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Consolas.gff", appDirectory );
+   snprintf( fontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Papyrus.gff", appDirectory );
 
    if ( !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Background] ), backgroundBmpFilePath) ||
         !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Star] ), starBmpFilePath ) ||
@@ -182,7 +182,7 @@ internal void Game_Render( GameData_t* gameData )
 
    Render_Clear();
    Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 1.0f, 0, 0 );
-   Render_DrawTextLine( STR_BRUSHTEETH, 0.18f, 40, 240, &( gameData->renderData.font ) );
+   Render_DrawTextLine( STR_BRUSHTEETH, 0.35f, 65, 240, &( gameData->renderData.font ) );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {

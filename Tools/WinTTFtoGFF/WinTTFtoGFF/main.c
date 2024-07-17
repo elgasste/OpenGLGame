@@ -8,8 +8,8 @@
 #define STARTCODEPOINT      32       // space
 #define ENDCODEPOINT        126      // tilde
 
-internal void LoadTTF( const char* filePath, Font_t* font );
-internal void WriteGFF( const char* filePath, Font_t* font );
+internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font );
+internal void WriteGFF( const char* filePath, const char* fileName, Font_t* font );
 
 int main( int argc, char** argv )
 {
@@ -20,6 +20,7 @@ int main( int argc, char** argv )
    char fileFilter[STRING_SIZE_DEFAULT];
    char sourceFilePath[STRING_SIZE_DEFAULT];
    char destFilePath[STRING_SIZE_DEFAULT];
+   char destFileName[STRING_SIZE_DEFAULT];
    Font_t font;
 
    if ( argc < 3 )
@@ -68,21 +69,28 @@ int main( int argc, char** argv )
          strcat_s( sourceFilePath, STRING_SIZE_DEFAULT, findData.cFileName );
          strcpy_s( destFilePath, STRING_SIZE_DEFAULT, destDir );
          strcat_s( destFilePath, STRING_SIZE_DEFAULT, findData.cFileName );
+         strcpy_s( destFileName, STRING_SIZE_DEFAULT, findData.cFileName );
 
          destFilePath[strlen( destFilePath ) - 3] = 'g';
          destFilePath[strlen( destFilePath ) - 2] = 'f';
          destFilePath[strlen( destFilePath ) - 1] = 'f';
 
-         LoadTTF( sourceFilePath, &font );
-         WriteGFF( destFilePath, &font );
+         destFileName[strlen( destFileName ) - 3] = 'g';
+         destFileName[strlen( destFileName ) - 2] = 'f';
+         destFileName[strlen( destFileName ) - 1] = 'f';
+
+         LoadTTF( sourceFilePath, findData.cFileName, &font );
+         WriteGFF( destFilePath, destFileName, &font );
       }
    }
    while( FindNextFileA( hFile, &findData ) != 0 );
 
+   printf( "\nAll finished!\n\n" );
+
    return 0;
 }
 
-internal void LoadTTF( const char* filePath, Font_t* font )
+internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font )
 {
    FileData_t fileData;
    uint8_t* filePos;
@@ -92,12 +100,12 @@ internal void LoadTTF( const char* filePath, Font_t* font )
    uint32_t* dest;
    uint8_t alpha;
    float scale;
-   char errorMsg[STRING_SIZE_DEFAULT];
+   char msg[STRING_SIZE_DEFAULT];
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, "ERROR: could not open file: %s\n\n", filePath );
-      printf( errorMsg );
+      snprintf( msg, STRING_SIZE_DEFAULT, "ERROR: could not open file: %s\n\n", filePath );
+      printf( msg );
       exit( 1 );
    }
 
@@ -105,8 +113,8 @@ internal void LoadTTF( const char* filePath, Font_t* font )
 
    if ( !stbtt_InitFont( &fontInfo, filePos, stbtt_GetFontOffsetForIndex( filePos, 0 ) ) )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, "ERROR: could not load font data: %s\n\n", filePath );
-      printf( errorMsg );
+      snprintf( msg, STRING_SIZE_DEFAULT, "ERROR: could not load font data: %s\n\n", filePath );
+      printf( msg );
       exit( 1 );
    }
 
@@ -118,7 +126,8 @@ internal void LoadTTF( const char* filePath, Font_t* font )
    font->baseline = (int32_t)( -( font->baseline ) * scale );
    font->lineGap = (int32_t)( font->lineGap * scale );
 
-   printf( "Reading glyphs..." );
+   snprintf( msg, STRING_SIZE_DEFAULT, "Reading glyphs from %s...", fileName );
+   printf( msg );
 
    for ( codepoint = STARTCODEPOINT; codepoint <= ENDCODEPOINT; codepoint++ )
    {
@@ -163,15 +172,16 @@ internal void LoadTTF( const char* filePath, Font_t* font )
    Platform_ClearFileData( &fileData );
 }
 
-internal void WriteGFF( const char* filePath, Font_t* font )
+internal void WriteGFF( const char* filePath, const char* fileName, Font_t* font )
 {
    FileData_t fileData;
    uint32_t i, j;
    FontGlyph_t* glyph;
-   char errorMsg[STRING_SIZE_DEFAULT];
    uint32_t* filePos32;
+   char msg[STRING_SIZE_DEFAULT];
 
-   printf( "Writing GFF data..." );
+   snprintf( msg, STRING_SIZE_DEFAULT, "Writing GFF data to %s...", fileName );
+   printf( msg );
 
    strcpy_s( fileData.filePath, STRING_SIZE_DEFAULT, filePath );
 
@@ -220,12 +230,12 @@ internal void WriteGFF( const char* filePath, Font_t* font )
 
    if ( !Platform_WriteFileData( &fileData ) )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, "ERROR: could not write to file: %s\n\n", filePath );
-      printf( errorMsg );
+      snprintf( msg, STRING_SIZE_DEFAULT, "ERROR: could not write to file: %s\n\n", filePath );
+      printf( msg );
       exit( 1 );
    }
 
-   printf( "done!\n\n" );
+   printf( "done!\n" );
    Platform_ClearFileData( &fileData );
 }
 
