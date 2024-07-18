@@ -186,6 +186,7 @@ internal void Game_Render( GameData_t* gameData )
    Star_t* star;
    Font_t* consolasFont = & ( gameData->renderData.fonts[FontID_Consolas] );
    Font_t* papyrusFont = &( gameData->renderData.fonts[FontID_Papyrus] );
+   char msg[STRING_SIZE_DEFAULT];
 
    Render_Clear();
    Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 1.0f, 0, 0 );
@@ -197,7 +198,8 @@ internal void Game_Render( GameData_t* gameData )
       Render_DrawSprite( &( star->sprite ), star->scale, (uint32_t)( star->position.x ), (uint32_t)( star->position.y ) );
    }
 
-   Render_DrawTextLine( "Debug up here", 1.0f, 10, SCREEN_HEIGHT - (int32_t)( consolasFont->curGlyphCollection->height ) - 10, consolasFont );
+   snprintf( msg, STRING_SIZE_DEFAULT, "Last frame duration (microseconds): %lld", gameData->clock.lastFrameDurationMicro );
+   Render_DrawTextLine( msg, 1.0f, 10, SCREEN_HEIGHT - (int32_t)( consolasFont->curGlyphCollection->height ) - 10, consolasFont );
 
    Platform_RenderScreen();
 }
