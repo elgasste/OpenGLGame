@@ -31,7 +31,6 @@ typedef struct
 }
 BmpData_t;
 
-internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer );
 internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos );
 internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos );
 internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos );
@@ -70,29 +69,11 @@ Bool_t Bmp_LoadFromFile( const char* filePath, PixelBuffer_t* pixelBuffer )
         !Bmp_VerifyDataSize( &bmpData, &fileData ) ||
         !Bmp_ReadPixelBuffer( &bmpData, &fileData, ( fileStartPos + bmpData.imageOffset ), pixelBuffer ) )
    {
-      Bmp_Cleanup( &bmpData, pixelBuffer );
       Platform_ClearFileData( &fileData );
       return False;
    }
 
    return True;
-}
-
-internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer )
-{
-   if ( bmpData->paletteColors )
-   {
-      Platform_MemFree( bmpData->paletteColors );
-      bmpData->paletteColors = 0;
-   }
-
-   if ( pixelBuffer->memory )
-   {
-      Platform_MemFree( pixelBuffer->memory );
-      pixelBuffer->memory = 0;
-      pixelBuffer->dimensions.x = 0;
-      pixelBuffer->dimensions.y = 0;
-   }
 }
 
 internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos )

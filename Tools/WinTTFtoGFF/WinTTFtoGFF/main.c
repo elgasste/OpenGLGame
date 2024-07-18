@@ -11,6 +11,10 @@
 internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font );
 internal void WriteGFF( const char* filePath, const char* fileName, Font_t* font );
 
+// TODO: we probably want this to come from the command line, so we can have
+// different sizes for different TTF files.
+global uint32_t g_glyphSizes[] = { 16, 24, 48, 72 };
+
 int main( int argc, char** argv )
 {
    HANDLE hFile;
@@ -51,19 +55,15 @@ int main( int argc, char** argv )
       exit( 1 );
    }
 
-   font.glyphs = 0;
+   font.glyphCollections = 0;
 
    do
    {
       if ( !( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
       {
          font.codepointOffset = STARTCODEPOINT;
+         font.numGlyphCollections = (uint32_t)( sizeof( g_glyphSizes ) / 4 );
          font.numGlyphs = (uint32_t)( ( ENDCODEPOINT - STARTCODEPOINT ) + 1 );
-         if ( font.glyphs )
-         {
-            Platform_MemFree( font.glyphs );
-         }
-         font.glyphs = (FontGlyph_t*)Platform_MemAlloc( font.numGlyphs * sizeof( PixelBuffer_t ) );
 
          strcpy_s( sourceFilePath, STRING_SIZE_DEFAULT, sourceDir );
          strcat_s( sourceFilePath, STRING_SIZE_DEFAULT, findData.cFileName );
@@ -99,8 +99,13 @@ internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font 
    uint8_t *monoCodepointMemory, *codepointMemory, *source, *destRow;
    uint32_t* dest;
    uint8_t alpha;
+   uint32_t i;
    float scale;
+   FontGlyphCollection_t* collection;
    char msg[STRING_SIZE_DEFAULT];
+
+   snprintf( msg, STRING_SIZE_DEFAULT, "Reading glyphs from %s...", fileName );
+   printf( msg );
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
@@ -118,54 +123,58 @@ internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font 
       exit( 1 );
    }
 
-   // TODO: we should probably offer the option of passing in a raw pixel height as a parameter,
-   // or even allow several different glyph heights in the same font.
-   scale = stbtt_ScaleForPixelHeight( &fontInfo, (float)RAWPIXELHEIGHT );
-   stbtt_GetFontVMetrics( &fontInfo, 0, &( font->baseline ), &( font->lineGap ) );
-   font->height = RAWPIXELHEIGHT;
-   font->baseline = (int32_t)( -( font->baseline ) * scale );
-   font->lineGap = (int32_t)( font->lineGap * scale );
+   font->glyphCollections = (FontGlyphCollection_t*)Platform_MemAlloc( sizeof( FontGlyphCollection_t ) * font->numGlyphCollections );
+   collection = font->glyphCollections;
 
-   snprintf( msg, STRING_SIZE_DEFAULT, "Reading glyphs from %s...", fileName );
-   printf( msg );
-
-   for ( codepoint = STARTCODEPOINT; codepoint <= ENDCODEPOINT; codepoint++ )
+   for ( i = 0; i < font->numGlyphCollections; i++ )
    {
-      monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scale, codepoint, &width, &height, &xOffset, &yOffset );
-      pitch = width * 4;
-      codepointMemory = Platform_MemAlloc( height * pitch );
-      source = monoCodepointMemory;
-      destRow = codepointMemory + ( ( height - 1 ) * pitch );
+      collection->height = g_glyphSizes[i];
+      scale = stbtt_ScaleForPixelHeight( &fontInfo, (float)( collection->height ) );
+      stbtt_GetFontVMetrics( &fontInfo, 0, &( collection->baseline ), &( collection->lineGap ) );
+      collection->baseline = (int32_t)( -( collection->baseline ) * scale );
+      collection->lineGap = (int32_t)( collection->lineGap * scale );
+      collection->glyphs = (FontGlyph_t*)Platform_MemAlloc( sizeof( FontGlyph_t ) * font->numGlyphs );
 
-      for ( y = 0; y < height; y++ )
+      for ( codepoint = STARTCODEPOINT; codepoint <= ENDCODEPOINT; codepoint++ )
       {
-         dest = (uint32_t*)destRow;
+         monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scale, codepoint, &width, &height, &xOffset, &yOffset );
+         pitch = width * 4;
+         codepointMemory = Platform_MemAlloc( height * pitch );
+         source = monoCodepointMemory;
+         destRow = codepointMemory + ( ( height - 1 ) * pitch );
 
-         for ( x = 0; x < width; x++ )
+         for ( y = 0; y < height; y++ )
          {
-            alpha = *source;
-            source++;
-            *dest = 0x00FFFFFF | ( (uint32_t)alpha << 24 );
-            dest++;
+            dest = (uint32_t*)destRow;
+
+            for ( x = 0; x < width; x++ )
+            {
+               alpha = *source;
+               source++;
+               *dest = 0x00FFFFFF | ( (uint32_t)alpha << 24 );
+               dest++;
+            }
+
+            destRow -= pitch;
          }
 
-         destRow -= pitch;
+         glyphIndex = codepoint - STARTCODEPOINT;
+
+         stbtt_GetCodepointBox( &fontInfo, codepoint, 0, &( collection->glyphs[glyphIndex].baselineOffset ), 0, 0 );
+         collection->glyphs[glyphIndex].baselineOffset = (int32_t)( collection->glyphs[glyphIndex].baselineOffset * scale );
+
+         stbtt_GetCodepointHMetrics( &fontInfo, codepoint, &( collection->glyphs[glyphIndex].advance ), &( collection->glyphs[glyphIndex].leftBearing ) );
+         collection->glyphs[glyphIndex].advance = (int32_t)( collection->glyphs[glyphIndex].advance * scale );
+         collection->glyphs[glyphIndex].leftBearing = (int32_t)( collection->glyphs[glyphIndex].leftBearing * scale );
+
+         collection->glyphs[glyphIndex].pixelBuffer.memory = (uint8_t*)codepointMemory;
+         collection->glyphs[glyphIndex].pixelBuffer.dimensions.x = (uint32_t)width;
+         collection->glyphs[glyphIndex].pixelBuffer.dimensions.y = (uint32_t)height;
+
+         stbtt_FreeBitmap( monoCodepointMemory, 0 );
       }
 
-      glyphIndex = codepoint - STARTCODEPOINT;
-
-      stbtt_GetCodepointBox( &fontInfo, codepoint, 0, &( font->glyphs[glyphIndex].baselineOffset ), 0, 0 );
-      font->glyphs[glyphIndex].baselineOffset = (int32_t)( font->glyphs[glyphIndex].baselineOffset * scale );
-
-      stbtt_GetCodepointHMetrics( &fontInfo, codepoint, &( font->glyphs[glyphIndex].advance ), &( font->glyphs[glyphIndex].leftBearing ) );
-      font->glyphs[glyphIndex].advance = (int32_t)( font->glyphs[glyphIndex].advance * scale );
-      font->glyphs[glyphIndex].leftBearing = (int32_t)( font->glyphs[glyphIndex].leftBearing * scale );
-
-      font->glyphs[glyphIndex].pixelBuffer.memory = (uint8_t*)codepointMemory;
-      font->glyphs[glyphIndex].pixelBuffer.dimensions.x = (uint32_t)width;
-      font->glyphs[glyphIndex].pixelBuffer.dimensions.y = (uint32_t)height;
-
-      stbtt_FreeBitmap( monoCodepointMemory, 0 );
+      collection++;
    }
 
    printf( "done!\n" );
@@ -175,7 +184,8 @@ internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font 
 internal void WriteGFF( const char* filePath, const char* fileName, Font_t* font )
 {
    FileData_t fileData;
-   uint32_t i, j;
+   uint32_t i, j, k;
+   FontGlyphCollection_t* collection;
    FontGlyph_t* glyph;
    uint32_t* filePos32;
    char msg[STRING_SIZE_DEFAULT];
@@ -185,47 +195,64 @@ internal void WriteGFF( const char* filePath, const char* fileName, Font_t* font
 
    strcpy_s( fileData.filePath, STRING_SIZE_DEFAULT, filePath );
 
-   // codepoint offset, height, baseline, line gap, and number of glyphs, each 4 bytes
-   fileData.fileSize = 20;
-   glyph = font->glyphs;
+   // codepoint offset, number of glyph collections, and number of glyphs, each 4 bytes
+   fileData.fileSize = 12;
+   collection = font->glyphCollections;
 
-   for ( i = 0; i < font->numGlyphs; i++ )
+   for ( i = 0; i < font->numGlyphCollections; i++ )
    {
-      // left bearing (4 bytes), baseline offset (4 bytes), advance (4 bytes),
-      // pixel buffer dimensions (8 bytes), and pixel buffer size
-      fileData.fileSize += 20;
-      fileData.fileSize += ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y * 4 );
-      glyph++;
+      // height, baseline, and lineGap, each 4 bytes
+      fileData.fileSize += 12;
+      glyph = collection->glyphs;
+
+      for ( j = 0; j < font->numGlyphs; j++ )
+      {
+         // left bearing (4 bytes), baseline offset (4 bytes), advance (4 bytes),
+         // pixel buffer dimensions (8 bytes), and pixel buffer size
+         fileData.fileSize += 20;
+         fileData.fileSize += ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y * 4 );
+         glyph++;
+      }
+
+      collection++;
    }
 
    fileData.contents = Platform_MemAlloc( fileData.fileSize );
 
    filePos32 = (uint32_t*)fileData.contents;
    filePos32[0] = font->codepointOffset;
-   filePos32[1] = font->height;
-   filePos32[2] = font->baseline;
-   filePos32[3] = font->lineGap;
-   filePos32[4] = font->numGlyphs;
-   filePos32 += 5;
+   filePos32[1] = font->numGlyphCollections;
+   filePos32[2] = font->numGlyphs;
+   filePos32 += 3;
+   collection = font->glyphCollections;
 
-   glyph = font->glyphs;
-
-   for ( i = 0; i < font->numGlyphs; i++ )
+   for ( i = 0; i < font->numGlyphCollections; i++ )
    {
-      filePos32[0] = glyph->leftBearing;
-      filePos32[1] = glyph->baselineOffset;
-      filePos32[2] = glyph->advance;
-      filePos32[3] = glyph->pixelBuffer.dimensions.x;
-      filePos32[4] = glyph->pixelBuffer.dimensions.y;
-      filePos32 += 5;
+      filePos32[0] = collection->height;
+      filePos32[1] = collection->baseline;
+      filePos32[2] = collection->lineGap;
+      filePos32 += 3;
+      glyph = collection->glyphs;
 
-      for ( j = 0; j < ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y ); j++ )
+      for ( j = 0; j < font->numGlyphs; j++ )
       {
-         filePos32[j] = ( (uint32_t*)( glyph->pixelBuffer.memory ) )[j];
+         filePos32[0] = glyph->leftBearing;
+         filePos32[1] = glyph->baselineOffset;
+         filePos32[2] = glyph->advance;
+         filePos32[3] = glyph->pixelBuffer.dimensions.x;
+         filePos32[4] = glyph->pixelBuffer.dimensions.y;
+         filePos32 += 5;
+
+         for ( k = 0; k < ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y ); k++ )
+         {
+            filePos32[k] = ( (uint32_t*)( glyph->pixelBuffer.memory ) )[k];
+         }
+
+         filePos32 += ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y );
+         glyph++;
       }
 
-      filePos32 += ( glyph->pixelBuffer.dimensions.x * glyph->pixelBuffer.dimensions.y );
-      glyph++;
+      collection++;
    }
 
    if ( !Platform_WriteFileData( &fileData ) )
@@ -323,6 +350,7 @@ void Platform_ClearFileData( FileData_t* fileData )
    fileData->fileSize = 0;
 }
 
+// unused platform functions
 void Platform_Log( const char* message ) { UNUSED_PARAM( message ); }
 void Platform_Tick() { }
 void Platform_RenderScreen() { }

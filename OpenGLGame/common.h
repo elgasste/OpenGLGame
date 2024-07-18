@@ -30,4 +30,6 @@ typedef int32_t Bool_t;
 
 #define GAME_FPS                 60
 
+#define FONT_DEFAULT_HEIGHT      20
+
 #endif

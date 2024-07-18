@@ -1,98 +1,116 @@
 #include "font.h"
 #include "platform.h"
 
+#define ERROR_RETURN_FALSE() \
+   snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_FILECORRUPT, filePath ); \
+   Platform_Log( errorMsg ); \
+   Font_ClearGlyphCollections( font ); \
+   return False
+
+internal void Font_ClearGlyphCollections( Font_t* font );
+
 Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 {
    FileData_t fileData;
    uint32_t* filePos32;
-   uint32_t bufferSize, bytesRead, i, j;
-   int32_t k;
+   uint32_t bufferSize, bytesRead, i, j, k;
+   FontGlyphCollection_t* glyphCollection;
    FontGlyph_t* glyph;
    PixelBuffer_t* buffer;
    char errorMsg[STRING_SIZE_DEFAULT];
 
+   font->glyphCollections = 0;
+
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
+      Font_ClearGlyphCollections( font );
       return False;
    }
 
-   // first 5 values are codepoint offset, height, baseline, line gap, and
+   // first 3 values are codepoint offset, number of glyph collections, and
    // number of glyphs. these are each 4 bytes, and we want to make sure there's
-   // at least one glyph, so make sure we can read another 20 bytes after that.
-   if ( fileData.fileSize <= 40 )
+   // at least one glyph collection header (12 bytes)
+   if ( fileData.fileSize < 24 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_FILECORRUPT, filePath );
-      Platform_Log( errorMsg );
-      return False;
+      ERROR_RETURN_FALSE();
    }
 
    filePos32 = (uint32_t*)( fileData.contents );
    font->codepointOffset = filePos32[0];
-   font->height = filePos32[1];
-   font->baseline = filePos32[2];
-   font->lineGap = filePos32[3];
-   font->numGlyphs = filePos32[4];
-   filePos32 += 5;
-   bytesRead = 20;
+   font->numGlyphCollections = filePos32[1];
+   font->numGlyphs = filePos32[2];
+   filePos32 += 3;
+   bytesRead = 12;
 
-   font->glyphs = (FontGlyph_t*)Platform_MemAlloc( sizeof( FontGlyph_t ) * font->numGlyphs );
-
-   glyph = font->glyphs;
-   buffer = &( glyph->pixelBuffer );
-
-   for ( i = 0; i < font->numGlyphs; i++ )
+   font->glyphCollections = (FontGlyphCollection_t*)Platform_MemAlloc( sizeof( FontGlyphCollection_t ) * font->numGlyphCollections );
+   for ( i = 0; i < font->numGlyphCollections; i++ )
    {
-      glyph->leftBearing = filePos32[0];
-      glyph->baselineOffset = filePos32[1];
-      glyph->advance = filePos32[2];
-      buffer->dimensions.x = filePos32[3];
-      buffer->dimensions.y = filePos32[4];
-      filePos32 += 5;
-      bytesRead += 20;
+      font->glyphCollections[i].glyphs = 0;
+   }
 
-      bufferSize = ( buffer->dimensions.x * buffer->dimensions.y * 4 );
+   glyphCollection = font->glyphCollections;
 
-      if ( ( fileData.fileSize - bytesRead ) < bufferSize )
+   for ( i = 0; i < font->numGlyphCollections; i++ )
+   {
+      // first 3 values are height, baseline, and line gap, which are 4 bytes each
+      glyphCollection->height = filePos32[0];
+      glyphCollection->baseline = filePos32[1];
+      glyphCollection->lineGap = filePos32[2];
+      filePos32 += 3;
+      bytesRead += 12;
+
+      // make sure there's enough content to read at least one glyph header
+      if ( ( fileData.fileSize - bytesRead ) < 20 )
       {
-         for ( k = (int32_t)i - 1; k >= 0; k-- )
+         ERROR_RETURN_FALSE();
+      }
+
+      glyphCollection->glyphs = (FontGlyph_t*)Platform_MemAlloc( sizeof( FontGlyph_t ) * font->numGlyphs );
+      for ( j = 0; j < font->numGlyphs; j++ )
+      {
+         glyphCollection->glyphs[j].pixelBuffer.memory = 0;
+      }
+
+      glyph = font->glyphCollections[i].glyphs;
+
+      for ( j = 0; j < font->numGlyphs; j++ )
+      {
+         buffer = &( glyph->pixelBuffer );
+         glyph->leftBearing = filePos32[0];
+         glyph->baselineOffset = filePos32[1];
+         glyph->advance = filePos32[2];
+         buffer->dimensions.x = filePos32[3];
+         buffer->dimensions.y = filePos32[4];
+         filePos32 += 5;
+         bytesRead += 20;
+         bufferSize = ( buffer->dimensions.x * buffer->dimensions.y * 4 );
+
+         if ( ( fileData.fileSize - bytesRead ) < bufferSize )
          {
-            Platform_MemFree( buffer->memory );
+            ERROR_RETURN_FALSE();
          }
-         Platform_MemFree( font->glyphs );
 
-         snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_FILECORRUPT, filePath );
-         Platform_Log( errorMsg );
-         return False;
+         buffer->memory = (uint8_t*)Platform_MemAlloc( bufferSize );
+         for ( k = 0; k < bufferSize; k++ )
+         {
+            buffer->memory[k] = ( (uint8_t*)filePos32 )[k];
+         }
+
+         filePos32 += ( buffer->dimensions.x * buffer->dimensions.y );
+         bytesRead += bufferSize;
+
+         glyph++;
       }
 
-      buffer->memory = (uint8_t*)Platform_MemAlloc( bufferSize );
-
-      for ( j = 0; j < bufferSize; j++ )
-      {
-         buffer->memory[j] = ( (uint8_t*)filePos32 )[j];
-      }
-
-      filePos32 += ( buffer->dimensions.x * buffer->dimensions.y );
-      bytesRead += bufferSize;
-
-      glyph++;
-      buffer = &( glyph->pixelBuffer );
+      glyphCollection++;
    }
 
    if ( bytesRead != fileData.fileSize )
    {
-      glyph = font->glyphs;
-      for ( i = 0; i < font->numGlyphs; i++ )
-      {
-         Platform_MemFree( glyph->pixelBuffer.memory );
-         glyph++;
-      }
-      Platform_MemFree( font->glyphs );
-
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_FILECORRUPT, filePath );
-      Platform_Log( errorMsg );
-      return False;
+      ERROR_RETURN_FALSE();
    }
+
+   Font_SetGlyphCollectionForHeight( font, FONT_DEFAULT_HEIGHT );
 
    glGenTextures( 1, &( font->textureHandle ) );
 
@@ -107,18 +125,21 @@ Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint )
 
 void Font_SetCharColor( Font_t* font, uint32_t codepoint, uint32_t color )
 {
-   uint32_t i;
+   uint32_t i, j;
    PixelBuffer_t* buffer;
    uint32_t* memory;
 
    if ( Font_ContainsChar( font, codepoint ) )
    {
-      buffer = &( font->glyphs[codepoint - font->codepointOffset].pixelBuffer );
-      memory = (uint32_t*)( buffer->memory );
-
-      for ( i = 0; i < ( buffer->dimensions.x * buffer->dimensions.y ); i++ )
+      for ( i = 0; i < font->numGlyphCollections; i++ )
       {
-         memory[i] = ( memory[i] & 0xFF000000 ) | ( color & 0x00FFFFFF );
+         buffer = &( font->glyphCollections[i].glyphs[codepoint - font->codepointOffset].pixelBuffer );
+         memory = (uint32_t*)( buffer->memory );
+
+         for ( j = 0; j < ( buffer->dimensions.x * buffer->dimensions.y ); j++ )
+         {
+            memory[j] = ( memory[j] & 0xFF000000 ) | ( color & 0x00FFFFFF );
+         }
       }
    }
 }
@@ -131,4 +152,68 @@ void Font_SetColor( Font_t* font, uint32_t color )
    {
       Font_SetCharColor( font, i + font->codepointOffset, color );
    }
+}
+
+internal void Font_ClearGlyphCollections( Font_t* font )
+{
+   uint32_t i, j;
+
+   if ( font->glyphCollections )
+   {
+      for ( i = 0; i < font->numGlyphCollections; i++ )
+      {
+         if ( font->glyphCollections[i].glyphs )
+         {
+            for ( j = 0; j < font->numGlyphs; j++ )
+            {
+               if ( font->glyphCollections[i].glyphs[j].pixelBuffer.memory )
+               {
+                  Platform_MemFree( font->glyphCollections[i].glyphs[j].pixelBuffer.memory );
+               }
+            }
+            Platform_MemFree( font->glyphCollections[i].glyphs );
+         }
+      }
+      Platform_MemFree( font->glyphCollections );
+      font->glyphCollections = 0;
+   }
+}
+
+void Font_SetGlyphCollectionForHeight( Font_t* font, uint32_t height )
+{
+   uint32_t i, heightDiff, tallestIndex = 0, bestIndex = 0, lowestHeightDiff = UINT32_MAX, highestHeight = 0;
+   FontGlyphCollection_t* collection = font->glyphCollections;
+
+   for ( i = 0; i < font->numGlyphCollections; i++ )
+   {
+      if ( collection->height == height )
+      {
+         font->curGlyphCollection = collection;
+         return;
+      }
+      else if ( collection->height > height )
+      {
+         heightDiff = collection->height - height;
+         if ( heightDiff < lowestHeightDiff )
+         {
+            lowestHeightDiff = heightDiff;
+            bestIndex = i;
+         }
+      }
+
+      if( collection->height > highestHeight )
+      {
+         highestHeight = collection->height;
+         tallestIndex = i;
+      }
+
+      collection++;
+   }
+
+   if ( bestIndex == 0 && font->numGlyphCollections > 0 )
+   {
+      bestIndex = tallestIndex;
+   }
+
+   font->curGlyphCollection = &( font->glyphCollections[bestIndex] );
 }

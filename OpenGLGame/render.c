@@ -72,6 +72,7 @@ void Render_DrawChar( uint32_t codepoint, float scale, int32_t screenX, int32_t 
 {
    FontGlyph_t* glyph;
    PixelBuffer_t* buffer;
+   uint32_t baseline;
    int32_t x, y;
 
    if ( !Font_ContainsChar( font, codepoint ) )
@@ -79,10 +80,11 @@ void Render_DrawChar( uint32_t codepoint, float scale, int32_t screenX, int32_t 
       return;
    }
 
-   glyph = &( font->glyphs[codepoint - font->codepointOffset] );
+   baseline = font->curGlyphCollection->baseline;
+   glyph = &( font->curGlyphCollection->glyphs[codepoint - font->codepointOffset] );
    buffer = &( glyph->pixelBuffer );
    x = screenX + (int32_t)( glyph->leftBearing * scale );
-   y = screenY + (int32_t)( ( font->baseline + glyph->baselineOffset ) * scale );
+   y = screenY + (int32_t)( ( baseline + glyph->baselineOffset ) * scale );
 
    Render_PrepareTextureForDrawing( font->textureHandle, buffer,
                                     x, y,
@@ -104,7 +106,7 @@ void Render_DrawTextLine( const char* text, float scale, int32_t screenX, int32_
    {
       if ( Font_ContainsChar( font, text[i] ) )
       {
-         glyph = font->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
+         glyph = font->curGlyphCollection->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
          Render_DrawChar( (uint32_t)( text[i] ), scale, x, screenY, font );
          x += (int32_t)( glyph->advance * scale );
       }
