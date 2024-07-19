@@ -34,6 +34,7 @@ Bool_t Game_Init( GameData_t* gameData )
 
    gameData->isRunning = False;
    gameData->isEngineRunning = True;
+   gameData->showDiagnostics = False;
 
    return True;
 }
@@ -131,6 +132,11 @@ internal void Game_HandleInput( GameData_t* gameData )
    {
       Game_TryClose( gameData );
    }
+
+   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_F8 ) )
+   {
+      TOGGLE_BOOL( gameData->showDiagnostics );
+   }
 }
 
 internal void Game_Tick( GameData_t* gameData )
@@ -198,8 +204,11 @@ internal void Game_Render( GameData_t* gameData )
       Render_DrawSprite( &( star->sprite ), star->scale, star->position.x, star->position.y );
    }
 
-   snprintf( msg, STRING_SIZE_DEFAULT, "Last frame duration (microseconds): %lld", gameData->clock.lastFrameDurationMicro );
-   Render_DrawTextLine( msg, 1.0f, 10.0f, (float)SCREEN_HEIGHT - consolasFont->curGlyphCollection->height - 10.0f, consolasFont );
+   if ( gameData->showDiagnostics )
+   {
+      snprintf( msg, STRING_SIZE_DEFAULT, "Last frame duration (microseconds): %lld", gameData->clock.lastFrameDurationMicro );
+      Render_DrawTextLine( msg, 1.0f, 10.0f, (float)SCREEN_HEIGHT - consolasFont->curGlyphCollection->height - 10.0f, consolasFont );
+   }
 
    Platform_RenderScreen();
 }
