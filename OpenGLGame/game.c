@@ -192,6 +192,7 @@ internal void Game_Render( GameData_t* gameData )
    Star_t* star;
    Font_t* consolasFont = & ( gameData->renderData.fonts[FontID_Consolas] );
    Font_t* papyrusFont = &( gameData->renderData.fonts[FontID_Papyrus] );
+   float y;
    char msg[STRING_SIZE_DEFAULT];
 
    Render_Clear();
@@ -206,8 +207,15 @@ internal void Game_Render( GameData_t* gameData )
 
    if ( gameData->showDiagnostics )
    {
-      snprintf( msg, STRING_SIZE_DEFAULT, "Last frame duration (microseconds): %lld", gameData->clock.lastFrameDurationMicro );
-      Render_DrawTextLine( msg, 1.0f, 10.0f, (float)SCREEN_HEIGHT - consolasFont->curGlyphCollection->height - 10.0f, consolasFont );
+      y = (float)SCREEN_HEIGHT - consolasFont->curGlyphCollection->height - 10.0f;
+      snprintf( msg, STRING_SIZE_DEFAULT, "Target frame microseconds: %lld", gameData->clock.targetFrameDurationMicro );
+      Render_DrawTextLine( msg, 1.0f, 10.0f, y, consolasFont );
+      y -= consolasFont->curGlyphCollection->height - consolasFont->curGlyphCollection->lineGap;
+      snprintf( msg, STRING_SIZE_DEFAULT, "Last frame microseconds: %lld", gameData->clock.lastFrameDurationMicro );
+      Render_DrawTextLine( msg, 1.0f, 10.0f, y, consolasFont );
+      y -= consolasFont->curGlyphCollection->height - consolasFont->curGlyphCollection->lineGap;
+      snprintf( msg, STRING_SIZE_DEFAULT, "Lag frames: %d", gameData->clock.lagFrames );
+      Render_DrawTextLine( msg, 1.0f, 10.0f, y, consolasFont );
    }
 
    Platform_RenderScreen();
