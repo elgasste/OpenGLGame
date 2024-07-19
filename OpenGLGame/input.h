@@ -12,6 +12,8 @@ typedef enum
 
    KeyCode_Escape,
 
+   KeyCode_F8,
+
    KeyCode_Count
 }
 KeyCode_t;
