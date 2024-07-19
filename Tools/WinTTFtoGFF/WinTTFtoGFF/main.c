@@ -348,16 +348,3 @@ void Platform_ClearFileData( FileData_t* fileData )
    fileData->contents = 0;
    fileData->fileSize = 0;
 }
-
-// unused platform functions
-void Platform_Log( const char* message ) { UNUSED_PARAM( message ); }
-void Platform_Tick() { }
-void Platform_RenderScreen() { }
-uint64_t Platform_GetTimeStampMicro() { return 0; }
-void Platform_Sleep( uint64_t micro ) { UNUSED_PARAM( micro ); }
-Bool_t Platform_GetAppDirectory( char* directory, uint32_t stringSize )
-{
-   UNUSED_PARAM( directory );
-   UNUSED_PARAM( stringSize );
-   return 0;
-}
