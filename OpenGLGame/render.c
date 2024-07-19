@@ -1,8 +1,8 @@
 #include "render.h"
 
 internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
-                                               int32_t screenX, int32_t screenY,
-                                               uint32_t viewportWidth, uint32_t viewportHeight );
+                                               float screenX, float screenY,
+                                               float viewportWidth, float viewportHeight );
 
 void Render_Clear()
 {
@@ -11,7 +11,7 @@ void Render_Clear()
 }
 
 void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
-                                int32_t screenX, int32_t screenY,
+                                float screenX, float screenY,
                                 int32_t textureX, int32_t textureY,
                                 uint32_t sectionWidth, uint32_t sectionHeight )
 {
@@ -26,7 +26,7 @@ void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer
 
    Render_PrepareTextureForDrawing( textureHandle, pixelBuffer,
                                     screenX, screenY,
-                                    (uint32_t)( sectionWidth * scale), (uint32_t)( sectionHeight * scale ) );
+                                    sectionWidth * scale, sectionHeight * scale );
 
    glBegin( GL_TRIANGLES );
 
@@ -49,7 +49,7 @@ void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer
    glEnd();
 }
 
-void Render_DrawTexture( Texture_t* texture, float scale, int32_t screenX, int32_t screenY )
+void Render_DrawTexture( Texture_t* texture, float scale, float screenX, float screenY )
 {
    Render_DrawTextureSection( texture->textureHandle, &( texture->pixelBuffer ), scale,
                               screenX, screenY,
@@ -57,7 +57,7 @@ void Render_DrawTexture( Texture_t* texture, float scale, int32_t screenX, int32
                               texture->pixelBuffer.dimensions.x, texture->pixelBuffer.dimensions.y );
 }
 
-void Render_DrawSprite( Sprite_t* sprite, float scale, int32_t screenX, int32_t screenY )
+void Render_DrawSprite( Sprite_t* sprite, float scale, float screenX, float screenY )
 {
    uint32_t rowIndex = ( sprite->frameIndex ) / sprite->frameStride;
    uint32_t colIndex = ( sprite->frameIndex ) % sprite->frameStride;
@@ -68,25 +68,25 @@ void Render_DrawSprite( Sprite_t* sprite, float scale, int32_t screenX, int32_t 
                               sprite->frameDimensions.x, sprite->frameDimensions.y );
 }
 
-void Render_DrawChar( uint32_t codepoint, float scale, int32_t screenX, int32_t screenY, Font_t* font )
+void Render_DrawChar( uint32_t codepoint, float scale, float screenX, float screenY, Font_t* font )
 {
    FontGlyph_t* glyph;
    PixelBuffer_t* buffer;
-   int32_t x, y;
+   float x, y;
 
    if ( !Font_ContainsChar( font, codepoint ) )
    {
       return;
    }
 
-   glyph = &( font->glyphs[codepoint - font->codepointOffset] );
+   glyph = &( font->curGlyphCollection->glyphs[codepoint - font->codepointOffset] );
    buffer = &( glyph->pixelBuffer );
-   x = screenX + (int32_t)( glyph->leftBearing * scale );
-   y = screenY + (int32_t)( ( font->baseline + glyph->baselineOffset ) * scale );
+   x = screenX + ( glyph->leftBearing * scale );
+   y = screenY + ( ( font->curGlyphCollection->baseline + glyph->baselineOffset ) * scale );
 
    Render_PrepareTextureForDrawing( font->textureHandle, buffer,
                                     x, y,
-                                    (uint32_t)( buffer->dimensions.x * scale ), (uint32_t)( buffer->dimensions.y * scale ) );
+                                    buffer->dimensions.x * scale, buffer->dimensions.y * scale );
 
    Render_DrawTextureSection( font->textureHandle, buffer, scale,
                               x, y,
@@ -94,26 +94,26 @@ void Render_DrawChar( uint32_t codepoint, float scale, int32_t screenX, int32_t 
                               buffer->dimensions.x, buffer->dimensions.y );
 }
 
-void Render_DrawTextLine( const char* text, float scale, int32_t screenX, int32_t screenY, Font_t* font )
+void Render_DrawTextLine( const char* text, float scale, float screenX, float screenY, Font_t* font )
 {
    uint32_t i;
-   int32_t x = screenX;
+   float x = screenX;
    FontGlyph_t* glyph;
 
    for ( i = 0; i < strlen( text ); i++ )
    {
       if ( Font_ContainsChar( font, text[i] ) )
       {
-         glyph = font->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
+         glyph = font->curGlyphCollection->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
          Render_DrawChar( (uint32_t)( text[i] ), scale, x, screenY, font );
-         x += (int32_t)( glyph->advance * scale );
+         x += ( glyph->advance * scale );
       }
    }
 }
 
 internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
-                                               int32_t screenX, int32_t screenY,
-                                               uint32_t viewportWidth, uint32_t viewportHeight )
+                                               float screenX, float screenY,
+                                               float viewportWidth, float viewportHeight )
 {
    GLfloat modelMatrix[] = 
    {
@@ -123,7 +123,7 @@ internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer
       -1.0f, -1.0f, 0.0f, 1.0f
    };
 
-   glViewport( screenX, screenY, viewportWidth, viewportHeight );
+   glViewport( (GLint)screenX, (GLint)screenY, (GLsizei)viewportWidth, (GLsizei)viewportHeight );
 
    glBindTexture( GL_TEXTURE_2D, textureHandle );
    glTexImage2D( GL_TEXTURE_2D,
