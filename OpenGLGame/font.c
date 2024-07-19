@@ -1,3 +1,5 @@
+#include <float.h>
+
 #include "font.h"
 #include "platform.h"
 
@@ -53,9 +55,9 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
    for ( i = 0; i < font->numGlyphCollections; i++ )
    {
       // first 3 values are height, baseline, and line gap, which are 4 bytes each
-      glyphCollection->height = filePos32[0];
-      glyphCollection->baseline = filePos32[1];
-      glyphCollection->lineGap = filePos32[2];
+      glyphCollection->height = ( (float*)filePos32 )[0];
+      glyphCollection->baseline = ( (float*)filePos32 )[1];
+      glyphCollection->lineGap = ( (float*)filePos32 )[2];
       filePos32 += 3;
       bytesRead += 12;
 
@@ -76,9 +78,9 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
       for ( j = 0; j < font->numGlyphs; j++ )
       {
          buffer = &( glyph->pixelBuffer );
-         glyph->leftBearing = filePos32[0];
-         glyph->baselineOffset = filePos32[1];
-         glyph->advance = filePos32[2];
+         glyph->leftBearing = ( (float*)filePos32 )[0];
+         glyph->baselineOffset = ( (float*)filePos32 )[1];
+         glyph->advance = ( (float*)filePos32 )[2];
          buffer->dimensions.x = filePos32[3];
          buffer->dimensions.y = filePos32[4];
          filePos32 += 5;
@@ -179,9 +181,10 @@ internal void Font_ClearGlyphCollections( Font_t* font )
    }
 }
 
-void Font_SetGlyphCollectionForHeight( Font_t* font, uint32_t height )
+void Font_SetGlyphCollectionForHeight( Font_t* font, float height )
 {
-   uint32_t i, heightDiff, tallestIndex = 0, bestIndex = 0, lowestHeightDiff = UINT32_MAX, highestHeight = 0;
+   uint32_t i, tallestIndex = 0, bestIndex = 0;
+   float heightDiff, lowestHeightDiff = FLT_MAX, highestHeight = 0.0f;
    FontGlyphCollection_t* collection = font->glyphCollections;
 
    for ( i = 0; i < font->numGlyphCollections; i++ )

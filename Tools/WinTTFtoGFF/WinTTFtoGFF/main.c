@@ -4,7 +4,6 @@
 #include "font.h"
 #include "platform.h"
 
-#define RAWPIXELHEIGHT      128
 #define STARTCODEPOINT      32       // space
 #define ENDCODEPOINT        126      // tilde
 
@@ -13,7 +12,7 @@ internal void WriteGFF( const char* filePath, const char* fileName, Font_t* font
 
 // TODO: we probably want this to come from the command line, so we can have
 // different sizes for different TTF files.
-global uint32_t g_glyphSizes[] = { 16, 24, 48, 72 };
+global float g_glyphHeights[] = { 12.0f, 16.0f, 24.0f, 48.0f, 72.0f };
 
 int main( int argc, char** argv )
 {
@@ -62,7 +61,7 @@ int main( int argc, char** argv )
       if ( !( findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ) )
       {
          font.codepointOffset = STARTCODEPOINT;
-         font.numGlyphCollections = (uint32_t)( sizeof( g_glyphSizes ) / 4 );
+         font.numGlyphCollections = (uint32_t)( sizeof( g_glyphHeights ) / 4 );
          font.numGlyphs = (uint32_t)( ( ENDCODEPOINT - STARTCODEPOINT ) + 1 );
 
          strcpy_s( sourceFilePath, STRING_SIZE_DEFAULT, sourceDir );
@@ -85,7 +84,7 @@ int main( int argc, char** argv )
    }
    while( FindNextFileA( hFile, &findData ) != 0 );
 
-   printf( "\nAll finished!\n\n" );
+   printf( "\nFont conversion complete!\n\n" );
 
    return 0;
 }
@@ -95,7 +94,7 @@ internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font 
    FileData_t fileData;
    uint8_t* filePos;
    stbtt_fontinfo fontInfo;
-   int32_t width, height, xOffset, yOffset, pitch, x, y, codepoint, glyphIndex;
+   int32_t width, height, yOffset, pitch, x, y, codepoint, glyphIndex, baseline, lineGap, baselineOffset, advance, leftBearing;
    uint8_t *monoCodepointMemory, *codepointMemory, *source, *destRow;
    uint32_t* dest;
    uint8_t alpha;
@@ -128,16 +127,16 @@ internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font 
 
    for ( i = 0; i < font->numGlyphCollections; i++ )
    {
-      collection->height = g_glyphSizes[i];
+      collection->height = g_glyphHeights[i];
       scale = stbtt_ScaleForPixelHeight( &fontInfo, (float)( collection->height ) );
-      stbtt_GetFontVMetrics( &fontInfo, 0, &( collection->baseline ), &( collection->lineGap ) );
-      collection->baseline = (int32_t)( -( collection->baseline ) * scale );
-      collection->lineGap = (int32_t)( collection->lineGap * scale );
+      stbtt_GetFontVMetrics( &fontInfo, 0, &baseline, &lineGap);
+      collection->baseline = -baseline * scale;
+      collection->lineGap = lineGap * scale;
       collection->glyphs = (FontGlyph_t*)Platform_MemAlloc( sizeof( FontGlyph_t ) * font->numGlyphs );
 
       for ( codepoint = STARTCODEPOINT; codepoint <= ENDCODEPOINT; codepoint++ )
       {
-         monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scale, codepoint, &width, &height, &xOffset, &yOffset );
+         monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scale, codepoint, &width, &height, 0, &yOffset );
          pitch = width * 4;
          codepointMemory = Platform_MemAlloc( height * pitch );
          source = monoCodepointMemory;
@@ -160,12 +159,12 @@ internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font 
 
          glyphIndex = codepoint - STARTCODEPOINT;
 
-         stbtt_GetCodepointBox( &fontInfo, codepoint, 0, &( collection->glyphs[glyphIndex].baselineOffset ), 0, 0 );
-         collection->glyphs[glyphIndex].baselineOffset = (int32_t)( collection->glyphs[glyphIndex].baselineOffset * scale );
+         stbtt_GetCodepointBox( &fontInfo, codepoint, 0, &baselineOffset, 0, 0 );
+         collection->glyphs[glyphIndex].baselineOffset = ( baselineOffset + yOffset ) * scale;
 
-         stbtt_GetCodepointHMetrics( &fontInfo, codepoint, &( collection->glyphs[glyphIndex].advance ), &( collection->glyphs[glyphIndex].leftBearing ) );
-         collection->glyphs[glyphIndex].advance = (int32_t)( collection->glyphs[glyphIndex].advance * scale );
-         collection->glyphs[glyphIndex].leftBearing = (int32_t)( collection->glyphs[glyphIndex].leftBearing * scale );
+         stbtt_GetCodepointHMetrics( &fontInfo, codepoint, &advance, &leftBearing );
+         collection->glyphs[glyphIndex].advance = advance * scale;
+         collection->glyphs[glyphIndex].leftBearing = leftBearing * scale;
 
          collection->glyphs[glyphIndex].pixelBuffer.memory = (uint8_t*)codepointMemory;
          collection->glyphs[glyphIndex].pixelBuffer.dimensions.x = (uint32_t)width;
@@ -228,17 +227,17 @@ internal void WriteGFF( const char* filePath, const char* fileName, Font_t* font
 
    for ( i = 0; i < font->numGlyphCollections; i++ )
    {
-      filePos32[0] = collection->height;
-      filePos32[1] = collection->baseline;
-      filePos32[2] = collection->lineGap;
+      ( (float*)filePos32 )[0] = collection->height;
+      ( (float*)filePos32 )[1] = collection->baseline;
+      ( (float*)filePos32 )[2] = collection->lineGap;
       filePos32 += 3;
       glyph = collection->glyphs;
 
       for ( j = 0; j < font->numGlyphs; j++ )
       {
-         filePos32[0] = glyph->leftBearing;
-         filePos32[1] = glyph->baselineOffset;
-         filePos32[2] = glyph->advance;
+         ( (float*)filePos32 )[0] = glyph->leftBearing;
+         ( (float*)filePos32 )[1] = glyph->baselineOffset;
+         ( (float*)filePos32 )[2] = glyph->advance;
          filePos32[3] = glyph->pixelBuffer.dimensions.x;
          filePos32[4] = glyph->pixelBuffer.dimensions.y;
          filePos32 += 5;

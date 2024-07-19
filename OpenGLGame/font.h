@@ -8,17 +8,17 @@
 typedef struct
 {
    PixelBuffer_t pixelBuffer;
-   int32_t leftBearing;
-   int32_t baselineOffset;
-   int32_t advance;
+   float leftBearing;
+   float baselineOffset;
+   float advance;
 }
 FontGlyph_t;
 
 typedef struct
 {
-   uint32_t height;
-   int32_t baseline;
-   int32_t lineGap;
+   float height;
+   float baseline;
+   float lineGap;
    FontGlyph_t* glyphs;
 }
 FontGlyphCollection_t;
@@ -38,6 +38,6 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath );
 Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint );
 void Font_SetCharColor( Font_t* font, uint32_t codepoint, uint32_t color );
 void Font_SetColor( Font_t* font, uint32_t color );
-void Font_SetGlyphCollectionForHeight( Font_t* font, uint32_t height );
+void Font_SetGlyphCollectionForHeight( Font_t* font, float height );
 
 #endif
