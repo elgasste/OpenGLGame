@@ -18,6 +18,7 @@
 #define STR_WINERR_INITGAME               "Failed to initialize game."
 #define STR_WINERR_CREATELOGFILE          "Failed to open log file."
 #define STR_WINERR_WRITELOGFILE           "Failed to write message to log file."
+#define STR_WINERR_INITTHREADS            "Failed to initialize threads."
 
 #define STR_FILEERR_OPENFILEFAILED        "File error: could not open file: %s"
 #define STR_FILEERR_GETFILESIZEFAILED     "File error: could not get file size: %s"
@@ -37,6 +38,10 @@
 #define STR_SPRITEERR_FRAMEDIMENSIONS     "Sprite error: frame dimensions don't match texture"
 
 #define STR_FONTERR_FILECORRUPT           "Font error: file is corrupt: %s"
+
+#define STR_DIAG_FRAMETARGETMICRO         "Target frame microseconds: %lld"
+#define STR_DIAG_FRAMEDURATIONMICRO       "Last frame microseconds: %lld"
+#define STR_DIAG_LAGFRAMES                "Lag frames: %d"
 
 #define STR_BRUSHTEETH                    "(...But don't forget to brush your teeth!)"
 

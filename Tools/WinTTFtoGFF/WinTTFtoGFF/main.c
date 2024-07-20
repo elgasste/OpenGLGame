@@ -94,7 +94,7 @@ internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font 
    FileData_t fileData;
    uint8_t* filePos;
    stbtt_fontinfo fontInfo;
-   int32_t width, height, yOffset, pitch, x, y, codepoint, glyphIndex, baseline, lineGap, baselineOffset, advance, leftBearing;
+   int32_t width, height, xOffset, yOffset, pitch, x, y, codepoint, glyphIndex, baseline, lineGap, baselineOffset, advance, leftBearing;
    uint8_t *monoCodepointMemory, *codepointMemory, *source, *destRow;
    uint32_t* dest;
    uint8_t alpha;
@@ -136,7 +136,7 @@ internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font 
 
       for ( codepoint = STARTCODEPOINT; codepoint <= ENDCODEPOINT; codepoint++ )
       {
-         monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scale, codepoint, &width, &height, 0, &yOffset );
+         monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scale, codepoint, &width, &height, &xOffset, &yOffset );
          pitch = width * 4;
          codepointMemory = Platform_MemAlloc( height * pitch );
          source = monoCodepointMemory;
@@ -164,7 +164,7 @@ internal void LoadTTF( const char* filePath, const char* fileName, Font_t* font 
 
          stbtt_GetCodepointHMetrics( &fontInfo, codepoint, &advance, &leftBearing );
          collection->glyphs[glyphIndex].advance = advance * scale;
-         collection->glyphs[glyphIndex].leftBearing = leftBearing * scale;
+         collection->glyphs[glyphIndex].leftBearing = ( leftBearing + xOffset ) * scale;
 
          collection->glyphs[glyphIndex].pixelBuffer.memory = (uint8_t*)codepointMemory;
          collection->glyphs[glyphIndex].pixelBuffer.dimensions.x = (uint32_t)width;

@@ -1,6 +1,3 @@
-#include <Shlwapi.h>
-#include <time.h>
-
 #include "game.h"
 
 typedef struct
@@ -9,16 +6,21 @@ typedef struct
    GameData_t gameData;
    LARGE_INTEGER performanceFrequency;
    uint32_t keyCodeMap[(int)KeyCode_Count];
+   ThreadQueue_t threadQueue;
+   HANDLE threadSemaphoreHandle;
 }
 cGlobalObjects_t;
 
 global cGlobalObjects_t g_globals;
 
 internal void FatalError( const char* message );
+internal void InitThreads();
 internal void InitKeyCodeMap();
 internal void InitOpenGL( HWND hWnd );
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags );
+internal DWORD WINAPI ThreadProc( LPVOID lpParam );
+internal Bool_t DoNextThreadQueueEntry();
 
 int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow )
 {
@@ -87,6 +89,7 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
    InitKeyCodeMap();
    InitOpenGL( g_globals.hWndMain );
+   InitThreads();
 
    if ( !Game_Init( &( g_globals.gameData ) ) )
    {
@@ -108,6 +111,47 @@ internal void FatalError( const char* message )
    Game_EmergencySave( &( g_globals.gameData ) );
    MessageBoxA( 0, message, STR_WINERR_HEADER, MB_OK | MB_ICONERROR );
    exit( 1 );
+}
+
+internal void InitThreads()
+{
+   Win32ThreadInfo_t* threadInfo;
+   uint32_t i;
+   DWORD threadCount, threadId;
+   HANDLE threadHandle;
+   SYSTEM_INFO sysInfo;
+
+   GetSystemInfo( &sysInfo );
+   threadCount = ( sysInfo.dwNumberOfProcessors == 0 ) ? 1 : sysInfo.dwNumberOfProcessors;
+   threadInfo = (Win32ThreadInfo_t*)Platform_MemAlloc( sizeof( Win32ThreadInfo_t ) * threadCount );
+
+   g_globals.threadQueue.completionGoal = 0;
+   g_globals.threadQueue.completionCount = 0;
+   g_globals.threadQueue.nextEntryToRead = 0;
+   g_globals.threadQueue.nextEntryToWrite = 0;
+   g_globals.threadSemaphoreHandle = CreateSemaphoreExA( 0, 0, threadCount, 0, 0, SEMAPHORE_ALL_ACCESS );
+
+   if ( !g_globals.threadSemaphoreHandle || g_globals.threadSemaphoreHandle == INVALID_HANDLE_VALUE )
+   {
+      FatalError( STR_WINERR_INITTHREADS );
+   }
+
+   for ( i = 0; i < threadCount; i++ )
+   {
+      threadInfo[i].queue = &( g_globals.threadQueue );
+      threadInfo[i].logicalThreadIndex = i;
+      threadHandle = CreateThread( 0, 0, ThreadProc, &( threadInfo[i] ), 0, &threadId );
+
+      if ( !threadHandle || threadHandle == INVALID_HANDLE_VALUE )
+      {
+         FatalError( STR_WINERR_INITTHREADS );
+      }
+      else
+      {
+#pragma warning(suppress : 6001)
+         CloseHandle( threadHandle );
+      }
+   }
 }
 
 internal void InitKeyCodeMap()
@@ -238,6 +282,45 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
          }
       }
    }
+}
+
+internal DWORD WINAPI ThreadProc( LPVOID lpParam )
+{
+   UNUSED_PARAM( lpParam );
+
+   while ( 1 )
+   {
+      if ( DoNextThreadQueueEntry() )
+      {
+         WaitForSingleObjectEx( g_globals.threadSemaphoreHandle, INFINITE, FALSE );
+      }
+   }
+}
+
+internal Bool_t DoNextThreadQueueEntry()
+{
+   Bool_t shouldSleep = False;
+   uint32_t entryIndex, originalNextEntry = g_globals.threadQueue.nextEntryToRead;
+   uint32_t newNextEntryToRead = ( originalNextEntry + 1 ) % MAX_THREADQUEUE_SIZE;
+
+   if ( originalNextEntry != g_globals.threadQueue.nextEntryToWrite )
+   {
+      entryIndex = InterlockedCompareExchange( (LONG volatile *)( &( g_globals.threadQueue.nextEntryToRead ) ),
+                                               newNextEntryToRead,
+                                               originalNextEntry );
+
+      if ( entryIndex == originalNextEntry )
+      {        
+         g_globals.threadQueue.entries[entryIndex].workerFnc( g_globals.threadQueue.entries[entryIndex].data );
+         InterlockedIncrement( (LONG volatile *)( &( g_globals.threadQueue.completionCount ) ) );
+      }
+   }
+   else
+   {
+      shouldSleep = True;
+   }
+
+   return shouldSleep;
 }
 
 void Platform_Log( const char* message )
@@ -424,4 +507,39 @@ Bool_t Platform_GetAppDirectory( char* directory, uint32_t stringSize )
    directory[stringLength - strlen( fileName )] = '\0';
 
    return True;
+}
+
+ThreadQueue_t* Platform_GetThreadQueue()
+{
+   return &( g_globals.threadQueue );
+}
+
+Bool_t Platform_AddThreadQueueEntry( void ( *workerFnc )(), void* data )
+{
+   if ( g_globals.threadQueue.completionGoal >= ( MAX_THREADQUEUE_SIZE - 1 ) )
+   {
+      return False;
+   }
+
+   uint32_t newNextEntryToWrite = ( g_globals.threadQueue.nextEntryToWrite + 1 ) % MAX_THREADQUEUE_SIZE;
+   ThreadQueueEntry_t* entry = g_globals.threadQueue.entries + g_globals.threadQueue.nextEntryToWrite;
+   entry->workerFnc = workerFnc;
+   entry->data = data;
+   g_globals.threadQueue.completionGoal++;
+   _WriteBarrier();
+   _mm_sfence();
+   g_globals.threadQueue.nextEntryToWrite = newNextEntryToWrite;
+   ReleaseSemaphore( g_globals.threadSemaphoreHandle, 1, 0 );
+   return True;
+}
+
+void Platform_RunThreadQueue()
+{
+   while( g_globals.threadQueue.completionGoal != g_globals.threadQueue.completionCount )
+   {
+      DoNextThreadQueueEntry();
+   }
+
+   g_globals.threadQueue.completionGoal = 0;
+   g_globals.threadQueue.completionCount = 0;
 }

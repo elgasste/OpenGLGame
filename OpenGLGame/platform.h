@@ -2,7 +2,8 @@
 #define PLATFORM_H
 
 #include "common.h"
-#include "win_platform_headers.h"
+#include "thread.h"
+#include "platform_includes.h"
 
 typedef struct FileData_t
 {
@@ -23,5 +24,8 @@ Bool_t Platform_ReadFileData( const char* filePath, FileData_t* fileData );
 Bool_t Platform_WriteFileData( FileData_t* fileData );
 void Platform_ClearFileData( FileData_t* fileData );
 Bool_t Platform_GetAppDirectory( char* directory, uint32_t stringSize );
+ThreadQueue_t* Platform_GetThreadQueue();
+Bool_t Platform_AddThreadQueueEntry( void ( *workerFnc )(), void* data );
+void Platform_RunThreadQueue();
 
 #endif

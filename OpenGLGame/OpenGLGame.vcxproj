@@ -156,15 +156,17 @@ xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
     <ClInclude Include="common.h" />
     <ClInclude Include="enums.h" />
     <ClInclude Include="font.h" />
+    <ClInclude Include="platform_includes.h" />
     <ClInclude Include="sprite.h" />
     <ClInclude Include="texture.h" />
+    <ClInclude Include="thread.h" />
     <ClInclude Include="vector.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="pixel_buffer.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="platform.h" />
     <ClInclude Include="random.h" />
-    <ClInclude Include="win_platform_headers.h" />
+    <ClInclude Include="win_platform.h" />
     <ClInclude Include="render.h" />
     <ClInclude Include="strings.h" />
   </ItemGroup>

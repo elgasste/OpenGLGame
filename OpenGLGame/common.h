@@ -1,6 +1,8 @@
 #if !defined( COMMON_H )
 #define COMMON_H
 
+#define _CRT_RAND_S
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,6 +22,8 @@ typedef int32_t Bool_t;
 #define True 1
 #define False 0
 #define TOGGLE_BOOL( x ) x = ( x ) ? False : True
+
+#define MAX_THREADQUEUE_SIZE     256
 
 #define LOG_FILE_NAME            "log.txt"
 

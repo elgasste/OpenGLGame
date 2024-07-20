@@ -67,7 +67,7 @@
     <ClInclude Include="pixel_buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="win_platform_headers.h">
+    <ClInclude Include="win_platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="render.h">
@@ -89,6 +89,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="thread.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="platform_includes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
