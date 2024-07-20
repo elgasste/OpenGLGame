@@ -18,6 +18,7 @@
 #define STR_WINERR_INITGAME               "Failed to initialize game."
 #define STR_WINERR_CREATELOGFILE          "Failed to open log file."
 #define STR_WINERR_WRITELOGFILE           "Failed to write message to log file."
+#define STR_WINERR_INITTHREADS            "Failed to initialize threads."
 
 #define STR_FILEERR_OPENFILEFAILED        "File error: could not open file: %s"
 #define STR_FILEERR_GETFILESIZEFAILED     "File error: could not get file size: %s"

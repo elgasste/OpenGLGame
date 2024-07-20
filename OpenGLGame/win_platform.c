@@ -1,6 +1,3 @@
-#include <Shlwapi.h>
-#include <time.h>
-
 #include "game.h"
 
 typedef struct
@@ -9,16 +6,29 @@ typedef struct
    GameData_t gameData;
    LARGE_INTEGER performanceFrequency;
    uint32_t keyCodeMap[(int)KeyCode_Count];
+   ThreadQueue_t threadQueue;
+   HANDLE threadSemaphoreHandle;
 }
 cGlobalObjects_t;
 
 global cGlobalObjects_t g_globals;
 
+// TODO: this is how thread workers work
+//internal void PrintString( void* s )
+//{
+//   char buffer[256];
+//   snprintf( buffer, 256, "Thread %u: %s\n", GetCurrentThreadId(), (char *)s );
+//   OutputDebugStringA( buffer );
+//}
+
 internal void FatalError( const char* message );
+internal Bool_t InitThreads();
 internal void InitKeyCodeMap();
 internal void InitOpenGL( HWND hWnd );
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags );
+internal DWORD WINAPI ThreadProc( LPVOID lpParam );
+internal Bool_t DoNextThreadQueueEntry();
 
 int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow )
 {
@@ -32,6 +42,26 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    UNUSED_PARAM( hPrevInstance );
    UNUSED_PARAM( lpCmdLine );
    UNUSED_PARAM( nCmdShow );
+
+   // TODO: this is how you use thread workers
+   /*Platform_AddThreadQueueEntry( PrintString, "A0" );
+   Platform_AddThreadQueueEntry( PrintString, "A1" );
+   Platform_AddThreadQueueEntry( PrintString, "A2" );
+   Platform_AddThreadQueueEntry( PrintString, "A3" );
+   Platform_AddThreadQueueEntry( PrintString, "A4" );
+   Platform_AddThreadQueueEntry( PrintString, "A5" );
+   Platform_AddThreadQueueEntry( PrintString, "A6" );
+   Platform_AddThreadQueueEntry( PrintString, "A7" );
+   Platform_AddThreadQueueEntry( PrintString, "B0" );
+   Platform_AddThreadQueueEntry( PrintString, "B1" );
+   Platform_AddThreadQueueEntry( PrintString, "B2" );
+   Platform_AddThreadQueueEntry( PrintString, "B3" );
+   Platform_AddThreadQueueEntry( PrintString, "B4" );
+   Platform_AddThreadQueueEntry( PrintString, "B5" );
+   Platform_AddThreadQueueEntry( PrintString, "B6" );
+   Platform_AddThreadQueueEntry( PrintString, "B7" );*/
+
+   //Platform_RunThreadQueue( &( g_globals.threadQueue ) );
 
    if ( !QueryPerformanceFrequency( &( g_globals.performanceFrequency ) ) )
    {
@@ -88,6 +118,11 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    InitKeyCodeMap();
    InitOpenGL( g_globals.hWndMain );
 
+   if ( !InitThreads() )
+   {
+      FatalError( STR_WINERR_INITTHREADS );
+   }
+
    if ( !Game_Init( &( g_globals.gameData ) ) )
    {
       FatalError( STR_WINERR_INITGAME );
@@ -108,6 +143,45 @@ internal void FatalError( const char* message )
    Game_EmergencySave( &( g_globals.gameData ) );
    MessageBoxA( 0, message, STR_WINERR_HEADER, MB_OK | MB_ICONERROR );
    exit( 1 );
+}
+
+internal Bool_t InitThreads()
+{
+   // TODO: we should count the number of cores here, and use it for the number of threads
+   Win32ThreadInfo_t threadInfo[8];
+   uint32_t i, threadCount = 8;
+   DWORD threadId;
+   HANDLE threadHandle;
+
+   g_globals.threadQueue.completionGoal = 0;
+   g_globals.threadQueue.completionCount = 0;
+   g_globals.threadQueue.nextEntryToRead = 0;
+   g_globals.threadQueue.nextEntryToWrite = 0;
+   g_globals.threadSemaphoreHandle = CreateSemaphoreExA( 0, 0, threadCount, 0, 0, SEMAPHORE_ALL_ACCESS );
+
+   if ( !g_globals.threadSemaphoreHandle || g_globals.threadSemaphoreHandle == INVALID_HANDLE_VALUE )
+   {
+      FatalError( STR_WINERR_INITTHREADS );
+   }
+
+   for ( i = 0; i < threadCount; i++ )
+   {
+      threadInfo[i].queue = &( g_globals.threadQueue );
+      threadInfo[i].logicalThreadIndex = i;
+      threadHandle = CreateThread( 0, 0, ThreadProc, &( threadInfo[i] ), 0, &threadId );
+
+      if ( !threadHandle || threadHandle == INVALID_HANDLE_VALUE )
+      {
+         FatalError( STR_WINERR_INITTHREADS );
+      }
+      else
+      {
+#pragma warning(suppress : 6001)
+         CloseHandle( threadHandle );
+      }
+   }
+
+   return True;
 }
 
 internal void InitKeyCodeMap()
@@ -238,6 +312,45 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
          }
       }
    }
+}
+
+internal DWORD WINAPI ThreadProc( LPVOID lpParam )
+{
+   UNUSED_PARAM( lpParam );
+
+   while ( 1 )
+   {
+      if ( DoNextThreadQueueEntry() )
+      {
+         WaitForSingleObjectEx( g_globals.threadSemaphoreHandle, INFINITE, FALSE );
+      }
+   }
+}
+
+internal Bool_t DoNextThreadQueueEntry()
+{
+   Bool_t shouldSleep = False;
+   uint32_t entryIndex, originalNextEntry = g_globals.threadQueue.nextEntryToRead;
+   uint32_t newNextEntryToRead = ( originalNextEntry + 1 ) % MAX_THREADQUEUE_SIZE;
+
+   if ( originalNextEntry != g_globals.threadQueue.nextEntryToWrite )
+   {
+      entryIndex = InterlockedCompareExchange( (LONG volatile *)( &( g_globals.threadQueue.nextEntryToRead ) ),
+                                               newNextEntryToRead,
+                                               originalNextEntry );
+
+      if ( entryIndex == originalNextEntry )
+      {        
+         g_globals.threadQueue.entries[entryIndex].workerFnc( g_globals.threadQueue.entries[entryIndex].data );
+         InterlockedIncrement( (LONG volatile *)( &( g_globals.threadQueue.completionCount ) ) );
+      }
+   }
+   else
+   {
+      shouldSleep = True;
+   }
+
+   return shouldSleep;
 }
 
 void Platform_Log( const char* message )
@@ -424,4 +537,35 @@ Bool_t Platform_GetAppDirectory( char* directory, uint32_t stringSize )
    directory[stringLength - strlen( fileName )] = '\0';
 
    return True;
+}
+
+ThreadQueue_t* Platform_GetThreadQueue()
+{
+   return &( g_globals.threadQueue );
+}
+
+void Platform_AddThreadQueueEntry( void ( *workerFnc )(), void* data )
+{
+   // TODO: don't allow adding too many entries. this was originally written to
+   // be a circular list, but I think we want to refactor that.
+   uint32_t newNextEntryToWrite = ( g_globals.threadQueue.nextEntryToWrite + 1 ) % MAX_THREADQUEUE_SIZE;
+   ThreadQueueEntry_t* entry = g_globals.threadQueue.entries + g_globals.threadQueue.nextEntryToWrite;
+   entry->workerFnc = workerFnc;
+   entry->data = data;
+   g_globals.threadQueue.completionGoal++;
+   _WriteBarrier();
+   _mm_sfence();
+   g_globals.threadQueue.nextEntryToWrite = newNextEntryToWrite;
+   ReleaseSemaphore( g_globals.threadSemaphoreHandle, 1, 0 );
+}
+
+void Platform_RunThreadQueue()
+{
+   while( g_globals.threadQueue.completionGoal != g_globals.threadQueue.completionCount )
+   {
+      DoNextThreadQueueEntry();
+   }
+
+   g_globals.threadQueue.completionGoal = 0;
+   g_globals.threadQueue.completionCount = 0;
 }
