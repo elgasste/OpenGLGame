@@ -13,16 +13,8 @@ cGlobalObjects_t;
 
 global cGlobalObjects_t g_globals;
 
-// TODO: this is how thread workers work
-//internal void PrintString( void* s )
-//{
-//   char buffer[256];
-//   snprintf( buffer, 256, "Thread %u: %s\n", GetCurrentThreadId(), (char *)s );
-//   OutputDebugStringA( buffer );
-//}
-
 internal void FatalError( const char* message );
-internal Bool_t InitThreads();
+internal void InitThreads();
 internal void InitKeyCodeMap();
 internal void InitOpenGL( HWND hWnd );
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
@@ -97,31 +89,7 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
    InitKeyCodeMap();
    InitOpenGL( g_globals.hWndMain );
-
-   if ( !InitThreads() )
-   {
-      FatalError( STR_WINERR_INITTHREADS );
-   }
-
-   // TODO: this is how you use thread workers
-   /*Platform_AddThreadQueueEntry( PrintString, "A0" );
-   Platform_AddThreadQueueEntry( PrintString, "A1" );
-   Platform_AddThreadQueueEntry( PrintString, "A2" );
-   Platform_AddThreadQueueEntry( PrintString, "A3" );
-   Platform_AddThreadQueueEntry( PrintString, "A4" );
-   Platform_AddThreadQueueEntry( PrintString, "A5" );
-   Platform_AddThreadQueueEntry( PrintString, "A6" );
-   Platform_AddThreadQueueEntry( PrintString, "A7" );
-   Platform_AddThreadQueueEntry( PrintString, "B0" );
-   Platform_AddThreadQueueEntry( PrintString, "B1" );
-   Platform_AddThreadQueueEntry( PrintString, "B2" );
-   Platform_AddThreadQueueEntry( PrintString, "B3" );
-   Platform_AddThreadQueueEntry( PrintString, "B4" );
-   Platform_AddThreadQueueEntry( PrintString, "B5" );
-   Platform_AddThreadQueueEntry( PrintString, "B6" );
-   Platform_AddThreadQueueEntry( PrintString, "B7" );
-
-   Platform_RunThreadQueue( &( g_globals.threadQueue ) );*/
+   InitThreads();
 
    if ( !Game_Init( &( g_globals.gameData ) ) )
    {
@@ -145,7 +113,7 @@ internal void FatalError( const char* message )
    exit( 1 );
 }
 
-internal Bool_t InitThreads()
+internal void InitThreads()
 {
    Win32ThreadInfo_t* threadInfo;
    uint32_t i;
@@ -154,7 +122,7 @@ internal Bool_t InitThreads()
    SYSTEM_INFO sysInfo;
 
    GetSystemInfo( &sysInfo );
-   threadCount = sysInfo.dwNumberOfProcessors;
+   threadCount = ( sysInfo.dwNumberOfProcessors == 0 ) ? 1 : sysInfo.dwNumberOfProcessors;
    threadInfo = (Win32ThreadInfo_t*)Platform_MemAlloc( sizeof( Win32ThreadInfo_t ) * threadCount );
 
    g_globals.threadQueue.completionGoal = 0;
@@ -184,8 +152,6 @@ internal Bool_t InitThreads()
          CloseHandle( threadHandle );
       }
    }
-
-   return True;
 }
 
 internal void InitKeyCodeMap()
@@ -548,10 +514,13 @@ ThreadQueue_t* Platform_GetThreadQueue()
    return &( g_globals.threadQueue );
 }
 
-void Platform_AddThreadQueueEntry( void ( *workerFnc )(), void* data )
+Bool_t Platform_AddThreadQueueEntry( void ( *workerFnc )(), void* data )
 {
-   // TODO: don't allow adding too many entries. this was originally written to
-   // be a circular list, but I think we want to refactor that.
+   if ( g_globals.threadQueue.completionGoal >= ( MAX_THREADQUEUE_SIZE - 1 ) )
+   {
+      return False;
+   }
+
    uint32_t newNextEntryToWrite = ( g_globals.threadQueue.nextEntryToWrite + 1 ) % MAX_THREADQUEUE_SIZE;
    ThreadQueueEntry_t* entry = g_globals.threadQueue.entries + g_globals.threadQueue.nextEntryToWrite;
    entry->workerFnc = workerFnc;
@@ -561,6 +530,7 @@ void Platform_AddThreadQueueEntry( void ( *workerFnc )(), void* data )
    _mm_sfence();
    g_globals.threadQueue.nextEntryToWrite = newNextEntryToWrite;
    ReleaseSemaphore( g_globals.threadSemaphoreHandle, 1, 0 );
+   return True;
 }
 
 void Platform_RunThreadQueue()

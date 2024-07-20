@@ -39,6 +39,10 @@
 
 #define STR_FONTERR_FILECORRUPT           "Font error: file is corrupt: %s"
 
+#define STR_DIAG_FRAMETARGETMICRO         "Target frame microseconds: %lld"
+#define STR_DIAG_FRAMEDURATIONMICRO       "Last frame microseconds: %lld"
+#define STR_DIAG_LAGFRAMES                "Lag frames: %d"
+
 #define STR_BRUSHTEETH                    "(...But don't forget to brush your teeth!)"
 
 #endif

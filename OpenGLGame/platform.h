@@ -25,7 +25,7 @@ Bool_t Platform_WriteFileData( FileData_t* fileData );
 void Platform_ClearFileData( FileData_t* fileData );
 Bool_t Platform_GetAppDirectory( char* directory, uint32_t stringSize );
 ThreadQueue_t* Platform_GetThreadQueue();
-void Platform_AddThreadQueueEntry( void ( *workerFnc )(), void* data );
+Bool_t Platform_AddThreadQueueEntry( void ( *workerFnc )(), void* data );
 void Platform_RunThreadQueue();
 
 #endif

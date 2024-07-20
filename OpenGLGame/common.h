@@ -1,6 +1,8 @@
 #if !defined( COMMON_H )
 #define COMMON_H
 
+#define _CRT_RAND_S
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
