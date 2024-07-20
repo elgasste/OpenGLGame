@@ -43,26 +43,6 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    UNUSED_PARAM( lpCmdLine );
    UNUSED_PARAM( nCmdShow );
 
-   // TODO: this is how you use thread workers
-   /*Platform_AddThreadQueueEntry( PrintString, "A0" );
-   Platform_AddThreadQueueEntry( PrintString, "A1" );
-   Platform_AddThreadQueueEntry( PrintString, "A2" );
-   Platform_AddThreadQueueEntry( PrintString, "A3" );
-   Platform_AddThreadQueueEntry( PrintString, "A4" );
-   Platform_AddThreadQueueEntry( PrintString, "A5" );
-   Platform_AddThreadQueueEntry( PrintString, "A6" );
-   Platform_AddThreadQueueEntry( PrintString, "A7" );
-   Platform_AddThreadQueueEntry( PrintString, "B0" );
-   Platform_AddThreadQueueEntry( PrintString, "B1" );
-   Platform_AddThreadQueueEntry( PrintString, "B2" );
-   Platform_AddThreadQueueEntry( PrintString, "B3" );
-   Platform_AddThreadQueueEntry( PrintString, "B4" );
-   Platform_AddThreadQueueEntry( PrintString, "B5" );
-   Platform_AddThreadQueueEntry( PrintString, "B6" );
-   Platform_AddThreadQueueEntry( PrintString, "B7" );*/
-
-   //Platform_RunThreadQueue( &( g_globals.threadQueue ) );
-
    if ( !QueryPerformanceFrequency( &( g_globals.performanceFrequency ) ) )
    {
       FatalError( STR_WINERR_PERFORMANCEFREQUENCY );
@@ -123,6 +103,26 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
       FatalError( STR_WINERR_INITTHREADS );
    }
 
+   // TODO: this is how you use thread workers
+   /*Platform_AddThreadQueueEntry( PrintString, "A0" );
+   Platform_AddThreadQueueEntry( PrintString, "A1" );
+   Platform_AddThreadQueueEntry( PrintString, "A2" );
+   Platform_AddThreadQueueEntry( PrintString, "A3" );
+   Platform_AddThreadQueueEntry( PrintString, "A4" );
+   Platform_AddThreadQueueEntry( PrintString, "A5" );
+   Platform_AddThreadQueueEntry( PrintString, "A6" );
+   Platform_AddThreadQueueEntry( PrintString, "A7" );
+   Platform_AddThreadQueueEntry( PrintString, "B0" );
+   Platform_AddThreadQueueEntry( PrintString, "B1" );
+   Platform_AddThreadQueueEntry( PrintString, "B2" );
+   Platform_AddThreadQueueEntry( PrintString, "B3" );
+   Platform_AddThreadQueueEntry( PrintString, "B4" );
+   Platform_AddThreadQueueEntry( PrintString, "B5" );
+   Platform_AddThreadQueueEntry( PrintString, "B6" );
+   Platform_AddThreadQueueEntry( PrintString, "B7" );
+
+   Platform_RunThreadQueue( &( g_globals.threadQueue ) );*/
+
    if ( !Game_Init( &( g_globals.gameData ) ) )
    {
       FatalError( STR_WINERR_INITGAME );
@@ -147,11 +147,15 @@ internal void FatalError( const char* message )
 
 internal Bool_t InitThreads()
 {
-   // TODO: we should count the number of cores here, and use it for the number of threads
-   Win32ThreadInfo_t threadInfo[8];
-   uint32_t i, threadCount = 8;
-   DWORD threadId;
+   Win32ThreadInfo_t* threadInfo;
+   uint32_t i;
+   DWORD threadCount, threadId;
    HANDLE threadHandle;
+   SYSTEM_INFO sysInfo;
+
+   GetSystemInfo( &sysInfo );
+   threadCount = sysInfo.dwNumberOfProcessors;
+   threadInfo = (Win32ThreadInfo_t*)Platform_MemAlloc( sizeof( Win32ThreadInfo_t ) * threadCount );
 
    g_globals.threadQueue.completionGoal = 0;
    g_globals.threadQueue.completionCount = 0;
