@@ -12,6 +12,8 @@ ThreadQueueEntry_t;
 
 typedef struct
 {
+   uint32_t numThreads;
+
    uint32_t volatile completionGoal;
    uint32_t volatile completionCount;
    uint32_t volatile nextEntryToRead;

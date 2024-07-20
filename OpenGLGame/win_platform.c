@@ -117,26 +117,27 @@ internal void InitThreads()
 {
    Win32ThreadInfo_t* threadInfo;
    uint32_t i;
-   DWORD threadCount, threadId;
+   DWORD numThreads, threadId;
    HANDLE threadHandle;
    SYSTEM_INFO sysInfo;
 
    GetSystemInfo( &sysInfo );
-   threadCount = ( sysInfo.dwNumberOfProcessors == 0 ) ? 1 : sysInfo.dwNumberOfProcessors;
-   threadInfo = (Win32ThreadInfo_t*)Platform_MemAlloc( sizeof( Win32ThreadInfo_t ) * threadCount );
+   numThreads = ( sysInfo.dwNumberOfProcessors == 0 ) ? 1 : sysInfo.dwNumberOfProcessors;
+   threadInfo = (Win32ThreadInfo_t*)Platform_MemAlloc( sizeof( Win32ThreadInfo_t ) * numThreads );
 
+   g_globals.threadQueue.numThreads = numThreads;
    g_globals.threadQueue.completionGoal = 0;
    g_globals.threadQueue.completionCount = 0;
    g_globals.threadQueue.nextEntryToRead = 0;
    g_globals.threadQueue.nextEntryToWrite = 0;
-   g_globals.threadSemaphoreHandle = CreateSemaphoreExA( 0, 0, threadCount, 0, 0, SEMAPHORE_ALL_ACCESS );
+   g_globals.threadSemaphoreHandle = CreateSemaphoreExA( 0, 0, numThreads, 0, 0, SEMAPHORE_ALL_ACCESS );
 
    if ( !g_globals.threadSemaphoreHandle || g_globals.threadSemaphoreHandle == INVALID_HANDLE_VALUE )
    {
       FatalError( STR_WINERR_INITTHREADS );
    }
 
-   for ( i = 0; i < threadCount; i++ )
+   for ( i = 0; i < numThreads; i++ )
    {
       threadInfo[i].queue = &( g_globals.threadQueue );
       threadInfo[i].logicalThreadIndex = i;

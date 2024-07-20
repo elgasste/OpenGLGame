@@ -176,8 +176,8 @@ internal void Game_Render( GameData_t* gameData )
    char msg[STRING_SIZE_DEFAULT];
 
    Render_Clear();
-   Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 1.0f, 0, 0 );
-   Render_DrawTextLine( STR_BRUSHTEETH, 1.0f, 65, 240, papyrusFont );
+   Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 1.0f, 0.0f, 0.0f );
+   Render_DrawTextLine( STR_BRUSHTEETH, 1.0f, 65.0f, 240.0f, papyrusFont );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {
