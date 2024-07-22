@@ -1,6 +1,8 @@
+#include <math.h>
+
 #include "render.h"
 
-internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
+internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
                                                float screenX, float screenY,
                                                float viewportWidth, float viewportHeight );
 
@@ -21,10 +23,8 @@ void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer
    float fny1 = (float)textureY / pixelBuffer->dimensions.y;
    float fnx2 = fnx1 + ( fw / pixelBuffer->dimensions.x );
    float fny2 = fny1 + ( fh / pixelBuffer->dimensions.y );
-   float fsw = fw * scale;
-   float fsh = fh * scale;
 
-   Render_PrepareTextureForDrawing( textureHandle, pixelBuffer,
+   Render_PrepareTextureForDrawing( textureHandle, pixelBuffer, scale,
                                     screenX, screenY,
                                     sectionWidth * scale, sectionHeight * scale );
 
@@ -34,17 +34,17 @@ void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer
    glTexCoord2f( fnx1, fny1 );
    glVertex2f( 0.0f, 0.0f );
    glTexCoord2f( fnx2, fny1 );
-   glVertex2f( fsw, 0.0f );
+   glVertex2f( fw, 0.0f );
    glTexCoord2f( fnx2, fny2 );
-   glVertex2f( fsw, fsh );
+   glVertex2f( fw, fh );
 
    // upper triangle
    glTexCoord2f( fnx1, fny1 );
    glVertex2f( 0.0f, 0.0f );
    glTexCoord2f( fnx2, fny2 );
-   glVertex2f( fsw, fsh );
+   glVertex2f( fw, fh );
    glTexCoord2f( fnx1, fny2 );
-   glVertex2f( 0.0f, fsh );
+   glVertex2f( 0.0f, fh );
 
    glEnd();
 }
@@ -82,9 +82,9 @@ void Render_DrawChar( uint32_t codepoint, float scale, float screenX, float scre
    glyph = &( font->curGlyphCollection->glyphs[codepoint - font->codepointOffset] );
    buffer = &( glyph->pixelBuffer );
    x = screenX + ( glyph->leftBearing * scale );
-   y = screenY + ( ( font->curGlyphCollection->baseline + glyph->baselineOffset ) * scale );
+   y = screenY + ceilf( ( ( font->curGlyphCollection->baseline + glyph->baselineOffset ) * scale ) );
 
-   Render_PrepareTextureForDrawing( font->textureHandle, buffer,
+   Render_PrepareTextureForDrawing( font->textureHandle, buffer, scale,
                                     x, y,
                                     buffer->dimensions.x * scale, buffer->dimensions.y * scale );
 
@@ -106,19 +106,19 @@ void Render_DrawTextLine( const char* text, float scale, float screenX, float sc
       {
          glyph = font->curGlyphCollection->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
          Render_DrawChar( (uint32_t)( text[i] ), scale, x, screenY, font );
-         x += ( glyph->advance * scale );
+         x += ceilf( ( glyph->advance * scale ) );
       }
    }
 }
 
-internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
+internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
                                                float screenX, float screenY,
                                                float viewportWidth, float viewportHeight )
 {
    GLfloat modelMatrix[] = 
    {
-      2.0f / viewportWidth, 0.0f, 0.0f, 0.0f,
-      0.0f, 2.0f / viewportHeight, 0.0f, 0.0f,
+      2.0f / ( viewportWidth / scale ), 0.0f, 0.0f, 0.0f,
+      0.0f, 2.0f / ( viewportHeight / scale ), 0.0f, 0.0f,
       0.0f, 0.0f, 1.0f, 0.0f,
       -1.0f, -1.0f, 0.0f, 1.0f
    };
