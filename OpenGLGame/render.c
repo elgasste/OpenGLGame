@@ -4,12 +4,44 @@
 
 internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
                                                float screenX, float screenY,
-                                               float viewportWidth, float viewportHeight );
+                                               float width, float height );
 
 void Render_Clear()
 {
    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
    glClear( GL_COLOR_BUFFER_BIT );
+}
+
+void Render_DrawRect( float screenX, float screenY, float width, float height, uint32_t color )
+{
+   GLint r = ( color >> 16 ) & 0xFF;
+   GLint g = ( color >> 8 ) & 0xFF;
+   GLint b = color & 0xFF;
+   GLint a = ( color >> 24 ) & 0xFF;
+
+   glViewport( (GLint)screenX, (GLint)screenY, (GLsizei)width, (GLsizei)height );
+
+   glDisable( GL_TEXTURE_2D );
+
+   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+   glEnable( GL_BLEND );
+
+   glMatrixMode( GL_PROJECTION );
+   glLoadIdentity();
+
+   glMatrixMode( GL_MODELVIEW );
+   glLoadIdentity();
+
+   glColor4f( r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f );
+
+   glBegin( GL_QUADS );
+
+   glVertex2f( -1.0f, -1.0f );
+   glVertex2f( 1.0f, -1.0f );
+   glVertex2f( 1.0f, 1.0f );
+   glVertex2f( -1.0f, 1.0f );
+
+   glEnd();
 }
 
 void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
@@ -26,7 +58,7 @@ void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer
 
    Render_PrepareTextureForDrawing( textureHandle, pixelBuffer, scale,
                                     screenX, screenY,
-                                    sectionWidth * scale, sectionHeight * scale );
+                                    (float)sectionWidth, (float)sectionHeight );
 
    glBegin( GL_TRIANGLES );
 
@@ -84,10 +116,6 @@ void Render_DrawChar( uint32_t codepoint, float scale, float screenX, float scre
    x = screenX + ( glyph->leftBearing * scale );
    y = screenY + ceilf( ( ( font->curGlyphCollection->baseline + glyph->baselineOffset ) * scale ) );
 
-   Render_PrepareTextureForDrawing( font->textureHandle, buffer, scale,
-                                    x, y,
-                                    buffer->dimensions.x * scale, buffer->dimensions.y * scale );
-
    Render_DrawTextureSection( font->textureHandle, buffer, scale,
                               x, y,
                               0, 0,
@@ -113,17 +141,17 @@ void Render_DrawTextLine( const char* text, float scale, float screenX, float sc
 
 internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
                                                float screenX, float screenY,
-                                               float viewportWidth, float viewportHeight )
+                                               float width, float height )
 {
    GLfloat modelMatrix[] = 
    {
-      2.0f / ( viewportWidth / scale ), 0.0f, 0.0f, 0.0f,
-      0.0f, 2.0f / ( viewportHeight / scale ), 0.0f, 0.0f,
+      2.0f / ( width / scale ), 0.0f, 0.0f, 0.0f,
+      0.0f, 2.0f / ( height / scale ), 0.0f, 0.0f,
       0.0f, 0.0f, 1.0f, 0.0f,
       -1.0f, -1.0f, 0.0f, 1.0f
    };
 
-   glViewport( (GLint)screenX, (GLint)screenY, (GLsizei)viewportWidth, (GLsizei)viewportHeight );
+   glViewport( (GLint)screenX, (GLint)screenY, (GLsizei)( width * scale ), (GLsizei)( height * scale ) );
 
    glBindTexture( GL_TEXTURE_2D, textureHandle );
    glTexImage2D( GL_TEXTURE_2D,
@@ -140,7 +168,8 @@ internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
-   glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+
+   glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
 
    glEnable( GL_TEXTURE_2D );
 
@@ -151,8 +180,8 @@ internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer
    glLoadIdentity();
 
    glMatrixMode( GL_MODELVIEW );
-   glLoadIdentity();
+   glLoadMatrixf( modelMatrix );
 
    glMatrixMode( GL_PROJECTION );
-   glLoadMatrixf( modelMatrix );
+   glLoadIdentity();
 }

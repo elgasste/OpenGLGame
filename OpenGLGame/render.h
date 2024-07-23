@@ -13,6 +13,7 @@ typedef struct RenderData_t
 RenderData_t;
 
 void Render_Clear();
+void Render_DrawRect( float screenX, float screenY, float width, float height, uint32_t color );
 void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
                                 float screenX, float screenY,
                                 int32_t textureX, int32_t textureY,
