@@ -10,8 +10,12 @@ StarUpdateData_t;
 
 internal Bool_t Game_LoadAssets( GameData_t* gameData );
 internal void Game_HandleInput( GameData_t* gameData );
+internal void Game_HandleStateInput_Playing( GameData_t* gameData );
+internal void Game_HandleStateInput_Menu( GameData_t* gameData );
 internal void Game_Tick( GameData_t* gameData );
 internal void Game_Render( GameData_t* gameData );
+internal void Game_RenderWorld( GameData_t* gameData );
+internal void Game_RenderMenu( GameData_t* gameData );
 internal void Game_UpdateStarAsync( StarUpdateData_t* data );
 
 Bool_t Game_Init( GameData_t* gameData )
@@ -39,9 +43,13 @@ Bool_t Game_Init( GameData_t* gameData )
       star->isResting = True;
    }
 
+   gameData->stateInputHandlers[GameState_Playing] = Game_HandleStateInput_Playing;
+   gameData->stateInputHandlers[GameState_Menu] = Game_HandleStateInput_Menu;
+
    gameData->isRunning = False;
    gameData->isEngineRunning = True;
    gameData->showDiagnostics = False;
+   gameData->state = GameState_Playing;
 
    return True;
 }
@@ -135,14 +143,27 @@ void Game_TryClose( GameData_t* gameData )
 
 internal void Game_HandleInput( GameData_t* gameData )
 {
-   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
-   {
-      Game_TryClose( gameData );
-   }
-
    if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_F8 ) )
    {
       TOGGLE_BOOL( gameData->showDiagnostics );
+   }
+
+   gameData->stateInputHandlers[gameData->state]( gameData );
+}
+
+internal void Game_HandleStateInput_Playing( GameData_t* gameData )
+{
+   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
+   {
+      gameData->state = GameState_Menu;
+   }
+}
+
+internal void Game_HandleStateInput_Menu( GameData_t* gameData )
+{
+   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
+   {
+      gameData->state = GameState_Playing;
    }
 }
 
@@ -151,22 +172,41 @@ internal void Game_Tick( GameData_t* gameData )
    uint32_t i, entryCounter = 0;
    StarUpdateData_t dataArray[MAX_THREADQUEUE_SIZE];
 
-   for ( i = 0; i < STAR_COUNT; i++ )
+   if ( gameData->state == GameState_Playing )
    {
-      dataArray[entryCounter].gameData = gameData;
-      dataArray[entryCounter].star = &( gameData->stars[i] );
-      Platform_AddThreadQueueEntry( Game_UpdateStarAsync, (void*)( &( dataArray[entryCounter] ) ) );
-      entryCounter++;
-
-      if ( entryCounter == MAX_THREADQUEUE_SIZE || i == ( STAR_COUNT - 1 ) )
+      for ( i = 0; i < STAR_COUNT; i++ )
       {
-         Platform_RunThreadQueue();
-         entryCounter = 0;
+         dataArray[entryCounter].gameData = gameData;
+         dataArray[entryCounter].star = &( gameData->stars[i] );
+         Platform_AddThreadQueueEntry( Game_UpdateStarAsync, (void*)( &( dataArray[entryCounter] ) ) );
+         entryCounter++;
+
+         if ( entryCounter == MAX_THREADQUEUE_SIZE || i == ( STAR_COUNT - 1 ) )
+         {
+            Platform_RunThreadQueue();
+            entryCounter = 0;
+         }
       }
    }
 }
 
 internal void Game_Render( GameData_t* gameData )
+{
+   switch ( gameData->state )
+   {
+      case GameState_Playing:
+         Game_RenderWorld( gameData );
+         break;
+      case GameState_Menu:
+         Game_RenderWorld( gameData );
+         Game_RenderMenu( gameData );
+         break;
+   }
+
+   Platform_RenderScreen();
+}
+
+internal void Game_RenderWorld( GameData_t* gameData )
 {
    uint32_t i;
    Star_t* star;
@@ -197,8 +237,12 @@ internal void Game_Render( GameData_t* gameData )
       snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_LAGFRAMES, gameData->clock.lagFrames );
       Render_DrawTextLine( msg, 1.0f, 10.0f, y, consolasFont );
    }
+}
 
-   Platform_RenderScreen();
+internal void Game_RenderMenu( GameData_t* gameData )
+{
+   // TODO: actually draw the menu
+   UNUSED_PARAM( gameData );
 }
 
 internal void Game_UpdateStarAsync( StarUpdateData_t* data )

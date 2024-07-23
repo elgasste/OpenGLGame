@@ -19,4 +19,13 @@ typedef enum
 }
 FontID_t;
 
+typedef enum
+{
+   GameState_Playing = 0,
+   GameState_Menu,
+
+   GameState_Count
+}
+GameState_t;
+
 #endif

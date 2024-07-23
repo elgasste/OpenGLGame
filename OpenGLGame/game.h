@@ -37,6 +37,8 @@ typedef struct GameData_t
    Bool_t isEngineRunning;
    Bool_t showDiagnostics;
 
+   GameState_t state;
+   void (*stateInputHandlers[GameState_Count])( void* );
    Star_t stars[STAR_COUNT];
 }
 GameData_t;
