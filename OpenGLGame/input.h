@@ -10,6 +10,7 @@ typedef enum
    KeyCode_Right,
    KeyCode_Down,
 
+   KeyCode_Enter,
    KeyCode_Escape,
 
    KeyCode_F8,

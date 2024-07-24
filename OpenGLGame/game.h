@@ -33,8 +33,10 @@ typedef struct GameData_t
    Clock_t clock;
    KeyState_t keyStates[KeyCode_Count];
    RenderData_t renderData;
+
    Menu_t menus[MenuID_Count];
    MenuID_t curMenuID;
+   void (*menuItemInputHandlers[MenuItemID_Count])( void* );
 
    Bool_t isRunning;
    Bool_t isEngineRunning;
@@ -42,6 +44,7 @@ typedef struct GameData_t
 
    GameState_t state;
    void (*stateInputHandlers[GameState_Count])( void* );
+
    Star_t stars[STAR_COUNT];
 }
 GameData_t;

@@ -17,6 +17,7 @@ MenuRenderData_t;
 
 typedef struct
 {
+   MenuItemID_t ID;
    char text[STRING_SIZE_DEFAULT];
 }
 MenuItem_t;

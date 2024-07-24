@@ -162,6 +162,7 @@ internal void InitKeyCodeMap()
    g_globals.keyCodeMap[(int)KeyCode_Up] = VK_UP;
    g_globals.keyCodeMap[(int)KeyCode_Right] = VK_RIGHT;
    g_globals.keyCodeMap[(int)KeyCode_Down] = VK_DOWN;
+   g_globals.keyCodeMap[(int)KeyCode_Enter] = VK_RETURN;
    g_globals.keyCodeMap[(int)KeyCode_Escape] = VK_ESCAPE;
    g_globals.keyCodeMap[(int)KeyCode_F8] = VK_F8;
 }

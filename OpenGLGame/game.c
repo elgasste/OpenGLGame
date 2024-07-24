@@ -11,6 +11,8 @@ StarUpdateData_t;
 internal void Game_HandleInput( GameData_t* gameData );
 internal void Game_HandleStateInput_Playing( GameData_t* gameData );
 internal void Game_HandleStateInput_Menu( GameData_t* gameData );
+internal void Game_HandleMenuItem_KeepPlaying( GameData_t* gameData );
+internal void Game_HandleMenuItem_Quit( GameData_t* gameData );
 internal void Game_Tick( GameData_t* gameData );
 internal void Game_Render( GameData_t* gameData );
 internal void Game_RenderWorld( GameData_t* gameData );
@@ -57,6 +59,9 @@ Bool_t Game_Init( GameData_t* gameData )
 
    gameData->stateInputHandlers[GameState_Playing] = Game_HandleStateInput_Playing;
    gameData->stateInputHandlers[GameState_Menu] = Game_HandleStateInput_Menu;
+
+   gameData->menuItemInputHandlers[MenuItemID_KeepPlaying] = Game_HandleMenuItem_KeepPlaying;
+   gameData->menuItemInputHandlers[MenuItemID_Quit] = Game_HandleMenuItem_Quit;
 
    gameData->isRunning = False;
    gameData->isEngineRunning = True;
@@ -149,6 +154,8 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
 {
    if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
    {
+      gameData->curMenuID = MenuID_Playing;
+      Menu_Reset( &( gameData->menus[gameData->curMenuID] ) );
       gameData->state = GameState_Menu;
       gameData->curMenuID = MenuID_Playing;
    }
@@ -156,12 +163,36 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
 
 internal void Game_HandleStateInput_Menu( GameData_t* gameData )
 {
-   // TODO: handle scrolling and selection
+   Menu_t* menu = &( gameData->menus[gameData->curMenuID] );
 
    if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
    {
       gameData->state = GameState_Playing;
+      return;
    }
+   else if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Up ) )
+   {
+      Menu_DecrementSelectedItem( menu );
+   }
+   else if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Down ) )
+   {
+      Menu_IncrementSelectedItem( menu );
+   }
+   else if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Enter ) )
+   {
+      gameData->menuItemInputHandlers[menu->items[menu->selectedItem].ID]( gameData );
+   }
+}
+
+internal void Game_HandleMenuItem_KeepPlaying( GameData_t* gameData )
+{
+   UNUSED_PARAM( gameData );
+   gameData->state = GameState_Playing;
+}
+
+internal void Game_HandleMenuItem_Quit( GameData_t* gameData )
+{
+   Game_TryClose( gameData );
 }
 
 internal void Game_Tick( GameData_t* gameData )

@@ -66,7 +66,9 @@ internal void Game_LoadMenus( GameData_t* gameData )
 
    playingMenu->numItems = 2;
    playingMenu->items = (MenuItem_t*)Platform_MemAlloc( sizeof( MenuItem_t ) * playingMenu->numItems );
+   playingMenu->items[0].ID = MenuItemID_KeepPlaying;
    snprintf( playingMenu->items[0].text, STRING_SIZE_DEFAULT, STR_MENU_KEEPPLAYING );
+   playingMenu->items[1].ID = MenuItemID_Quit;
    snprintf( playingMenu->items[1].text, STRING_SIZE_DEFAULT, STR_MENU_QUIT );
    playingMenu->renderData.font = &( gameData->renderData.fonts[FontID_Menu] );
    playingMenu->renderData.caratCodepoint = (uint32_t)( '>' );
