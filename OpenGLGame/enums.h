@@ -12,8 +12,9 @@ TextureID_t;
 
 typedef enum
 {
-   FontID_Consolas = 0,
-   FontID_Papyrus,
+   FontID_Diagnostics = 0,
+   FontID_BrushTeeth,
+   FontID_Menu,
 
    FontID_Count
 }

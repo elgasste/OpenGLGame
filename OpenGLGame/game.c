@@ -28,6 +28,13 @@ Bool_t Game_Init( GameData_t* gameData )
       return False;
    }
 
+   Font_SetGlyphCollectionForHeight( &( gameData->renderData.fonts[FontID_Diagnostics] ), 12.0f );
+   Font_SetGlyphCollectionForHeight( &( gameData->renderData.fonts[FontID_BrushTeeth] ), 48.0f );
+   Font_SetGlyphCollectionForHeight( &( gameData->renderData.fonts[FontID_Menu] ), 24.0f );
+
+   Font_SetColor( &( gameData->renderData.fonts[FontID_BrushTeeth] ), 0x003333CC );
+   Font_SetColor( &( gameData->renderData.fonts[FontID_Menu] ), 0xFFFF8800 );
+
    for ( i = 0; i < STAR_COUNT; i++ )
    {
       star->isResting = False;
@@ -189,6 +196,7 @@ internal void Game_Render( GameData_t* gameData )
          break;
       case GameState_Menu:
          Game_RenderWorld( gameData );
+         Render_DrawRect( 0.0f, 0.0f, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT, 0x99000000 );
          Game_RenderMenu( gameData );
          break;
    }
@@ -200,14 +208,14 @@ internal void Game_RenderWorld( GameData_t* gameData )
 {
    uint32_t i;
    Star_t* star;
-   Font_t* consolasFont = & ( gameData->renderData.fonts[FontID_Consolas] );
-   Font_t* papyrusFont = &( gameData->renderData.fonts[FontID_Papyrus] );
+   Font_t* diagFont = &( gameData->renderData.fonts[FontID_Diagnostics] );
+   Font_t* teethFont = &( gameData->renderData.fonts[FontID_BrushTeeth] );
    float y;
    char msg[STRING_SIZE_DEFAULT];
 
    Render_ClearScreen();
    Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 1.0f, 0.0f, 0.0f );
-   Render_DrawTextLine( STR_BRUSHTEETH, 1.0f, 65.0f, 240.0f, papyrusFont );
+   Render_DrawTextLine( STR_BRUSHTEETH, 1.0f, 65.0f, 240.0f, teethFont );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {
@@ -217,22 +225,39 @@ internal void Game_RenderWorld( GameData_t* gameData )
 
    if ( gameData->showDiagnostics )
    {
-      y = (float)SCREEN_HEIGHT - consolasFont->curGlyphCollection->height - 10.0f;
+      y = (float)SCREEN_HEIGHT - diagFont->curGlyphCollection->height - 10.0f;
       snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_FRAMETARGETMICRO, gameData->clock.targetFrameDurationMicro );
-      Render_DrawTextLine( msg, 1.0f, 10.0f, y, consolasFont );
-      y -= ( consolasFont->curGlyphCollection->height + consolasFont->curGlyphCollection->lineGap );
+      Render_DrawTextLine( msg, 1.0f, 10.0f, y, diagFont );
+      y -= ( diagFont->curGlyphCollection->height + diagFont->curGlyphCollection->lineGap );
       snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_FRAMEDURATIONMICRO, gameData->clock.lastFrameDurationMicro );
-      Render_DrawTextLine( msg, 1.0f, 10.0f, y, consolasFont );
-      y -= ( consolasFont->curGlyphCollection->height + consolasFont->curGlyphCollection->lineGap );
+      Render_DrawTextLine( msg, 1.0f, 10.0f, y, diagFont );
+      y -= ( diagFont->curGlyphCollection->height + diagFont->curGlyphCollection->lineGap );
       snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_LAGFRAMES, gameData->clock.lagFrames );
-      Render_DrawTextLine( msg, 1.0f, 10.0f, y, consolasFont );
+      Render_DrawTextLine( msg, 1.0f, 10.0f, y, diagFont );
    }
 }
 
 internal void Game_RenderMenu( GameData_t* gameData )
 {
-   // TODO: actually draw the menu
-   UNUSED_PARAM( gameData );
+   uint32_t i;
+   Menu_t* menu = &( gameData->menus[gameData->curMenuID] );
+   float y = menu->renderData.y;
+   MenuItem_t* item = menu->items;
+   MenuRenderData_t* renderData = &( menu->renderData );
+   Font_t* font = renderData->font;
+
+   for ( i = 0; i < menu->numItems; i++ )
+   {
+      Render_DrawTextLine( item->text, 1.0f, renderData->x, y, font );
+
+      if ( menu->selectedItem == i )
+      {
+         Render_DrawChar( renderData->caratCodepoint, 1.0f, renderData->x + renderData->caratOffset, y, font );
+      }
+
+      y -= ( font->curGlyphCollection->height + renderData->lineGap );
+      item++;
+   }
 }
 
 internal void Game_UpdateStarAsync( StarUpdateData_t* data )

@@ -14,3 +14,23 @@ void Menu_ClearItems( Menu_t* menu )
 
    menu->items = 0;
 }
+
+void Menu_Reset( Menu_t* menu )
+{
+   menu->selectedItem = 0;
+}
+
+void Menu_IncrementSelectedItem( Menu_t* menu )
+{
+   menu->selectedItem++;
+
+   if ( menu->selectedItem == menu->numItems )
+   {
+      menu->selectedItem = 0;
+   }
+}
+
+void Menu_DecrementSelectedItem( Menu_t* menu )
+{
+   menu->selectedItem = ( menu->selectedItem == 0 ) ? menu->numItems - 1 : menu->selectedItem - 1;
+}
