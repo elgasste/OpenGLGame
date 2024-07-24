@@ -19,9 +19,30 @@ internal void Game_UpdateStarAsync( StarUpdateData_t* data );
 
 Bool_t Game_Init( GameData_t* gameData )
 {
+   uint32_t i;
+   float frameTimeAdjustment;
+   Star_t* star = gameData->stars;
+
    if ( !Game_LoadData( gameData ) )
    {
       return False;
+   }
+
+   for ( i = 0; i < STAR_COUNT; i++ )
+   {
+      star->isResting = False;
+      star->movingLeft = Random_Bool();
+      star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
+      star->position.x = (float)Random_UInt32( 0, SCREEN_WIDTH - 1 );
+      star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
+      star->restSeconds = ( Random_UInt32( 0, STAR_MAX_RESTSECONDS * 1000 ) ) / 1000.0f;
+
+      Sprite_Reset( &( star->sprite ) );
+      frameTimeAdjustment = ( (float)Random_Percent() / 100 ) * 0.5f;
+      star->scale = ( (float)Random_Percent() / 100 );
+      Sprite_ScaleFrameTime( &( star->sprite ), 1.0f + ( Random_Bool() ? frameTimeAdjustment : -frameTimeAdjustment ) );
+
+      star++;
    }
 
    Clock_Init( &( gameData->clock ) );
