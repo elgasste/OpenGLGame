@@ -5,14 +5,15 @@
 #include "sprite.h"
 #include "font.h"
 
-typedef struct RenderData_t
+typedef struct
 {
    Texture_t textures[TextureID_Count];
    Font_t fonts[FontID_Count];
 }
 RenderData_t;
 
-void Render_Clear();
+void Render_ClearData( RenderData_t* renderData );
+void Render_ClearScreen();
 void Render_DrawRect( float screenX, float screenY, float width, float height, uint32_t color );
 void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
                                 float screenX, float screenY,

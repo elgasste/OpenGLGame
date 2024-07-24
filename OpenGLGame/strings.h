@@ -45,5 +45,8 @@
 
 #define STR_BRUSHTEETH                    "(...But don't forget to brush your teeth!)"
 
+#define STR_MENU_KEEPPLAYING              "Keep Playing"
+#define STR_MENU_QUIT                     "Quit"
+
 #endif
 

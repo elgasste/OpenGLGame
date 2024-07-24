@@ -8,7 +8,6 @@ typedef struct
 }
 StarUpdateData_t;
 
-internal Bool_t Game_LoadAssets( GameData_t* gameData );
 internal void Game_HandleInput( GameData_t* gameData );
 internal void Game_HandleStateInput_Playing( GameData_t* gameData );
 internal void Game_HandleStateInput_Menu( GameData_t* gameData );
@@ -20,28 +19,13 @@ internal void Game_UpdateStarAsync( StarUpdateData_t* data );
 
 Bool_t Game_Init( GameData_t* gameData )
 {
-   uint32_t i;
-   Star_t* star;
-
-   Clock_Init( &( gameData->clock ) );
-   Input_Init( gameData->keyStates );
-
-   if ( !Game_LoadAssets( gameData ) )
+   if ( !Game_LoadData( gameData ) )
    {
       return False;
    }
 
-   for ( i = 0; i < STAR_COUNT; i++ )
-   {
-      star = &( gameData->stars[i] );
-
-      if ( !Sprite_Init( &( star->sprite ), &( gameData->renderData.textures[TextureID_Star] ), 6, 6, 0.1f ) )
-      {
-         return False;
-      }
-
-      star->isResting = True;
-   }
+   Clock_Init( &( gameData->clock ) );
+   Input_Init( gameData->keyStates );
 
    gameData->stateInputHandlers[GameState_Playing] = Game_HandleStateInput_Playing;
    gameData->stateInputHandlers[GameState_Menu] = Game_HandleStateInput_Menu;
@@ -50,41 +34,23 @@ Bool_t Game_Init( GameData_t* gameData )
    gameData->isEngineRunning = True;
    gameData->showDiagnostics = False;
    gameData->state = GameState_Playing;
+   gameData->curMenuID = (MenuID_t)0;
 
    return True;
 }
 
-Bool_t Game_LoadAssets( GameData_t* gameData )
+void Game_ClearData( GameData_t* gameData )
 {
-   char appDirectory[STRING_SIZE_DEFAULT];
-   char backgroundBmpFilePath[STRING_SIZE_DEFAULT];
-   char starBmpFilePath[STRING_SIZE_DEFAULT];
-   char consolasFontFilePath[STRING_SIZE_DEFAULT];
-   char papyrusFontFilePath[STRING_SIZE_DEFAULT];
+   uint32_t i;
+   Menu_t* menu = gameData->menus;
 
-   if ( !Platform_GetAppDirectory( appDirectory, STRING_SIZE_DEFAULT ) )
+   for ( i = 0; i < (uint32_t)MenuID_Count; i++ )
    {
-      return False;
+      Menu_ClearItems( menu );
+      menu++;
    }
 
-   snprintf( backgroundBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
-   snprintf( starBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\star.bmp", appDirectory );
-   snprintf( consolasFontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Consolas.gff", appDirectory );
-   snprintf( papyrusFontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Papyrus.gff", appDirectory );
-
-   if ( !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Background] ), backgroundBmpFilePath) ||
-        !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Star] ), starBmpFilePath ) ||
-        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Consolas] ), consolasFontFilePath ) ||
-        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Papyrus] ), papyrusFontFilePath ) )
-   {
-      return False;
-   }
-
-   Font_SetGlyphCollectionForHeight( &( gameData->renderData.fonts[FontID_Consolas] ), 12.0f );
-   Font_SetGlyphCollectionForHeight( &( gameData->renderData.fonts[FontID_Papyrus] ), 48.0f );
-   Font_SetColor( &( gameData->renderData.fonts[FontID_Papyrus] ), 0x003333CC );
-
-   return True;
+   Render_ClearData( &( gameData->renderData ) );
 }
 
 void Game_Run( GameData_t* gameData )
@@ -156,11 +122,14 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
    if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
    {
       gameData->state = GameState_Menu;
+      gameData->curMenuID = MenuID_Playing;
    }
 }
 
 internal void Game_HandleStateInput_Menu( GameData_t* gameData )
 {
+   // TODO: handle scrolling and selection
+
    if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
    {
       gameData->state = GameState_Playing;
@@ -215,7 +184,7 @@ internal void Game_RenderWorld( GameData_t* gameData )
    float y;
    char msg[STRING_SIZE_DEFAULT];
 
-   Render_Clear();
+   Render_ClearScreen();
    Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 1.0f, 0.0f, 0.0f );
    Render_DrawTextLine( STR_BRUSHTEETH, 1.0f, 65.0f, 240.0f, papyrusFont );
 

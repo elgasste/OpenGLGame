@@ -21,6 +21,14 @@ FontID_t;
 
 typedef enum
 {
+   MenuID_Playing = 0,
+
+   MenuID_Count
+}
+MenuID_t;
+
+typedef enum
+{
    GameState_Playing = 0,
    GameState_Menu,
 

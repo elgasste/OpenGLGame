@@ -17,7 +17,7 @@ Bool_t Texture_LoadFromFile( Texture_t* texture, const char* filePath )
    return True;
 }
 
-void Texture_Cleanup( Texture_t* texture )
+void Texture_ClearData( Texture_t* texture )
 {
    if ( texture->pixelBuffer.memory )
    {

@@ -6,10 +6,8 @@
 #define ERROR_RETURN_FALSE() \
    snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_FILECORRUPT, filePath ); \
    Platform_Log( errorMsg ); \
-   Font_ClearGlyphCollections( font ); \
+   Font_ClearData( font ); \
    return False
-
-internal void Font_ClearGlyphCollections( Font_t* font );
 
 Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 {
@@ -25,7 +23,6 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
-      Font_ClearGlyphCollections( font );
       return False;
    }
 
@@ -119,6 +116,32 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
    return True;
 }
 
+void Font_ClearData( Font_t* font )
+{
+   uint32_t i, j;
+
+   if ( font->glyphCollections )
+   {
+      for ( i = 0; i < font->numGlyphCollections; i++ )
+      {
+         if ( font->glyphCollections[i].glyphs )
+         {
+            for ( j = 0; j < font->numGlyphs; j++ )
+            {
+               if ( font->glyphCollections[i].glyphs[j].pixelBuffer.memory )
+               {
+                  Platform_MemFree( font->glyphCollections[i].glyphs[j].pixelBuffer.memory );
+               }
+            }
+            Platform_MemFree( font->glyphCollections[i].glyphs );
+         }
+      }
+
+      Platform_MemFree( font->glyphCollections );
+      font->glyphCollections = 0;
+   }
+}
+
 Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint )
 {
    return ( codepoint < font->codepointOffset ) || ( codepoint > ( font->codepointOffset + font->numGlyphs ) )
@@ -153,31 +176,6 @@ void Font_SetColor( Font_t* font, uint32_t color )
    for ( i = 0; i < font->numGlyphs; i++ )
    {
       Font_SetCharColor( font, i + font->codepointOffset, color );
-   }
-}
-
-internal void Font_ClearGlyphCollections( Font_t* font )
-{
-   uint32_t i, j;
-
-   if ( font->glyphCollections )
-   {
-      for ( i = 0; i < font->numGlyphCollections; i++ )
-      {
-         if ( font->glyphCollections[i].glyphs )
-         {
-            for ( j = 0; j < font->numGlyphs; j++ )
-            {
-               if ( font->glyphCollections[i].glyphs[j].pixelBuffer.memory )
-               {
-                  Platform_MemFree( font->glyphCollections[i].glyphs[j].pixelBuffer.memory );
-               }
-            }
-            Platform_MemFree( font->glyphCollections[i].glyphs );
-         }
-      }
-      Platform_MemFree( font->glyphCollections );
-      font->glyphCollections = 0;
    }
 }
 

@@ -13,6 +13,7 @@
 #include "input.h"
 #include "render.h"
 #include "vector.h"
+#include "menu.h"
 
 typedef struct Star_t
 {
@@ -32,6 +33,8 @@ typedef struct GameData_t
    Clock_t clock;
    KeyState_t keyStates[KeyCode_Count];
    RenderData_t renderData;
+   Menu_t menus[MenuID_Count];
+   MenuID_t curMenuID;
 
    Bool_t isRunning;
    Bool_t isEngineRunning;
@@ -44,10 +47,14 @@ typedef struct GameData_t
 GameData_t;
 
 Bool_t Game_Init( GameData_t* gameData );
+void Game_ClearData( GameData_t* gameData );
 void Game_Run( GameData_t* gameData );
 void Game_PauseEngine( GameData_t* gameData );
 void Game_ResumeEngine( GameData_t* gameData );
 void Game_EmergencySave( GameData_t* gameData );
 void Game_TryClose( GameData_t* gameData );
+
+// game_loader.c
+Bool_t Game_LoadData( GameData_t* gameData );
 
 #endif

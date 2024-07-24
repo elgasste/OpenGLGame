@@ -97,6 +97,7 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    }
 
    Game_Run( &( g_globals.gameData ) );
+   Game_ClearData( &( g_globals.gameData ) );
 
    return 0;
 }

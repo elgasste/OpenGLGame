@@ -6,7 +6,26 @@ internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer
                                                float screenX, float screenY,
                                                float width, float height );
 
-void Render_Clear()
+void Render_ClearData( RenderData_t* renderData )
+{
+   uint32_t i;
+   Texture_t* texture = renderData->textures;
+   Font_t* font = renderData->fonts;
+
+   for ( i = 0; i < TextureID_Count; i++ )
+   {
+      Texture_ClearData( texture );
+      texture++;
+   }
+
+   for ( i = 0; i < FontID_Count; i++ )
+   {
+      Font_ClearData( font );
+      font++;
+   }
+}
+
+void Render_ClearScreen()
 {
    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
    glClear( GL_COLOR_BUFFER_BIT );
