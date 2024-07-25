@@ -72,8 +72,9 @@ internal void Game_LoadMenus( GameData_t* gameData )
    snprintf( playingMenu->items[1].text, STRING_SIZE_DEFAULT, STR_MENU_QUIT );
    playingMenu->renderData.font = &( gameData->renderData.fonts[FontID_Menu] );
    playingMenu->renderData.caratCodepoint = (uint32_t)( '>' );
-   playingMenu->renderData.x = 100.0f;
-   playingMenu->renderData.y = 500.0f;
+   playingMenu->renderData.position.x = 100.0f;
+   playingMenu->renderData.position.y = 500.0f;
    playingMenu->renderData.lineGap = playingMenu->renderData.font->curGlyphCollection->lineGap;
    playingMenu->renderData.caratOffset = -30.0f;
+   playingMenu->caratBlinkSeconds = 0.25f;
 }

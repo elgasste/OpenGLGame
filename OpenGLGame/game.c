@@ -216,6 +216,10 @@ internal void Game_Tick( GameData_t* gameData )
          }
       }
    }
+   else if ( gameData->state == GameState_Menu )
+   {
+      Menu_Tick( &( gameData->menus[gameData->curMenuID] ), &( gameData->clock ) );
+   }
 }
 
 internal void Game_Render( GameData_t* gameData )
@@ -272,18 +276,18 @@ internal void Game_RenderMenu( GameData_t* gameData )
 {
    uint32_t i;
    Menu_t* menu = &( gameData->menus[gameData->curMenuID] );
-   float y = menu->renderData.y;
+   float y = menu->renderData.position.y;
    MenuItem_t* item = menu->items;
    MenuRenderData_t* renderData = &( menu->renderData );
    Font_t* font = renderData->font;
 
    for ( i = 0; i < menu->numItems; i++ )
    {
-      Render_DrawTextLine( item->text, 1.0f, renderData->x, y, font );
+      Render_DrawTextLine( item->text, 1.0f, renderData->position.x, y, font );
 
-      if ( menu->selectedItem == i )
+      if ( menu->selectedItem == i && menu->showCarat )
       {
-         Render_DrawChar( renderData->caratCodepoint, 1.0f, renderData->x + renderData->caratOffset, y, font );
+         Render_DrawChar( renderData->caratCodepoint, 1.0f, renderData->position.x + renderData->caratOffset, y, font );
       }
 
       y -= ( font->curGlyphCollection->height + renderData->lineGap );

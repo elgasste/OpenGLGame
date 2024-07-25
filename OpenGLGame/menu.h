@@ -3,13 +3,14 @@
 
 #include "common.h"
 #include "font.h"
+#include "vector.h"
+#include "clock.h"
 
 typedef struct
 {
    Font_t* font;
    uint32_t caratCodepoint;
-   float x;
-   float y;
+   Vector2f_t position;
    float lineGap;
    float caratOffset;
 }
@@ -28,6 +29,9 @@ typedef struct
    uint32_t numItems;
    uint32_t selectedItem;
    MenuRenderData_t renderData;
+   Bool_t showCarat;
+   float caratElapsedSeconds;
+   float caratBlinkSeconds;
 }
 Menu_t;
 
@@ -35,5 +39,6 @@ void Menu_ClearItems( Menu_t* menu );
 void Menu_Reset( Menu_t* menu );
 void Menu_IncrementSelectedItem( Menu_t* menu );
 void Menu_DecrementSelectedItem( Menu_t* menu );
+void Menu_Tick( Menu_t* menu, Clock_t* clock );
 
 #endif
