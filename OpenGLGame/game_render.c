@@ -1,4 +1,5 @@
 #include "game.h"
+#include "blit.h"
 
 internal void Game_RenderWorld( GameData_t* gameData );
 internal void Game_RenderMenu( GameData_t* gameData );
@@ -6,16 +7,13 @@ internal void Game_RenderDiagnostics( GameData_t* gameData );
 
 void Game_Render( GameData_t* gameData )
 {
-   switch ( gameData->state )
+   Blit_ClearScreen();
+   Game_RenderWorld( gameData );
+
+   if ( gameData->state == GameState_Menu )
    {
-      case GameState_Playing:
-         Game_RenderWorld( gameData );
-         break;
-      case GameState_Menu:
-         Game_RenderWorld( gameData );
-         Render_DrawRect( 0.0f, 0.0f, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT, 0x99000000 );
-         Game_RenderMenu( gameData );
-         break;
+      Blit_Rect( 0.0f, 0.0f, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT, 0x99000000 );
+      Game_RenderMenu( gameData );
    }
 
    if ( gameData->showDiagnostics )
@@ -32,17 +30,16 @@ internal void Game_RenderWorld( GameData_t* gameData )
    Star_t* star;
    Font_t* font = &( gameData->renderData.fonts[FontID_Papyrus] );
 
-   Render_ClearScreen();
-   Render_DrawImage( &( gameData->renderData.images[ImageID_Background] ), 0.0f, 0.0f, 1.0f );
+   Blit_Image( &( gameData->renderData.images[ImageID_Background] ), 0.0f, 0.0f, 1.0f );
 
    Font_SetGlyphCollectionForHeight( font, 48.0f );
    Font_SetColor( font, 0xFF3333CC );
-   Render_DrawTextLine( STR_BRUSHTEETH, 1.0f, 65.0f, 240.0f, font );
+   Blit_TextLine( STR_BRUSHTEETH, 1.0f, 65.0f, 240.0f, font );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {
       star = &( gameData->stars[i] );
-      Render_DrawSprite( &( star->sprite ), star->position.x, star->position.y, star->scale );
+      Blit_Sprite( &( star->sprite ), star->position.x, star->position.y, star->scale );
    }
 }
 
@@ -64,11 +61,11 @@ internal void Game_RenderMenu( GameData_t* gameData )
 
    for ( i = 0; i < menu->numItems; i++ )
    {
-      Render_DrawTextLine( item->text, textScale, renderData->position.x, y, font );
+      Blit_TextLine( item->text, textScale, renderData->position.x, y, font );
 
       if ( menu->selectedItem == i )
       {
-         Render_DrawChar( renderData->caratCodepoint, textScale, renderData->position.x + renderData->caratOffset, y, font );
+         Blit_Char( renderData->caratCodepoint, textScale, renderData->position.x + renderData->caratOffset, y, font );
       }
 
       y -= ( font->curGlyphCollection->height + renderData->lineGap );
@@ -87,11 +84,11 @@ internal void Game_RenderDiagnostics( GameData_t* gameData )
 
    y = (float)SCREEN_HEIGHT - font->curGlyphCollection->height - 10.0f;
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_FRAMETARGETMICRO, gameData->clock.targetFrameDurationMicro );
-   Render_DrawTextLine( msg, 1.0f, 10.0f, y, font );
+   Blit_TextLine( msg, 1.0f, 10.0f, y, font );
    y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_FRAMEDURATIONMICRO, gameData->clock.lastFrameDurationMicro );
-   Render_DrawTextLine( msg, 1.0f, 10.0f, y, font );
+   Blit_TextLine( msg, 1.0f, 10.0f, y, font );
    y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_LAGFRAMES, gameData->clock.lagFrames );
-   Render_DrawTextLine( msg, 1.0f, 10.0f, y, font );
+   Blit_TextLine( msg, 1.0f, 10.0f, y, font );
 }

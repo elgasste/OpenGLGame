@@ -11,9 +11,16 @@
 #include "common.h"
 #include "clock.h"
 #include "input.h"
-#include "render.h"
 #include "vector.h"
 #include "menu.h"
+#include "sprite.h"
+
+typedef struct
+{
+   Image_t images[ImageID_Count];
+   Font_t fonts[FontID_Count];
+}
+RenderData_t;
 
 typedef struct Star_t
 {

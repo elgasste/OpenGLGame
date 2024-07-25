@@ -65,15 +65,27 @@ Bool_t Game_Init( GameData_t* gameData )
 void Game_ClearData( GameData_t* gameData )
 {
    uint32_t i;
+   Image_t* image = gameData->renderData.images;
+   Font_t* font = gameData->renderData.fonts;
    Menu_t* menu = gameData->menus;
+
+   for ( i = 0; i < (uint32_t)ImageID_Count; i++ )
+   {
+      Image_ClearData( image );
+      image++;
+   }
+
+   for ( i = 0; i < (uint32_t)FontID_Count; i++ )
+   {
+      Font_ClearData( font );
+      font++;
+   }
 
    for ( i = 0; i < (uint32_t)MenuID_Count; i++ )
    {
       Menu_ClearItems( menu );
       menu++;
    }
-
-   Render_ClearData( &( gameData->renderData ) );
 }
 
 void Game_Run( GameData_t* gameData )
