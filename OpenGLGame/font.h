@@ -11,6 +11,7 @@ typedef struct
    float leftBearing;
    float baselineOffset;
    float advance;
+   uint32_t color;
 }
 FontGlyph_t;
 
@@ -35,6 +36,7 @@ typedef struct
 Font_t;
 
 Bool_t Font_LoadFromFile( Font_t* font, const char* filePath );
+void Font_ClearData( Font_t* font );
 Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint );
 void Font_SetCharColor( Font_t* font, uint32_t codepoint, uint32_t color );
 void Font_SetColor( Font_t* font, uint32_t color );

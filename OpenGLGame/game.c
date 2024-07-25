@@ -8,75 +8,72 @@ typedef struct
 }
 StarUpdateData_t;
 
-internal Bool_t Game_LoadAssets( GameData_t* gameData );
 internal void Game_HandleInput( GameData_t* gameData );
+internal void Game_HandleStateInput_Playing( GameData_t* gameData );
+internal void Game_HandleStateInput_Menu( GameData_t* gameData );
+internal void Game_HandleMenuItem_KeepPlaying( GameData_t* gameData );
+internal void Game_HandleMenuItem_Quit( GameData_t* gameData );
 internal void Game_Tick( GameData_t* gameData );
-internal void Game_Render( GameData_t* gameData );
 internal void Game_UpdateStarAsync( StarUpdateData_t* data );
 
 Bool_t Game_Init( GameData_t* gameData )
 {
    uint32_t i;
-   Star_t* star;
+   float frameTimeAdjustment;
+   Star_t* star = gameData->stars;
 
-   Clock_Init( &( gameData->clock ) );
-   Input_Init( gameData->keyStates );
-
-   if ( !Game_LoadAssets( gameData ) )
+   if ( !Game_LoadData( gameData ) )
    {
       return False;
    }
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {
-      star = &( gameData->stars[i] );
+      star->isResting = False;
+      star->movingLeft = Random_Bool();
+      star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
+      star->position.x = (float)Random_UInt32( 0, SCREEN_WIDTH - 1 );
+      star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
+      star->restSeconds = ( Random_UInt32( 0, STAR_MAX_RESTSECONDS * 1000 ) ) / 1000.0f;
 
-      if ( !Sprite_Init( &( star->sprite ), &( gameData->renderData.textures[TextureID_Star] ), 6, 6, 0.1f ) )
-      {
-         return False;
-      }
+      Sprite_Reset( &( star->sprite ) );
+      frameTimeAdjustment = ( (float)Random_Percent() / 100 ) * 0.5f;
+      star->scale = ( (float)Random_Percent() / 100 );
+      Sprite_ScaleFrameTime( &( star->sprite ), 1.0f + ( Random_Bool() ? frameTimeAdjustment : -frameTimeAdjustment ) );
 
-      star->isResting = True;
+      star++;
    }
+
+   Clock_Init( &( gameData->clock ) );
+   Input_Init( gameData->keyStates );
+
+   gameData->stateInputHandlers[GameState_Playing] = Game_HandleStateInput_Playing;
+   gameData->stateInputHandlers[GameState_Menu] = Game_HandleStateInput_Menu;
+
+   gameData->menuItemInputHandlers[MenuItemID_KeepPlaying] = Game_HandleMenuItem_KeepPlaying;
+   gameData->menuItemInputHandlers[MenuItemID_Quit] = Game_HandleMenuItem_Quit;
 
    gameData->isRunning = False;
    gameData->isEngineRunning = True;
    gameData->showDiagnostics = False;
+   gameData->state = GameState_Playing;
+   gameData->curMenuID = (MenuID_t)0;
 
    return True;
 }
 
-Bool_t Game_LoadAssets( GameData_t* gameData )
+void Game_ClearData( GameData_t* gameData )
 {
-   char appDirectory[STRING_SIZE_DEFAULT];
-   char backgroundBmpFilePath[STRING_SIZE_DEFAULT];
-   char starBmpFilePath[STRING_SIZE_DEFAULT];
-   char consolasFontFilePath[STRING_SIZE_DEFAULT];
-   char papyrusFontFilePath[STRING_SIZE_DEFAULT];
+   uint32_t i;
+   Menu_t* menu = gameData->menus;
 
-   if ( !Platform_GetAppDirectory( appDirectory, STRING_SIZE_DEFAULT ) )
+   for ( i = 0; i < (uint32_t)MenuID_Count; i++ )
    {
-      return False;
+      Menu_ClearItems( menu );
+      menu++;
    }
 
-   snprintf( backgroundBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
-   snprintf( starBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\star.bmp", appDirectory );
-   snprintf( consolasFontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Consolas.gff", appDirectory );
-   snprintf( papyrusFontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Papyrus.gff", appDirectory );
-
-   if ( !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Background] ), backgroundBmpFilePath) ||
-        !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Star] ), starBmpFilePath ) ||
-        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Consolas] ), consolasFontFilePath ) ||
-        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Papyrus] ), papyrusFontFilePath ) )
-   {
-      return False;
-   }
-
-   Font_SetGlyphCollectionForHeight( &( gameData->renderData.fonts[FontID_Consolas] ), 12.0f );
-   Font_SetGlyphCollectionForHeight( &( gameData->renderData.fonts[FontID_Papyrus] ), 48.0f );
-   Font_SetColor( &( gameData->renderData.fonts[FontID_Papyrus] ), 0x003333CC );
-
-   return True;
+   Render_ClearData( &( gameData->renderData ) );
 }
 
 void Game_Run( GameData_t* gameData )
@@ -135,15 +132,57 @@ void Game_TryClose( GameData_t* gameData )
 
 internal void Game_HandleInput( GameData_t* gameData )
 {
-   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
-   {
-      Game_TryClose( gameData );
-   }
-
    if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_F8 ) )
    {
       TOGGLE_BOOL( gameData->showDiagnostics );
    }
+
+   gameData->stateInputHandlers[gameData->state]( gameData );
+}
+
+internal void Game_HandleStateInput_Playing( GameData_t* gameData )
+{
+   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
+   {
+      gameData->curMenuID = MenuID_Playing;
+      Menu_Reset( &( gameData->menus[gameData->curMenuID] ) );
+      gameData->state = GameState_Menu;
+      gameData->curMenuID = MenuID_Playing;
+   }
+}
+
+internal void Game_HandleStateInput_Menu( GameData_t* gameData )
+{
+   Menu_t* menu = &( gameData->menus[gameData->curMenuID] );
+
+   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
+   {
+      gameData->state = GameState_Playing;
+      return;
+   }
+   else if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Up ) )
+   {
+      Menu_DecrementSelectedItem( menu );
+   }
+   else if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Down ) )
+   {
+      Menu_IncrementSelectedItem( menu );
+   }
+   else if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Enter ) )
+   {
+      gameData->menuItemInputHandlers[menu->items[menu->selectedItem].ID]( gameData );
+   }
+}
+
+internal void Game_HandleMenuItem_KeepPlaying( GameData_t* gameData )
+{
+   UNUSED_PARAM( gameData );
+   gameData->state = GameState_Playing;
+}
+
+internal void Game_HandleMenuItem_Quit( GameData_t* gameData )
+{
+   Game_TryClose( gameData );
 }
 
 internal void Game_Tick( GameData_t* gameData )
@@ -164,41 +203,11 @@ internal void Game_Tick( GameData_t* gameData )
          entryCounter = 0;
       }
    }
-}
 
-internal void Game_Render( GameData_t* gameData )
-{
-   uint32_t i;
-   Star_t* star;
-   Font_t* consolasFont = & ( gameData->renderData.fonts[FontID_Consolas] );
-   Font_t* papyrusFont = &( gameData->renderData.fonts[FontID_Papyrus] );
-   float y;
-   char msg[STRING_SIZE_DEFAULT];
-
-   Render_Clear();
-   Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 1.0f, 0.0f, 0.0f );
-   Render_DrawTextLine( STR_BRUSHTEETH, 1.0f, 65.0f, 240.0f, papyrusFont );
-
-   for ( i = 0; i < STAR_COUNT; i++ )
+   if ( gameData->state == GameState_Menu )
    {
-      star = &( gameData->stars[i] );
-      Render_DrawSprite( &( star->sprite ), star->scale, star->position.x, star->position.y );
+      Menu_Tick( &( gameData->menus[gameData->curMenuID] ), &( gameData->clock ) );
    }
-
-   if ( gameData->showDiagnostics )
-   {
-      y = (float)SCREEN_HEIGHT - consolasFont->curGlyphCollection->height - 10.0f;
-      snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_FRAMETARGETMICRO, gameData->clock.targetFrameDurationMicro );
-      Render_DrawTextLine( msg, 1.0f, 10.0f, y, consolasFont );
-      y -= ( consolasFont->curGlyphCollection->height + consolasFont->curGlyphCollection->lineGap );
-      snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_FRAMEDURATIONMICRO, gameData->clock.lastFrameDurationMicro );
-      Render_DrawTextLine( msg, 1.0f, 10.0f, y, consolasFont );
-      y -= ( consolasFont->curGlyphCollection->height + consolasFont->curGlyphCollection->lineGap );
-      snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_LAGFRAMES, gameData->clock.lagFrames );
-      Render_DrawTextLine( msg, 1.0f, 10.0f, y, consolasFont );
-   }
-
-   Platform_RenderScreen();
 }
 
 internal void Game_UpdateStarAsync( StarUpdateData_t* data )

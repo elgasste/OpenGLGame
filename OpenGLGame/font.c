@@ -6,10 +6,8 @@
 #define ERROR_RETURN_FALSE() \
    snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_FILECORRUPT, filePath ); \
    Platform_Log( errorMsg ); \
-   Font_ClearGlyphCollections( font ); \
+   Font_ClearData( font ); \
    return False
-
-internal void Font_ClearGlyphCollections( Font_t* font );
 
 Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 {
@@ -25,7 +23,6 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
-      Font_ClearGlyphCollections( font );
       return False;
    }
 
@@ -101,6 +98,7 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
          filePos32 += ( buffer->dimensions.x * buffer->dimensions.y );
          bytesRead += bufferSize;
 
+         glyph->color = 0xFFFFFFFF;
          glyph++;
       }
 
@@ -119,44 +117,7 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
    return True;
 }
 
-Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint )
-{
-   return ( codepoint < font->codepointOffset ) || ( codepoint > ( font->codepointOffset + font->numGlyphs ) )
-      ? False : True;
-}
-
-void Font_SetCharColor( Font_t* font, uint32_t codepoint, uint32_t color )
-{
-   uint32_t i, j;
-   PixelBuffer_t* buffer;
-   uint32_t* memory;
-
-   if ( Font_ContainsChar( font, codepoint ) )
-   {
-      for ( i = 0; i < font->numGlyphCollections; i++ )
-      {
-         buffer = &( font->glyphCollections[i].glyphs[codepoint - font->codepointOffset].pixelBuffer );
-         memory = (uint32_t*)( buffer->memory );
-
-         for ( j = 0; j < ( buffer->dimensions.x * buffer->dimensions.y ); j++ )
-         {
-            memory[j] = ( memory[j] & 0xFF000000 ) | ( color & 0x00FFFFFF );
-         }
-      }
-   }
-}
-
-void Font_SetColor( Font_t* font, uint32_t color )
-{
-   uint32_t i;
-
-   for ( i = 0; i < font->numGlyphs; i++ )
-   {
-      Font_SetCharColor( font, i + font->codepointOffset, color );
-   }
-}
-
-internal void Font_ClearGlyphCollections( Font_t* font )
+void Font_ClearData( Font_t* font )
 {
    uint32_t i, j;
 
@@ -176,8 +137,38 @@ internal void Font_ClearGlyphCollections( Font_t* font )
             Platform_MemFree( font->glyphCollections[i].glyphs );
          }
       }
+
       Platform_MemFree( font->glyphCollections );
       font->glyphCollections = 0;
+   }
+}
+
+Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint )
+{
+   return ( codepoint < font->codepointOffset ) || ( codepoint > ( font->codepointOffset + font->numGlyphs ) )
+      ? False : True;
+}
+
+void Font_SetCharColor( Font_t* font, uint32_t codepoint, uint32_t color )
+{
+   uint32_t i;
+
+   if ( Font_ContainsChar( font, codepoint ) )
+   {
+      for ( i = 0; i < font->numGlyphCollections; i++ )
+      {
+         font->glyphCollections[i].glyphs[codepoint - font->codepointOffset].color = color;
+      }
+   }
+}
+
+void Font_SetColor( Font_t* font, uint32_t color )
+{
+   uint32_t i;
+
+   for ( i = 0; i < font->numGlyphs; i++ )
+   {
+      Font_SetCharColor( font, i + font->codepointOffset, color );
    }
 }
 

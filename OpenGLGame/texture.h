@@ -13,6 +13,6 @@ typedef struct Texture_t
 Texture_t;
 
 Bool_t Texture_LoadFromFile( Texture_t* texture, const char* filePath );
-void Texture_Cleanup( Texture_t* texture );
+void Texture_ClearData( Texture_t* texture );
 
 #endif
