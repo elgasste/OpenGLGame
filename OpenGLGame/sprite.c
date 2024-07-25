@@ -1,21 +1,21 @@
 #include "sprite.h"
 #include "clock.h"
 
-Bool_t Sprite_Init( Sprite_t* sprite, Texture_t* texture, uint32_t frameWidth, uint32_t frameHeight, float frameSeconds )
+Bool_t Sprite_Init( Sprite_t* sprite, Image_t* image, uint32_t frameWidth, uint32_t frameHeight, float frameSeconds )
 {
-   if ( ( texture->pixelBuffer.dimensions.x % frameWidth != 0 ) ||
-        ( texture->pixelBuffer.dimensions.y % frameHeight != 0 ) )
+   if ( ( image->pixelBuffer.dimensions.x % frameWidth != 0 ) ||
+        ( image->pixelBuffer.dimensions.y % frameHeight != 0 ) )
    {
-      // TODO: log the texture ID?
+      // MUFFINS: log the image?
       Platform_Log( STR_SPRITEERR_FRAMEDIMENSIONS );
       return False;
    }
 
-   sprite->texture = texture;
+   sprite->image = image;
    sprite->frameDimensions.x = frameWidth;
    sprite->frameDimensions.y = frameHeight;
-   sprite->frameStride = sprite->texture->pixelBuffer.dimensions.x / frameWidth;
-   sprite->numFrames = sprite->frameStride * ( sprite->texture->pixelBuffer.dimensions.y / frameHeight );
+   sprite->frameStride = sprite->image->pixelBuffer.dimensions.x / frameWidth;
+   sprite->numFrames = sprite->frameStride * ( sprite->image->pixelBuffer.dimensions.y / frameHeight );
    sprite->frameSeconds = frameSeconds;
 
    Sprite_Reset( sprite );

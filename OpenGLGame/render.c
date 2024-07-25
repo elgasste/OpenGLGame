@@ -10,13 +10,13 @@ internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer
 void Render_ClearData( RenderData_t* renderData )
 {
    uint32_t i;
-   Texture_t* texture = renderData->textures;
+   Image_t* image = renderData->images;
    Font_t* font = renderData->fonts;
 
-   for ( i = 0; i < TextureID_Count; i++ )
+   for ( i = 0; i < ImageID_Count; i++ )
    {
-      Texture_ClearData( texture );
-      texture++;
+      Image_ClearData( image );
+      image++;
    }
 
    for ( i = 0; i < FontID_Count; i++ )
@@ -116,18 +116,18 @@ void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer
                                      scale, 0xFFFFFFFF );
 }
 
-void Render_DrawColoredTexture( Texture_t* texture, float screenX, float screenY, float scale, uint32_t color )
+void Render_DrawColoredImage( Image_t* image, float screenX, float screenY, float scale, uint32_t color )
 {
-   Render_DrawColoredTextureSection( texture->textureHandle, &( texture->pixelBuffer ),
+   Render_DrawColoredTextureSection( image->textureHandle, &( image->pixelBuffer ),
                                      screenX, screenY,
                                      0, 0,
-                                     texture->pixelBuffer.dimensions.x, texture->pixelBuffer.dimensions.y,
+                                     image->pixelBuffer.dimensions.x, image->pixelBuffer.dimensions.y,
                                      scale, color );
 }
 
-void Render_DrawTexture( Texture_t* texture, float screenX, float screenY, float scale )
+void Render_DrawImage( Image_t* image, float screenX, float screenY, float scale )
 {
-   Render_DrawColoredTexture( texture, screenX, screenY, scale, 0xFFFFFFFF );
+   Render_DrawColoredImage( image, screenX, screenY, scale, 0xFFFFFFFF );
 }
 
 void Render_DrawColoredSprite( Sprite_t* sprite, float screenX, float screenY, float scale, uint32_t color )
@@ -135,7 +135,7 @@ void Render_DrawColoredSprite( Sprite_t* sprite, float screenX, float screenY, f
    uint32_t rowIndex = ( sprite->frameIndex ) / sprite->frameStride;
    uint32_t colIndex = ( sprite->frameIndex ) % sprite->frameStride;
 
-   Render_DrawColoredTextureSection( sprite->texture->textureHandle, &( sprite->texture->pixelBuffer ),
+   Render_DrawColoredTextureSection( sprite->image->textureHandle, &( sprite->image->pixelBuffer ),
                                      screenX, screenY,
                                      sprite->frameDimensions.x * colIndex, sprite->frameDimensions.y * rowIndex,
                                      sprite->frameDimensions.x, sprite->frameDimensions.y,

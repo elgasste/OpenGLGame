@@ -7,7 +7,7 @@
 
 typedef struct
 {
-   Texture_t textures[TextureID_Count];
+   Image_t images[ImageID_Count];
    Font_t fonts[FontID_Count];
 }
 RenderData_t;
@@ -25,8 +25,8 @@ void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer
                                 int32_t textureX, int32_t textureY,
                                 uint32_t sectionWidth, uint32_t sectionHeight,
                                 float scale );
-void Render_DrawColoredTexture( Texture_t* texture, float screenX, float screenY, float scale, uint32_t color );
-void Render_DrawTexture( Texture_t* texture, float screenX, float screenY, float scale );
+void Render_DrawColoredImage( Image_t* texture, float screenX, float screenY, float scale, uint32_t color );
+void Render_DrawImage( Image_t* texture, float screenX, float screenY, float scale );
 void Render_DrawColoredSprite( Sprite_t* sprite, float scale, float screenX, float screenY, uint32_t color );
 void Render_DrawSprite( Sprite_t* sprite, float scale, float screenX, float screenY );
 void Render_DrawChar( uint32_t codepoint, float scale, float screenX, float screenY, Font_t* font );

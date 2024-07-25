@@ -33,7 +33,7 @@ internal void Game_RenderWorld( GameData_t* gameData )
    Font_t* font = &( gameData->renderData.fonts[FontID_Papyrus] );
 
    Render_ClearScreen();
-   Render_DrawTexture( &( gameData->renderData.textures[TextureID_Background] ), 0.0f, 0.0f, 1.0f );
+   Render_DrawImage( &( gameData->renderData.images[ImageID_Background] ), 0.0f, 0.0f, 1.0f );
 
    Font_SetGlyphCollectionForHeight( font, 48.0f );
    Font_SetColor( font, 0xFF3333CC );

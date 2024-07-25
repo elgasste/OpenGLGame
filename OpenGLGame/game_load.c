@@ -19,7 +19,7 @@ Bool_t Game_LoadData( GameData_t* gameData )
    {
       star = &( gameData->stars[i] );
 
-      if ( !Sprite_Init( &( star->sprite ), &( gameData->renderData.textures[TextureID_Star] ), 6, 6, 0.1f ) )
+      if ( !Sprite_Init( &( star->sprite ), &( gameData->renderData.images[ImageID_Star] ), 6, 6, 0.1f ) )
       {
          return False;
       }
@@ -48,8 +48,8 @@ internal Bool_t Game_LoadAssets( GameData_t* gameData )
    snprintf( consolasFontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Consolas.gff", appDirectory );
    snprintf( papyrusFontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Papyrus.gff", appDirectory );
 
-   if ( !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Background] ), backgroundBmpFilePath) ||
-        !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Star] ), starBmpFilePath ) ||
+   if ( !Image_LoadFromBitmapFile( &( gameData->renderData.images[ImageID_Background] ), backgroundBmpFilePath) ||
+        !Image_LoadFromBitmapFile( &( gameData->renderData.images[ImageID_Star] ), starBmpFilePath ) ||
         !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Consolas] ), consolasFontFilePath ) ||
         !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Papyrus] ), papyrusFontFilePath ) )
    {
