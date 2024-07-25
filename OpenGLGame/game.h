@@ -60,4 +60,7 @@ void Game_TryClose( GameData_t* gameData );
 // game_loader.c
 Bool_t Game_LoadData( GameData_t* gameData );
 
+// game_render.c
+void Game_Render( GameData_t* gameData );
+
 #endif

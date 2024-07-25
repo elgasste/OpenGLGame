@@ -47,6 +47,9 @@
     <ClCompile Include="game_load.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="game_render.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h">
