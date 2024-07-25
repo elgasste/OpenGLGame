@@ -2,8 +2,9 @@
 #define PLATFORM_H
 
 #include "common.h"
-#include "thread.h"
 #include "platform_includes.h"
+
+typedef struct ThreadQueue_t ThreadQueue_t;
 
 typedef struct FileData_t
 {

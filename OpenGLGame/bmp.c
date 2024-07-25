@@ -1,6 +1,7 @@
 #include <math.h>
 
 #include "bmp.h"
+#include "pixel_buffer.h"
 #include "platform.h"
 
 #define BMP_HEADER_SIZE                14

@@ -1,4 +1,5 @@
 #include "sprite.h"
+#include "image.h"
 #include "clock.h"
 
 Bool_t Sprite_Init( Sprite_t* sprite, Image_t* image, uint32_t frameWidth, uint32_t frameHeight, float frameSeconds )
@@ -6,7 +7,7 @@ Bool_t Sprite_Init( Sprite_t* sprite, Image_t* image, uint32_t frameWidth, uint3
    if ( ( image->pixelBuffer.dimensions.x % frameWidth != 0 ) ||
         ( image->pixelBuffer.dimensions.y % frameHeight != 0 ) )
    {
-      // MUFFINS: log the image?
+      // TODO: log the image ID?
       Platform_Log( STR_SPRITEERR_FRAMEDIMENSIONS );
       return False;
    }

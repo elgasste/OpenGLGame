@@ -1,4 +1,5 @@
 #include "game.h"
+#include "image.h"
 #include "random.h"
 
 typedef struct

@@ -2,8 +2,9 @@
 #define SPRITE_H
 
 #include "common.h"
-#include "image.h"
+#include "vector.h"
 
+typedef struct Image_t Image_t;
 typedef struct Clock_t Clock_t;
 
 typedef struct Sprite_t

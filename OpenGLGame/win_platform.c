@@ -1,4 +1,5 @@
 #include "game.h"
+#include "thread.h"
 
 typedef struct
 {

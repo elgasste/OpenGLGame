@@ -1,6 +1,10 @@
 #include <math.h>
 
 #include "blit.h"
+#include "pixel_buffer.h"
+#include "image.h"
+#include "sprite.h"
+#include "font.h"
 
 internal void Blit_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
                                              float screenX, float screenY,

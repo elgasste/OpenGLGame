@@ -5,7 +5,7 @@
 #include "pixel_buffer.h"
 #include "platform.h"
 
-typedef struct
+typedef struct Image_t
 {
    PixelBuffer_t pixelBuffer;
    GLuint textureHandle;

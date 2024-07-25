@@ -2,8 +2,12 @@
 #define BLIT_H
 
 #include "common.h"
-#include "sprite.h"
-#include "font.h"
+#include "platform.h"
+
+typedef struct PixelBuffer_t PixelBuffer_t;
+typedef struct Image_t Image_t;
+typedef struct Sprite_t Sprite_t;
+typedef struct Font_t Font_t;
 
 void Blit_ClearScreen();
 void Blit_Rect( float screenX, float screenY, float width, float height, uint32_t color );

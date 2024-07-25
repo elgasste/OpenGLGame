@@ -1,4 +1,5 @@
 #include "menu.h"
+#include "clock.h"
 #include "platform.h"
 
 void Menu_ClearItems( Menu_t* menu )

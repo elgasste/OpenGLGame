@@ -1,7 +1,6 @@
 #include <float.h>
 
 #include "font.h"
-#include "platform.h"
 
 #define ERROR_RETURN_FALSE() \
    snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_FILECORRUPT, filePath ); \

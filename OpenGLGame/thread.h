@@ -3,14 +3,14 @@
 
 #include "common.h"
 
-typedef struct
+typedef struct ThreadQueueEntry_t
 {
    void (*workerFnc)();
    void* data;
 }
 ThreadQueueEntry_t;
 
-typedef struct
+typedef struct ThreadQueue_t
 {
    uint32_t numThreads;
 
