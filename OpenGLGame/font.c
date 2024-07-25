@@ -119,6 +119,7 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 void Font_ClearData( Font_t* font )
 {
    uint32_t i, j;
+   PixelBuffer_t* buffer;
 
    if ( font->glyphCollections )
    {
@@ -128,17 +129,20 @@ void Font_ClearData( Font_t* font )
          {
             for ( j = 0; j < font->numGlyphs; j++ )
             {
-               if ( font->glyphCollections[i].glyphs[j].pixelBuffer.memory )
+               buffer = &( font->glyphCollections[i].glyphs[j].pixelBuffer );
+
+               if ( buffer->memory )
                {
-                  Platform_MemFree( font->glyphCollections[i].glyphs[j].pixelBuffer.memory );
+                  Platform_MemFree( buffer->memory, (uint64_t)( buffer->dimensions.x * buffer->dimensions.y * 4 ) );
                }
             }
-            Platform_MemFree( font->glyphCollections[i].glyphs );
+            Platform_MemFree( font->glyphCollections[i].glyphs, sizeof( FontGlyph_t ) * font->numGlyphs );
          }
       }
 
-      Platform_MemFree( font->glyphCollections );
+      Platform_MemFree( font->glyphCollections, sizeof( FontGlyphCollection_t ) * font->numGlyphCollections );
       font->glyphCollections = 0;
+      font->curGlyphCollection = 0;
    }
 }
 

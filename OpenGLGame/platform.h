@@ -16,7 +16,7 @@ FileData_t;
 
 void Platform_Log( const char* message );
 void* Platform_MemAlloc( uint64_t size );
-void Platform_MemFree( void* memory );
+void Platform_MemFree( void* memory, uint64_t size );
 void Platform_Tick();
 void Platform_RenderScreen();
 uint64_t Platform_GetTimeStampMicro();

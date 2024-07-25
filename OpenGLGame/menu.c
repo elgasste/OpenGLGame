@@ -9,7 +9,7 @@ void Menu_ClearItems( Menu_t* menu )
 
    for ( i = 0; i < menu->numItems; i++ )
    {
-      Platform_MemFree( item );
+      Platform_MemFree( item, sizeof( MenuItem_t ) );
       item++;
    }
 
