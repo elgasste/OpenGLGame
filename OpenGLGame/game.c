@@ -275,20 +275,24 @@ internal void Game_RenderMenu( GameData_t* gameData )
    uint32_t i;
    Menu_t* menu = &( gameData->menus[gameData->curMenuID] );
    float y = menu->renderData.position.y;
+   float textScale;
    MenuItem_t* item = menu->items;
    MenuRenderData_t* renderData = &( menu->renderData );
    Font_t* font = renderData->font;
 
-   Font_SetGlyphCollectionForHeight( font, 24.0f );
-   Font_SetColor( font, 0xFFFF8800 );
+   Font_SetGlyphCollectionForHeight( font, menu->renderData.textHeight );
+   Font_SetColor( font, menu->renderData.textColor );
+   Font_SetCharColor( font, menu->renderData.caratCodepoint, menu->renderData.caratColor );
+
+   textScale = menu->renderData.textHeight / font->curGlyphCollection->height;
 
    for ( i = 0; i < menu->numItems; i++ )
    {
-      Render_DrawTextLine( item->text, 1.0f, renderData->position.x, y, font );
+      Render_DrawTextLine( item->text, textScale, renderData->position.x, y, font );
 
-      if ( menu->selectedItem == i && menu->showCarat )
+      if ( menu->selectedItem == i )
       {
-         Render_DrawChar( renderData->caratCodepoint, 1.0f, renderData->position.x + renderData->caratOffset, y, font );
+         Render_DrawChar( renderData->caratCodepoint, textScale, renderData->position.x + renderData->caratOffset, y, font );
       }
 
       y -= ( font->curGlyphCollection->height + renderData->lineGap );

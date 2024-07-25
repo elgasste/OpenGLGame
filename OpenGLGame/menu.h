@@ -11,8 +11,11 @@ typedef struct
    Font_t* font;
    uint32_t caratCodepoint;
    Vector2f_t position;
+   float textHeight;
    float lineGap;
    float caratOffset;
+   uint32_t textColor;
+   uint32_t caratColor;
 }
 MenuRenderData_t;
 
@@ -29,9 +32,9 @@ typedef struct
    uint32_t numItems;
    uint32_t selectedItem;
    MenuRenderData_t renderData;
-   Bool_t showCarat;
+   Bool_t caratFadingOut;
    float caratElapsedSeconds;
-   float caratBlinkSeconds;
+   float caratFadeSeconds;
 }
 Menu_t;
 
