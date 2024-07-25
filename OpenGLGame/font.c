@@ -98,6 +98,7 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
          filePos32 += ( buffer->dimensions.x * buffer->dimensions.y );
          bytesRead += bufferSize;
 
+         glyph->color = 0xFFFFFFFF;
          glyph++;
       }
 
@@ -150,21 +151,13 @@ Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint )
 
 void Font_SetCharColor( Font_t* font, uint32_t codepoint, uint32_t color )
 {
-   uint32_t i, j;
-   PixelBuffer_t* buffer;
-   uint32_t* memory;
+   uint32_t i;
 
    if ( Font_ContainsChar( font, codepoint ) )
    {
       for ( i = 0; i < font->numGlyphCollections; i++ )
       {
-         buffer = &( font->glyphCollections[i].glyphs[codepoint - font->codepointOffset].pixelBuffer );
-         memory = (uint32_t*)( buffer->memory );
-
-         for ( j = 0; j < ( buffer->dimensions.x * buffer->dimensions.y ); j++ )
-         {
-            memory[j] = ( memory[j] & 0xFF000000 ) | ( color & 0x00FFFFFF );
-         }
+         font->glyphCollections[i].glyphs[codepoint - font->codepointOffset].color = color;
       }
    }
 }

@@ -2,9 +2,10 @@
 
 #include "render.h"
 
-internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
+internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
                                                float screenX, float screenY,
-                                               float width, float height );
+                                               float width, float height,
+                                               float scale, uint32_t color );
 
 void Render_ClearData( RenderData_t* renderData )
 {
@@ -63,10 +64,11 @@ void Render_DrawRect( float screenX, float screenY, float width, float height, u
    glEnd();
 }
 
-void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
-                                float screenX, float screenY,
-                                int32_t textureX, int32_t textureY,
-                                uint32_t sectionWidth, uint32_t sectionHeight )
+void Render_DrawColoredTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
+                                       float screenX, float screenY,
+                                       int32_t textureX, int32_t textureY,
+                                       uint32_t sectionWidth, uint32_t sectionHeight,
+                                       float scale, uint32_t color )
 {
    float fw = (float)sectionWidth;
    float fh = (float)sectionHeight;
@@ -75,9 +77,10 @@ void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer
    float fnx2 = fnx1 + ( fw / pixelBuffer->dimensions.x );
    float fny2 = fny1 + ( fh / pixelBuffer->dimensions.y );
 
-   Render_PrepareTextureForDrawing( textureHandle, pixelBuffer, scale,
+   Render_PrepareTextureForDrawing( textureHandle, pixelBuffer,
                                     screenX, screenY,
-                                    (float)sectionWidth, (float)sectionHeight );
+                                    (float)sectionWidth, (float)sectionHeight,
+                                    scale, color );
 
    glBegin( GL_TRIANGLES );
 
@@ -100,23 +103,48 @@ void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer
    glEnd();
 }
 
-void Render_DrawTexture( Texture_t* texture, float scale, float screenX, float screenY )
+void Render_DrawTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
+                                float screenX, float screenY,
+                                int32_t textureX, int32_t textureY,
+                                uint32_t sectionWidth, uint32_t sectionHeight,
+                                float scale )
 {
-   Render_DrawTextureSection( texture->textureHandle, &( texture->pixelBuffer ), scale,
-                              screenX, screenY,
-                              0, 0,
-                              texture->pixelBuffer.dimensions.x, texture->pixelBuffer.dimensions.y );
+   Render_DrawColoredTextureSection( textureHandle, pixelBuffer,
+                                     screenX, screenY,
+                                     textureX, textureY,
+                                     sectionWidth, sectionHeight,
+                                     scale, 0xFFFFFFFF );
 }
 
-void Render_DrawSprite( Sprite_t* sprite, float scale, float screenX, float screenY )
+void Render_DrawColoredTexture( Texture_t* texture, float screenX, float screenY, float scale, uint32_t color )
+{
+   Render_DrawColoredTextureSection( texture->textureHandle, &( texture->pixelBuffer ),
+                                     screenX, screenY,
+                                     0, 0,
+                                     texture->pixelBuffer.dimensions.x, texture->pixelBuffer.dimensions.y,
+                                     scale, color );
+}
+
+void Render_DrawTexture( Texture_t* texture, float screenX, float screenY, float scale )
+{
+   Render_DrawColoredTexture( texture, screenX, screenY, scale, 0xFFFFFFFF );
+}
+
+void Render_DrawColoredSprite( Sprite_t* sprite, float screenX, float screenY, float scale, uint32_t color )
 {
    uint32_t rowIndex = ( sprite->frameIndex ) / sprite->frameStride;
    uint32_t colIndex = ( sprite->frameIndex ) % sprite->frameStride;
 
-   Render_DrawTextureSection( sprite->texture->textureHandle, &( sprite->texture->pixelBuffer ), scale,
-                              screenX, screenY,
-                              sprite->frameDimensions.x * colIndex, sprite->frameDimensions.y * rowIndex,
-                              sprite->frameDimensions.x, sprite->frameDimensions.y );
+   Render_DrawColoredTextureSection( sprite->texture->textureHandle, &( sprite->texture->pixelBuffer ),
+                                     screenX, screenY,
+                                     sprite->frameDimensions.x * colIndex, sprite->frameDimensions.y * rowIndex,
+                                     sprite->frameDimensions.x, sprite->frameDimensions.y,
+                                     scale, color );
+}
+
+void Render_DrawSprite( Sprite_t* sprite, float screenX, float screenY, float scale )
+{
+   Render_DrawColoredSprite( sprite, screenX, screenY, scale, 0xFFFFFFFF );
 }
 
 void Render_DrawChar( uint32_t codepoint, float scale, float screenX, float screenY, Font_t* font )
@@ -135,10 +163,11 @@ void Render_DrawChar( uint32_t codepoint, float scale, float screenX, float scre
    x = screenX + ( glyph->leftBearing * scale );
    y = screenY + ceilf( ( ( font->curGlyphCollection->baseline + glyph->baselineOffset ) * scale ) );
 
-   Render_DrawTextureSection( font->textureHandle, buffer, scale,
-                              x, y,
-                              0, 0,
-                              buffer->dimensions.x, buffer->dimensions.y );
+   Render_DrawColoredTextureSection( font->textureHandle, buffer,
+                                     x, y,
+                                     0, 0,
+                                     buffer->dimensions.x, buffer->dimensions.y,
+                                     scale, glyph->color );
 }
 
 void Render_DrawTextLine( const char* text, float scale, float screenX, float screenY, Font_t* font )
@@ -158,10 +187,15 @@ void Render_DrawTextLine( const char* text, float scale, float screenX, float sc
    }
 }
 
-internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float scale,
+internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
                                                float screenX, float screenY,
-                                               float width, float height )
+                                               float width, float height,
+                                               float scale, uint32_t color )
 {
+   GLint r = ( color >> 16 ) & 0xFF;
+   GLint g = ( color >> 8 ) & 0xFF;
+   GLint b = color & 0xFF;
+   GLint a = ( color >> 24 ) & 0xFF;
    GLfloat modelMatrix[] = 
    {
       2.0f / ( width / scale ), 0.0f, 0.0f, 0.0f,
@@ -188,10 +222,11 @@ internal void Render_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
 
-   glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+   glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
    glEnable( GL_TEXTURE_2D );
 
+   glColor4f( r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f );
    glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
    glEnable( GL_BLEND );
 

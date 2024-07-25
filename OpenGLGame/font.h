@@ -11,6 +11,7 @@ typedef struct
    float leftBearing;
    float baselineOffset;
    float advance;
+   uint32_t color;
 }
 FontGlyph_t;
 

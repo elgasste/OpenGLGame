@@ -50,9 +50,8 @@ internal Bool_t Game_LoadAssets( GameData_t* gameData )
 
    if ( !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Background] ), backgroundBmpFilePath) ||
         !Texture_LoadFromFile( &( gameData->renderData.textures[TextureID_Star] ), starBmpFilePath ) ||
-        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Diagnostics] ), consolasFontFilePath ) ||
-        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_BrushTeeth] ), papyrusFontFilePath ) || 
-        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Menu] ), consolasFontFilePath ) )
+        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Consolas] ), consolasFontFilePath ) ||
+        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Papyrus] ), papyrusFontFilePath ) )
    {
       return False;
    }
@@ -70,9 +69,9 @@ internal void Game_LoadMenus( GameData_t* gameData )
    snprintf( playingMenu->items[0].text, STRING_SIZE_DEFAULT, STR_MENU_KEEPPLAYING );
    playingMenu->items[1].ID = MenuItemID_Quit;
    snprintf( playingMenu->items[1].text, STRING_SIZE_DEFAULT, STR_MENU_QUIT );
-   playingMenu->renderData.font = &( gameData->renderData.fonts[FontID_Menu] );
+   playingMenu->renderData.font = &( gameData->renderData.fonts[FontID_Consolas] );
    playingMenu->renderData.caratCodepoint = (uint32_t)( '>' );
-   playingMenu->renderData.position.x = 100.0f;
+   playingMenu->renderData.position.x = 200.0f;
    playingMenu->renderData.position.y = 500.0f;
    playingMenu->renderData.lineGap = playingMenu->renderData.font->curGlyphCollection->lineGap;
    playingMenu->renderData.caratOffset = -30.0f;
