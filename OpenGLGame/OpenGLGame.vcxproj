@@ -149,9 +149,9 @@ xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
     <ClCompile Include="menu.c" />
     <ClCompile Include="random.c" />
     <ClCompile Include="sprite.c" />
-    <ClCompile Include="texture.c" />
+    <ClCompile Include="image.c" />
     <ClCompile Include="win_platform.c" />
-    <ClCompile Include="render.c" />
+    <ClCompile Include="blit.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bmp.h" />
@@ -162,7 +162,7 @@ xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
     <ClInclude Include="menu.h" />
     <ClInclude Include="platform_includes.h" />
     <ClInclude Include="sprite.h" />
-    <ClInclude Include="texture.h" />
+    <ClInclude Include="image.h" />
     <ClInclude Include="thread.h" />
     <ClInclude Include="vector.h" />
     <ClInclude Include="game.h" />
@@ -171,7 +171,7 @@ xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
     <ClInclude Include="platform.h" />
     <ClInclude Include="random.h" />
     <ClInclude Include="win_platform.h" />
-    <ClInclude Include="render.h" />
+    <ClInclude Include="blit.h" />
     <ClInclude Include="strings.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

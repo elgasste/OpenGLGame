@@ -11,7 +11,7 @@
 #include <Shlwapi.h>
 #include <time.h>
 
-#include "thread.h"
+typedef struct ThreadQueue_t ThreadQueue_t;
 
 typedef struct
 {

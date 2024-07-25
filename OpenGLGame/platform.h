@@ -2,8 +2,9 @@
 #define PLATFORM_H
 
 #include "common.h"
-#include "thread.h"
 #include "platform_includes.h"
+
+typedef struct ThreadQueue_t ThreadQueue_t;
 
 typedef struct FileData_t
 {
@@ -15,7 +16,7 @@ FileData_t;
 
 void Platform_Log( const char* message );
 void* Platform_MemAlloc( uint64_t size );
-void Platform_MemFree( void* memory );
+void Platform_MemFree( void* memory, uint64_t size );
 void Platform_Tick();
 void Platform_RenderScreen();
 uint64_t Platform_GetTimeStampMicro();

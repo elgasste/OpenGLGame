@@ -3,12 +3,12 @@
 
 typedef enum
 {
-   TextureID_Background = 0,
-   TextureID_Star,
+   ImageID_Background = 0,
+   ImageID_Star,
 
-   TextureID_Count
+   ImageID_Count
 }
-TextureID_t;
+ImageID_t;
 
 typedef enum
 {

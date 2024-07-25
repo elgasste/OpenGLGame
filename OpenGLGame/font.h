@@ -5,7 +5,7 @@
 #include "pixel_buffer.h"
 #include "platform.h"
 
-typedef struct
+typedef struct FontGlyph_t
 {
    PixelBuffer_t pixelBuffer;
    float leftBearing;
@@ -15,7 +15,7 @@ typedef struct
 }
 FontGlyph_t;
 
-typedef struct
+typedef struct FontGlyphCollection_t
 {
    float height;
    float baseline;
@@ -24,7 +24,7 @@ typedef struct
 }
 FontGlyphCollection_t;
 
-typedef struct
+typedef struct Font_t
 {
    uint32_t codepointOffset;
    uint32_t numGlyphCollections;

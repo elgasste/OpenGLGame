@@ -1,6 +1,7 @@
 #include <math.h>
 
 #include "bmp.h"
+#include "pixel_buffer.h"
 #include "platform.h"
 
 #define BMP_HEADER_SIZE                14
@@ -82,13 +83,13 @@ internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer )
 {
    if ( bmpData->paletteColors )
    {
-      Platform_MemFree( bmpData->paletteColors );
+      Platform_MemFree( bmpData->paletteColors, sizeof( uint32_t ) * bmpData->numPaletteColors );
       bmpData->paletteColors = 0;
    }
 
    if ( pixelBuffer->memory )
    {
-      Platform_MemFree( pixelBuffer->memory );
+      Platform_MemFree( pixelBuffer->memory, (uint64_t)( pixelBuffer->dimensions.x * pixelBuffer->dimensions.y * 4 ) );
       pixelBuffer->memory = 0;
       pixelBuffer->dimensions.x = 0;
       pixelBuffer->dimensions.y = 0;

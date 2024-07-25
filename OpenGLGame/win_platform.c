@@ -1,4 +1,7 @@
+#include <assert.h>
+
 #include "game.h"
+#include "thread.h"
 
 typedef struct
 {
@@ -6,8 +9,11 @@ typedef struct
    GameData_t gameData;
    LARGE_INTEGER performanceFrequency;
    uint32_t keyCodeMap[(int)KeyCode_Count];
+   Win32ThreadInfo_t* threadInfoArray;
    ThreadQueue_t threadQueue;
    HANDLE threadSemaphoreHandle;
+   uint64_t memAllocated;
+   uint64_t memFreed;
 }
 cGlobalObjects_t;
 
@@ -99,6 +105,10 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    Game_Run( &( g_globals.gameData ) );
    Game_ClearData( &( g_globals.gameData ) );
 
+   Platform_MemFree( g_globals.threadInfoArray, sizeof( Win32ThreadInfo_t ) * g_globals.threadQueue.numThreads );
+
+   assert( g_globals.memAllocated == g_globals.memFreed );
+
    return 0;
 }
 
@@ -116,7 +126,6 @@ internal void FatalError( const char* message )
 
 internal void InitThreads()
 {
-   Win32ThreadInfo_t* threadInfo;
    uint32_t i;
    DWORD numThreads, threadId;
    HANDLE threadHandle;
@@ -124,7 +133,7 @@ internal void InitThreads()
 
    GetSystemInfo( &sysInfo );
    numThreads = ( sysInfo.dwNumberOfProcessors == 0 ) ? 1 : sysInfo.dwNumberOfProcessors;
-   threadInfo = (Win32ThreadInfo_t*)Platform_MemAlloc( sizeof( Win32ThreadInfo_t ) * numThreads );
+   g_globals.threadInfoArray = (Win32ThreadInfo_t*)Platform_MemAlloc( sizeof( Win32ThreadInfo_t ) * numThreads );
 
    g_globals.threadQueue.numThreads = numThreads;
    g_globals.threadQueue.completionGoal = 0;
@@ -140,9 +149,9 @@ internal void InitThreads()
 
    for ( i = 0; i < numThreads; i++ )
    {
-      threadInfo[i].queue = &( g_globals.threadQueue );
-      threadInfo[i].logicalThreadIndex = i;
-      threadHandle = CreateThread( 0, 0, ThreadProc, &( threadInfo[i] ), 0, &threadId );
+      g_globals.threadInfoArray[i].queue = &( g_globals.threadQueue );
+      g_globals.threadInfoArray[i].logicalThreadIndex = i;
+      threadHandle = CreateThread( 0, 0, ThreadProc, &( g_globals.threadInfoArray[i] ), 0, &threadId );
 
       if ( !threadHandle || threadHandle == INVALID_HANDLE_VALUE )
       {
@@ -369,11 +378,13 @@ void Platform_Log( const char* message )
 
 void* Platform_MemAlloc( uint64_t size )
 {
+   g_globals.memAllocated += size;
    return VirtualAlloc( 0, size, MEM_COMMIT, PAGE_READWRITE );
 }
 
-void Platform_MemFree( void* memory )
+void Platform_MemFree( void* memory, uint64_t size )
 {
+   g_globals.memFreed += size;
    VirtualFree( memory, 0, MEM_RELEASE );
 }
 
