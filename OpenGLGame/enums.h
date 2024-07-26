@@ -3,12 +3,12 @@
 
 typedef enum
 {
-   GameDataFileChunkType_Bitmaps = 0,
-   GameDataFileChunkType_Fonts,
+   GameDataFileChunkID_Bitmaps = 0,
+   GameDataFileChunkID_Fonts,
 
-   GameDataFileChunkType_Count
+   GameDataFileChunkID_Count
 }
-GameDataFileChunkType_t;
+GameDataFileChunkID_t;
 
 typedef enum
 {

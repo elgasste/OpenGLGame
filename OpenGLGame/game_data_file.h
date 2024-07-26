@@ -13,6 +13,7 @@ GameDataFileChunkEntry_t;
 
 typedef struct GameDataFileChunk_t
 {
+   uint32_t ID;
    uint32_t numEntries;
    GameDataFileChunkEntry_t* entries;
 }
@@ -20,7 +21,8 @@ GameDataFileChunk_t;
 
 typedef struct GameDataFile_t
 {
-   GameDataFileChunk_t chunks[GameDataFileChunkType_Count];
+   uint32_t numChunks;
+   GameDataFileChunk_t* chunks;
 }
 GameDataFile_t;
 

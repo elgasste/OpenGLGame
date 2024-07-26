@@ -35,7 +35,7 @@ typedef struct Font_t
 }
 Font_t;
 
-Bool_t Font_LoadFromFile( Font_t* font, const char* filePath );
+Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize );
 void Font_ClearData( Font_t* font );
 Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint );
 void Font_SetCharColor( Font_t* font, uint32_t codepoint, uint32_t color );

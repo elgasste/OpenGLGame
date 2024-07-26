@@ -7,73 +7,72 @@
    GameDataFile_ClearData( gameDataFile ); \
    return False;
 
-internal void GameDataFile_ClearChunkEntries( GameDataFile_t* gameDataFile, GameDataFileChunkType_t type );
-internal Bool_t GameDataFile_ReadChunk( GameDataFile_t* gameDataFile,
+internal Bool_t GameDataFile_ReadChunk( GameDataFileChunk_t* chunk,
                                         FileData_t* fileData,
-                                        GameDataFileChunkType_t type,
                                         uint32_t chunkOffset );
 
 Bool_t GameDataFile_Load( GameDataFile_t* gameDataFile, const char* filePath )
 {
-   uint32_t numChunkTypeOffsetPairs, bytesRead, i, chunkType, chunkOffset;
+   uint32_t bytesRead, i, chunkOffset;
    FileData_t fileData;
    uint32_t* filePos32;
+   GameDataFileChunk_t* chunk;
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   for ( i = 0; i < (uint32_t)GameDataFileChunkType_Count; i++ )
-   {
-      gameDataFile->chunks[i].numEntries = 0;
-      gameDataFile->chunks[i].entries = 0;
-   }
+   gameDataFile->chunks = 0;
+   gameDataFile->numChunks = 0;
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
       return False;
    }
-   else if ( fileData.fileSize < 4 ) // 4 bytes for the number of chunk type/offset pairs
+   else if ( fileData.fileSize < 4 ) // 4 bytes for the number of chunks
    {
       ERROR_RETURN_FALSE();
    }
 
-   // first 4 bytes are the number of chunk type and offset pairs in the header
+   // first 4 bytes are the number of chunks
    filePos32 = (uint32_t*)fileData.contents;
-   numChunkTypeOffsetPairs = filePos32[0];
+   gameDataFile->numChunks = filePos32[0];
    filePos32++;
    bytesRead = 4;
 
-   if ( fileData.fileSize < ( bytesRead + ( numChunkTypeOffsetPairs * 8 ) ) )
+   // make sure there's enough room to read all the chunk offsets
+   if ( fileData.fileSize < ( bytesRead + ( gameDataFile->numChunks * 4 ) ) )
    {
       ERROR_RETURN_FALSE();
    }
 
-   for ( i = 0; i < numChunkTypeOffsetPairs; i++ )
+   gameDataFile->chunks = (GameDataFileChunk_t*)Platform_MemAlloc( sizeof( GameDataFileChunk_t ) * gameDataFile->numChunks );
+   chunk = gameDataFile->chunks;
+
+   for ( i = 0; i < gameDataFile->numChunks; i++ )
    {
-      chunkType = filePos32[0];
-      chunkOffset = filePos32[1];
-      filePos32 += 2;
-      bytesRead += 8;
+      chunk->entries = 0;
+      chunk->numEntries = 0;
+      chunk++;
+   }
 
-      if ( chunkType >= (uint32_t)GameDataFileChunkType_Count )
-      {
-         ERROR_RETURN_FALSE();
-      }
-      else if ( gameDataFile->chunks[chunkType].entries )
-      {
-         // TODO: maybe allow adding entries to any existing ones? this would mean
-         // allowing multiple chunks of the same type, for now let's only allow one.
-         GameDataFile_ClearChunkEntries( gameDataFile, chunkType );
-      }
+   chunk = gameDataFile->chunks;
 
-      // make sure there's enough room to read at least the entry count
-      if ( fileData.fileSize < ( chunkOffset + 4 ) )
+   for ( i = 0; i < gameDataFile->numChunks; i++ )
+   {
+      chunkOffset = filePos32[0];
+      filePos32++;
+      bytesRead += 4;
+
+      // make sure there's enough room to read at least the chunk ID and entry count
+      if ( fileData.fileSize < ( chunkOffset + 8 ) )
       {
          ERROR_RETURN_FALSE();
       }
 
-      if ( !GameDataFile_ReadChunk( gameDataFile, &fileData, (GameDataFileChunkType_t)chunkType, chunkOffset ) )
+      if ( !GameDataFile_ReadChunk( chunk, &fileData, chunkOffset ) )
       {
          ERROR_RETURN_FALSE();
       }
+
+      chunk++;
    }
 
    return True;
@@ -81,63 +80,62 @@ Bool_t GameDataFile_Load( GameDataFile_t* gameDataFile, const char* filePath )
 
 void GameDataFile_ClearData( GameDataFile_t* gameDataFile )
 {
-   uint32_t i;
-
-   for ( i = 0; i < (uint32_t)GameDataFileChunkType_Count; i++ )
-   {
-      GameDataFile_ClearChunkEntries( gameDataFile, (GameDataFileChunkType_t)i );
-   }
-}
-
-internal void GameDataFile_ClearChunkEntries( GameDataFile_t* gameDataFile, GameDataFileChunkType_t type )
-{
-   uint32_t i;
+   uint32_t i, j;
+   GameDataFileChunk_t* chunk = gameDataFile->chunks;
    GameDataFileChunkEntry_t* entry;
-   GameDataFileChunk_t* chunk = &( gameDataFile->chunks[(uint32_t)type] );
 
-   if ( chunk->entries )
+   if ( chunk )
    {
-      for ( i = 0; i < chunk->numEntries; i++ )
+      for ( i = 0; i < gameDataFile->numChunks; i++ )
       {
-         entry = &( chunk->entries[i] );
+         entry = chunk->entries;
 
          if ( entry )
          {
-            Platform_MemFree( entry->memory, (uint64_t)( entry->size ) );
-            Platform_MemFree( entry, sizeof( GameDataFileChunkEntry_t ) );
+            for ( j = 0; j < chunk->numEntries; j++ )
+            {
+               if ( entry->memory )
+               {
+                  Platform_MemFree( entry->memory, (uint64_t)( entry->size ) );
+               }
+
+               entry++;
+            }
          }
+
+         Platform_MemFree( chunk->entries, sizeof( GameDataFileChunkEntry_t ) * chunk->numEntries );
+         chunk++;
       }
 
-      chunk->numEntries = 0;
-      chunk->entries = 0;
+      Platform_MemFree( gameDataFile->chunks, sizeof( GameDataFileChunk_t ) * gameDataFile->numChunks );
+      gameDataFile->numChunks = 0;
+      gameDataFile->chunks = 0;
    }
 }
 
-internal Bool_t GameDataFile_ReadChunk( GameDataFile_t* gameDataFile,
+internal Bool_t GameDataFile_ReadChunk( GameDataFileChunk_t* chunk,
                                         FileData_t* fileData,
-                                        GameDataFileChunkType_t type,
                                         uint32_t chunkOffset )
 {
-   uint32_t i, j, numEntries, bytesRead;
+   uint32_t i, j, bytesRead;
    uint8_t* filePos = (uint8_t*)( fileData->contents ) + chunkOffset;
    GameDataFileChunkEntry_t* entry;
 
-   numEntries = ( (uint32_t*)filePos )[0];
-   filePos += 4;
-   bytesRead = 4;
+   chunk->ID = ( (uint32_t*)filePos )[0];
+   chunk->numEntries = ( (uint32_t*)filePos )[1];
+   filePos += 8;
+   bytesRead = 8;
 
    // make sure there's enough room to read at least the ID and size of each entry
-   if ( fileData->fileSize < ( chunkOffset + bytesRead + ( numEntries * 8 ) ) )
+   if ( fileData->fileSize < ( chunkOffset + bytesRead + ( chunk->numEntries * 8 ) ) )
    {
       return False;
    }
 
-   gameDataFile->chunks[(uint32_t)type].numEntries = numEntries;
-   gameDataFile->chunks[(uint32_t)type].entries =
-      (GameDataFileChunkEntry_t*)Platform_MemAlloc( sizeof( GameDataFileChunkEntry_t ) * numEntries );
-   entry = gameDataFile->chunks[(uint32_t)type].entries;
+   chunk->entries = (GameDataFileChunkEntry_t*)Platform_MemAlloc( sizeof( GameDataFileChunkEntry_t ) * chunk->numEntries );
+   entry = chunk->entries;
 
-   for ( i = 0; i < numEntries; i++ )
+   for ( i = 0; i < chunk->numEntries; i++ )
    {
       entry->ID = 0;
       entry->size = 0;
@@ -145,9 +143,9 @@ internal Bool_t GameDataFile_ReadChunk( GameDataFile_t* gameDataFile,
       entry++;
    }
 
-   entry = gameDataFile->chunks[(uint32_t)type].entries;
+   entry = chunk->entries;
 
-   for ( i = 0; i < numEntries; i++ )
+   for ( i = 0; i < chunk->numEntries; i++ )
    {
       entry->ID = ( ( uint32_t*)filePos )[0];
       entry->size = ( ( uint32_t*)filePos )[1];
