@@ -25,8 +25,6 @@ typedef int32_t Bool_t;
 
 #define MAX_THREADQUEUE_SIZE     256
 
-#define LOG_FILE_NAME            "log.txt"
-
 #define STRING_SIZE_DEFAULT      1024
 
 #define SCREEN_WIDTH             1280

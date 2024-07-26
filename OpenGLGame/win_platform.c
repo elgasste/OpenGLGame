@@ -354,7 +354,7 @@ void Platform_Log( const char* message )
 
    time( &now );
    localtime_s( &timeInfo, &now );
-   strftime( formattedTime, STRING_SIZE_DEFAULT, "%d-%m-%Y %H:%M:%S", &timeInfo );
+   strftime( formattedTime, STRING_SIZE_DEFAULT, "%Y-%m-%d %H:%M:%S", &timeInfo );
    snprintf( timestampedMessage, STRING_SIZE_DEFAULT, "%s - %s\n", formattedTime, message );
    snprintf( logFilePath, STRING_SIZE_DEFAULT, "%s%s", appDirectory, LOG_FILE_NAME );
    hFile = CreateFileA( logFilePath, FILE_APPEND_DATA, 0, 0, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );

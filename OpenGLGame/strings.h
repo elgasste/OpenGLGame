@@ -35,6 +35,8 @@
 #define STR_BMPERR_PALETTECORRUPT         "BMP error: palette is corrupt: %s"
 #define STR_BMPERR_INVALIDCOLORINDEXING   "BMP error: color indexing is not currently supported: %s"
 
+#define STR_GDFERR_FILECORRUPT            "Game data file error: file is corrupt: %s"
+
 #define STR_SPRITEERR_FRAMEDIMENSIONS     "Sprite error: frame dimensions don't match texture"
 
 #define STR_FONTERR_FILECORRUPT           "Font error: file is corrupt: %s"
