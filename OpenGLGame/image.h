@@ -12,7 +12,7 @@ typedef struct Image_t
 }
 Image_t;
 
-Bool_t Image_LoadFromBitmapMemory( Image_t* image, uint8_t* memory, uint32_t memSize );
+Bool_t Image_LoadFromBitmapMemory( Image_t* image, uint8_t* memory, uint32_t memSize, uint32_t imageID );
 void Image_ClearData( Image_t* image );
 
 #endif

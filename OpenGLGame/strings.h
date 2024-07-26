@@ -23,17 +23,17 @@
 #define STR_FILEERR_OPENFILEFAILED        "File error: could not open file: %s"
 #define STR_FILEERR_GETFILESIZEFAILED     "File error: could not get file size: %s"
 
-#define STR_BMPERR_MEMORYCORRUPT          "BMP error: bitmap memory is corrupt."
-#define STR_BMPERR_INVALIDHEADERTYPE      "BMP error: invalid header type, only BM is allowedl."
-#define STR_BMPERR_HEADERCORRUPT          "BMP error: header section is corrupt."
-#define STR_BMPERR_INVALIDDIBHEADERTYPE   "BMP error: invalid DIB header type, on BITMAPINFOHEADER is allowed."
-#define STR_BMPERR_INVALIDCOLORPLANES     "BMP error: invalid number of color planes."
-#define STR_BMPERR_INVALIDBPP             "BMP error: invalid number of bits per pixel."
-#define STR_BMPERR_ISCOMPRESSED           "BMP error: compression is not currently supported."
-#define STR_BMPERR_INVALIDIMAGESIZE       "BMP error: invalid image size."
-#define STR_BMPERR_INVALIDPALETTECOUNT    "BMP error: invalid number of palette colors."
-#define STR_BMPERR_PALETTECORRUPT         "BMP error: palette is corrupt."
-#define STR_BMPERR_INVALIDCOLORINDEXING   "BMP error: color indexing is not currently supported."
+#define STR_BMPERR_MEMORYCORRUPT          "BMP error: bitmap memory is corrupt, image ID %ud"
+#define STR_BMPERR_INVALIDHEADERTYPE      "BMP error: invalid header type, only BM is allowed, image ID %ud"
+#define STR_BMPERR_HEADERCORRUPT          "BMP error: header section is corrupt, image ID %ud"
+#define STR_BMPERR_INVALIDDIBHEADERTYPE   "BMP error: invalid DIB header type, on BITMAPINFOHEADER is allowed, image ID %ud"
+#define STR_BMPERR_INVALIDCOLORPLANES     "BMP error: invalid number of color planes, image ID %ud"
+#define STR_BMPERR_INVALIDBPP             "BMP error: invalid number of bits per pixel, image ID %ud"
+#define STR_BMPERR_ISCOMPRESSED           "BMP error: compression is not currently supported, image ID %ud"
+#define STR_BMPERR_INVALIDIMAGESIZE       "BMP error: invalid image size, image ID %ud"
+#define STR_BMPERR_INVALIDPALETTECOUNT    "BMP error: invalid number of palette colors, image ID %ud"
+#define STR_BMPERR_PALETTECORRUPT         "BMP error: palette is corrupt, image ID %ud"
+#define STR_BMPERR_INVALIDCOLORINDEXING   "BMP error: color indexing is not currently supported, image ID %ud"
 
 #define STR_GDFERR_FILECORRUPT            "Game data file error: file is corrupt: %s"
 #define STR_GDFWARN_UNKNOWNCHUNKID        "Game data file warning: unknown chunk ID encountered: %d"
@@ -42,7 +42,7 @@
 
 #define STR_SPRITEERR_FRAMEDIMENSIONS     "Sprite error: frame dimensions don't match texture"
 
-#define STR_FONTERR_MEMORYCORRUPT         "Font error: font memory is corrupt."
+#define STR_FONTERR_MEMORYCORRUPT         "Font error: font memory is corrupt, font ID %ud"
 
 #define STR_DIAG_FRAMETARGETMICRO         "Target frame microseconds: %lld"
 #define STR_DIAG_FRAMEDURATIONMICRO       "Last frame microseconds: %lld"

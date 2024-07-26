@@ -3,12 +3,12 @@
 #include "font.h"
 
 #define ERROR_RETURN_FALSE() \
-   snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_MEMORYCORRUPT ); \
+   snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_MEMORYCORRUPT, fontID ); \
    Platform_Log( errorMsg ); \
    Font_ClearData( font ); \
    return False
 
-Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize )
+Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize, uint32_t fontID )
 {
    uint32_t* memPos32;
    uint32_t bufferSize, bytesRead, i, j, k;

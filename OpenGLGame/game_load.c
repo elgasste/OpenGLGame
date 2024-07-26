@@ -104,7 +104,7 @@ internal Bool_t Game_LoadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t
          // TODO: should we check if it already exists, or just always overwrite it?
          image = &( gameData->renderData.images[entry->ID] );
          Image_ClearData( image );
-         if ( !Image_LoadFromBitmapMemory( image, entry->memory, entry->size ) )
+         if ( !Image_LoadFromBitmapMemory( image, entry->memory, entry->size, entry->ID ) )
          {
             return False;
          }
@@ -139,7 +139,7 @@ internal Bool_t Game_LoadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* 
          font = &( gameData->renderData.fonts[entry->ID] );
          Font_ClearData( font );
 
-         if ( !Font_LoadFromMemory( font, entry->memory, entry->size ) )
+         if ( !Font_LoadFromMemory( font, entry->memory, entry->size, entry->ID ) )
          {
             return False;
          }
