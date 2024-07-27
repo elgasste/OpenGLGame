@@ -17,6 +17,7 @@ FileData_t;
 void Platform_Log( const char* message );
 void* Platform_MAlloc( uint64_t size );
 void* Platform_CAlloc( uint64_t count, uint64_t size );
+void* Platform_ReAlloc( void* memory, uint64_t oldSize, uint64_t newSize );
 void Platform_Free( void* memory, uint64_t size );
 void Platform_Tick();
 void Platform_RenderScreen();

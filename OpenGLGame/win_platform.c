@@ -388,6 +388,20 @@ void* Platform_CAlloc( uint64_t count, uint64_t size )
    return calloc( count, size );
 }
 
+void* Platform_ReAlloc( void* memory, uint64_t oldSize, uint64_t newSize )
+{
+   if ( newSize < oldSize )
+   {
+      g_globals.memAllocated -= oldSize - newSize;
+   }
+   else
+   {
+      g_globals.memAllocated += ( newSize - oldSize );
+   }
+
+   return realloc( memory, newSize );
+}
+
 void Platform_Free( void* memory, uint64_t size )
 {
    g_globals.memFreed += size;
