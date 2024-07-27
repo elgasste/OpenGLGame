@@ -379,13 +379,13 @@ void Platform_Log( const char* message )
 void* Platform_MemAlloc( uint64_t size )
 {
    g_globals.memAllocated += size;
-   return VirtualAlloc( 0, size, MEM_COMMIT, PAGE_READWRITE );
+   return malloc( size );
 }
 
 void Platform_MemFree( void* memory, uint64_t size )
 {
    g_globals.memFreed += size;
-   VirtualFree( memory, 0, MEM_RELEASE );
+   free( memory );
 }
 
 void Platform_Tick()
