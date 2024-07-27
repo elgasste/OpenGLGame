@@ -105,7 +105,7 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    Game_Run( &( g_globals.gameData ) );
    Game_ClearData( &( g_globals.gameData ) );
 
-   Platform_MemFree( g_globals.threadInfoArray, sizeof( Win32ThreadInfo_t ) * g_globals.threadQueue.numThreads );
+   Platform_Free( g_globals.threadInfoArray, sizeof( Win32ThreadInfo_t ) * g_globals.threadQueue.numThreads );
 
    assert( g_globals.memAllocated == g_globals.memFreed );
 
@@ -133,7 +133,7 @@ internal void InitThreads()
 
    GetSystemInfo( &sysInfo );
    numThreads = ( sysInfo.dwNumberOfProcessors == 0 ) ? 1 : sysInfo.dwNumberOfProcessors;
-   g_globals.threadInfoArray = (Win32ThreadInfo_t*)Platform_MemAlloc( sizeof( Win32ThreadInfo_t ) * numThreads );
+   g_globals.threadInfoArray = (Win32ThreadInfo_t*)Platform_MAlloc( sizeof( Win32ThreadInfo_t ) * numThreads );
 
    g_globals.threadQueue.numThreads = numThreads;
    g_globals.threadQueue.completionGoal = 0;
@@ -376,13 +376,19 @@ void Platform_Log( const char* message )
    return;
 }
 
-void* Platform_MemAlloc( uint64_t size )
+void* Platform_MAlloc( uint64_t size )
 {
    g_globals.memAllocated += size;
    return malloc( size );
 }
 
-void Platform_MemFree( void* memory, uint64_t size )
+void* Platform_CAlloc( uint64_t count, uint64_t size )
+{
+   g_globals.memAllocated += ( count * size );
+   return calloc( count, size );
+}
+
+void Platform_Free( void* memory, uint64_t size )
 {
    g_globals.memFreed += size;
    free( memory );

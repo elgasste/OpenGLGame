@@ -4,7 +4,7 @@
 
 void Menu_ClearItems( Menu_t* menu )
 {
-   Platform_MemFree( menu->items, sizeof( MenuItem_t ) * menu->numItems );
+   Platform_Free( menu->items, sizeof( MenuItem_t ) * menu->numItems );
    menu->items = 0;
 }
 

@@ -74,13 +74,13 @@ internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer )
 {
    if ( bmpData->paletteColors )
    {
-      Platform_MemFree( bmpData->paletteColors, sizeof( uint32_t ) * bmpData->numPaletteColors );
+      Platform_Free( bmpData->paletteColors, sizeof( uint32_t ) * bmpData->numPaletteColors );
       bmpData->paletteColors = 0;
    }
 
    if ( pixelBuffer->memory )
    {
-      Platform_MemFree( pixelBuffer->memory, (uint64_t)( pixelBuffer->dimensions.x * pixelBuffer->dimensions.y * 4 ) );
+      Platform_Free( pixelBuffer->memory, pixelBuffer->dimensions.x * pixelBuffer->dimensions.y * 4 );
       pixelBuffer->memory = 0;
       pixelBuffer->dimensions.x = 0;
       pixelBuffer->dimensions.y = 0;
@@ -257,7 +257,7 @@ internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, uint8_t* memPos, uint32_t m
    }
 
    // colors are 4 bytes in RGBA format
-   bmpData->paletteColors = (uint32_t*)Platform_MemAlloc( bmpData->numPaletteColors * 4 );
+   bmpData->paletteColors = (uint32_t*)Platform_CAlloc( 1, bmpData->numPaletteColors * 4 );
 
    for ( i = 0; i < bmpData->numPaletteColors; i++ )
    {
@@ -298,7 +298,7 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, uint8_t* memPos, PixelB
 
    pixelBuffer->dimensions.x = bmpData->imageWidth;
    pixelBuffer->dimensions.y = imageHeight;
-   pixelBuffer->memory = (uint8_t*)Platform_MemAlloc( bmpData->imageWidth * imageHeight * 4 );
+   pixelBuffer->memory = (uint8_t*)Platform_CAlloc( 1, bmpData->imageWidth * imageHeight * 4 );
 
    for ( scanlineIndex = 0; scanlineIndex < imageHeight; scanlineIndex++ )
    {

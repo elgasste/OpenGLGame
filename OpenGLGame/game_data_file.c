@@ -43,7 +43,7 @@ Bool_t GameDataFile_Load( GameDataFile_t* gameDataFile, const char* filePath )
       ERROR_RETURN_FALSE();
    }
 
-   gameDataFile->chunks = (GameDataFileChunk_t*)Platform_MemAlloc( sizeof( GameDataFileChunk_t ) * gameDataFile->numChunks );
+   gameDataFile->chunks = (GameDataFileChunk_t*)Platform_MAlloc( sizeof( GameDataFileChunk_t ) * gameDataFile->numChunks );
    chunk = gameDataFile->chunks;
 
    for ( i = 0; i < gameDataFile->numChunks; i++ )
@@ -96,18 +96,18 @@ void GameDataFile_ClearData( GameDataFile_t* gameDataFile )
             {
                if ( entry->memory )
                {
-                  Platform_MemFree( entry->memory, (uint64_t)( entry->size ) );
+                  Platform_Free( entry->memory, entry->size );
                }
 
                entry++;
             }
          }
 
-         Platform_MemFree( chunk->entries, sizeof( GameDataFileChunkEntry_t ) * chunk->numEntries );
+         Platform_Free( chunk->entries, sizeof( GameDataFileChunkEntry_t ) * chunk->numEntries );
          chunk++;
       }
 
-      Platform_MemFree( gameDataFile->chunks, sizeof( GameDataFileChunk_t ) * gameDataFile->numChunks );
+      Platform_Free( gameDataFile->chunks, sizeof( GameDataFileChunk_t ) * gameDataFile->numChunks );
       gameDataFile->numChunks = 0;
       gameDataFile->chunks = 0;
    }
@@ -132,7 +132,7 @@ internal Bool_t GameDataFile_ReadChunk( GameDataFileChunk_t* chunk,
       return False;
    }
 
-   chunk->entries = (GameDataFileChunkEntry_t*)Platform_MemAlloc( sizeof( GameDataFileChunkEntry_t ) * chunk->numEntries );
+   chunk->entries = (GameDataFileChunkEntry_t*)Platform_MAlloc( sizeof( GameDataFileChunkEntry_t ) * chunk->numEntries );
    entry = chunk->entries;
 
    for ( i = 0; i < chunk->numEntries; i++ )
@@ -157,7 +157,7 @@ internal Bool_t GameDataFile_ReadChunk( GameDataFileChunk_t* chunk,
          return False;
       }
 
-      entry->memory = (uint8_t*)Platform_MemAlloc( (uint64_t)( entry->size ) );
+      entry->memory = (uint8_t*)Platform_CAlloc( 1, entry->size );
 
       for ( j = 0; j < entry->size; j++ )
       {
