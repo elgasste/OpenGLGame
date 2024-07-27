@@ -112,8 +112,8 @@
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies)winmm.lib;opengl32.lib;Shlwapi.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>rmdir "$(OutDir)assets" /S /Q
-xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
+      <Command>rmdir "$(OutDir)gamedata.dat" /S /Q
+xcopy "$(SolutionDir)OpenGLGame\gamedata.dat" "$(OutDir)" /S /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -134,8 +134,8 @@ xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies)winmm.lib;opengl32.lib;Shlwapi.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>rmdir "$(OutDir)assets" /S /Q
-xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
+      <Command>rmdir "$(OutDir)gamedata.dat" /S /Q
+xcopy "$(SolutionDir)OpenGLGame\gamedata.dat" "$(OutDir)" /S /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -143,6 +143,7 @@ xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
     <ClCompile Include="font.c" />
     <ClCompile Include="game.c" />
     <ClCompile Include="clock.c" />
+    <ClCompile Include="game_data_file.c" />
     <ClCompile Include="game_load.c" />
     <ClCompile Include="game_render.c" />
     <ClCompile Include="input.c" />
@@ -159,6 +160,7 @@ xcopy "$(SolutionDir)OpenGLGame\assets" "$(OutDir)assets\" /S /Y</Command>
     <ClInclude Include="common.h" />
     <ClInclude Include="enums.h" />
     <ClInclude Include="font.h" />
+    <ClInclude Include="game_data_file.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="platform_includes.h" />
     <ClInclude Include="sprite.h" />

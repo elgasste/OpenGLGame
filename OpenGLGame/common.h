@@ -23,9 +23,9 @@ typedef int32_t Bool_t;
 #define False 0
 #define TOGGLE_BOOL( x ) x = ( x ) ? False : True
 
-#define MAX_THREADQUEUE_SIZE     256
+#define GAME_DATA_FILENAME       "gamedata.dat"
 
-#define LOG_FILE_NAME            "log.txt"
+#define MAX_THREADQUEUE_SIZE     256
 
 #define STRING_SIZE_DEFAULT      1024
 

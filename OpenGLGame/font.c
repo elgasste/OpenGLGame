@@ -3,15 +3,14 @@
 #include "font.h"
 
 #define ERROR_RETURN_FALSE() \
-   snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_FILECORRUPT, filePath ); \
+   snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_FONTERR_MEMORYCORRUPT, fontID ); \
    Platform_Log( errorMsg ); \
    Font_ClearData( font ); \
    return False
 
-Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
+Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize, uint32_t fontID )
 {
-   FileData_t fileData;
-   uint32_t* filePos32;
+   uint32_t* memPos32;
    uint32_t bufferSize, bytesRead, i, j, k;
    FontGlyphCollection_t* glyphCollection;
    FontGlyph_t* glyph;
@@ -20,24 +19,19 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
 
    font->glyphCollections = 0;
 
-   if ( !Platform_ReadFileData( filePath, &fileData ) )
-   {
-      return False;
-   }
-
    // first 3 values are codepoint offset, number of glyph collections, and
    // number of glyphs. these are each 4 bytes, and we want to make sure there's
    // at least one glyph collection header (12 bytes)
-   if ( fileData.fileSize < 24 )
+   if ( memSize < 24 )
    {
       ERROR_RETURN_FALSE();
    }
 
-   filePos32 = (uint32_t*)( fileData.contents );
-   font->codepointOffset = filePos32[0];
-   font->numGlyphCollections = filePos32[1];
-   font->numGlyphs = filePos32[2];
-   filePos32 += 3;
+   memPos32 = (uint32_t*)( memory );
+   font->codepointOffset = memPos32[0];
+   font->numGlyphCollections = memPos32[1];
+   font->numGlyphs = memPos32[2];
+   memPos32 += 3;
    bytesRead = 12;
 
    font->glyphCollections = (FontGlyphCollection_t*)Platform_MemAlloc( sizeof( FontGlyphCollection_t ) * font->numGlyphCollections );
@@ -51,14 +45,14 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
    for ( i = 0; i < font->numGlyphCollections; i++ )
    {
       // first 3 values are height, baseline, and line gap, which are 4 bytes each
-      glyphCollection->height = ( (float*)filePos32 )[0];
-      glyphCollection->baseline = ( (float*)filePos32 )[1];
-      glyphCollection->lineGap = ( (float*)filePos32 )[2];
-      filePos32 += 3;
+      glyphCollection->height = ( (float*)memPos32 )[0];
+      glyphCollection->baseline = ( (float*)memPos32 )[1];
+      glyphCollection->lineGap = ( (float*)memPos32 )[2];
+      memPos32 += 3;
       bytesRead += 12;
 
       // make sure there's enough content to read at least one glyph header
-      if ( ( fileData.fileSize - bytesRead ) < 20 )
+      if ( ( memSize - bytesRead ) < 20 )
       {
          ERROR_RETURN_FALSE();
       }
@@ -74,16 +68,16 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
       for ( j = 0; j < font->numGlyphs; j++ )
       {
          buffer = &( glyph->pixelBuffer );
-         glyph->leftBearing = ( (float*)filePos32 )[0];
-         glyph->baselineOffset = ( (float*)filePos32 )[1];
-         glyph->advance = ( (float*)filePos32 )[2];
-         buffer->dimensions.x = filePos32[3];
-         buffer->dimensions.y = filePos32[4];
-         filePos32 += 5;
+         glyph->leftBearing = ( (float*)memPos32 )[0];
+         glyph->baselineOffset = ( (float*)memPos32 )[1];
+         glyph->advance = ( (float*)memPos32 )[2];
+         buffer->dimensions.x = memPos32[3];
+         buffer->dimensions.y = memPos32[4];
+         memPos32 += 5;
          bytesRead += 20;
          bufferSize = ( buffer->dimensions.x * buffer->dimensions.y * 4 );
 
-         if ( ( fileData.fileSize - bytesRead ) < bufferSize )
+         if ( ( memSize - bytesRead ) < bufferSize )
          {
             ERROR_RETURN_FALSE();
          }
@@ -91,10 +85,10 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
          buffer->memory = (uint8_t*)Platform_MemAlloc( bufferSize );
          for ( k = 0; k < bufferSize; k++ )
          {
-            buffer->memory[k] = ( (uint8_t*)filePos32 )[k];
+            buffer->memory[k] = ( (uint8_t*)memPos32 )[k];
          }
 
-         filePos32 += ( buffer->dimensions.x * buffer->dimensions.y );
+         memPos32 += ( buffer->dimensions.x * buffer->dimensions.y );
          bytesRead += bufferSize;
 
          glyph->color = 0xFFFFFFFF;
@@ -104,7 +98,7 @@ Bool_t Font_LoadFromFile( Font_t* font, const char* filePath )
       glyphCollection++;
    }
 
-   if ( bytesRead != fileData.fileSize )
+   if ( bytesRead != memSize )
    {
       ERROR_RETURN_FALSE();
    }

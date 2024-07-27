@@ -3,6 +3,15 @@
 
 typedef enum
 {
+   GameDataFileChunkID_Bitmaps = 0,
+   GameDataFileChunkID_Fonts,
+
+   GameDataFileChunkID_Count
+}
+GameDataFileChunkID_t;
+
+typedef enum
+{
    ImageID_Background = 0,
    ImageID_Star,
 

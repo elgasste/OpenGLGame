@@ -1,6 +1,9 @@
 #include "game.h"
+#include "game_data_file.h"
 
-internal Bool_t Game_LoadAssets( GameData_t* gameData );
+internal Bool_t Game_LoadGameDataFile( GameData_t* gameData );
+internal Bool_t Game_LoadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
+internal Bool_t Game_LoadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
 internal void Game_LoadMenus( GameData_t* gameData );
 
 Bool_t Game_LoadData( GameData_t* gameData )
@@ -8,7 +11,7 @@ Bool_t Game_LoadData( GameData_t* gameData )
    uint32_t i;
    Star_t* star;
 
-   if ( !Game_LoadAssets( gameData ) )
+   if ( !Game_LoadGameDataFile( gameData ) )
    {
       return False;
    }
@@ -30,30 +33,125 @@ Bool_t Game_LoadData( GameData_t* gameData )
    return True;
 }
 
-internal Bool_t Game_LoadAssets( GameData_t* gameData )
+internal Bool_t Game_LoadGameDataFile( GameData_t* gameData )
 {
+   uint32_t i;
+   GameDataFile_t dataFile = { 0 };
+   GameDataFileChunk_t* chunk;
    char appDirectory[STRING_SIZE_DEFAULT];
-   char backgroundBmpFilePath[STRING_SIZE_DEFAULT];
-   char starBmpFilePath[STRING_SIZE_DEFAULT];
-   char consolasFontFilePath[STRING_SIZE_DEFAULT];
-   char papyrusFontFilePath[STRING_SIZE_DEFAULT];
+   char dataFilePath[STRING_SIZE_DEFAULT];
+   char msg[STRING_SIZE_DEFAULT];
 
    if ( !Platform_GetAppDirectory( appDirectory, STRING_SIZE_DEFAULT ) )
    {
       return False;
    }
 
-   snprintf( backgroundBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\background.bmp", appDirectory );
-   snprintf( starBmpFilePath, STRING_SIZE_DEFAULT, "%sassets\\star.bmp", appDirectory );
-   snprintf( consolasFontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Consolas.gff", appDirectory );
-   snprintf( papyrusFontFilePath, STRING_SIZE_DEFAULT, "%sassets\\fonts\\Papyrus.gff", appDirectory );
+   snprintf( dataFilePath, STRING_SIZE_DEFAULT, "%s%s", appDirectory, GAME_DATA_FILENAME );
 
-   if ( !Image_LoadFromBitmapFile( &( gameData->renderData.images[ImageID_Background] ), backgroundBmpFilePath) ||
-        !Image_LoadFromBitmapFile( &( gameData->renderData.images[ImageID_Star] ), starBmpFilePath ) ||
-        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Consolas] ), consolasFontFilePath ) ||
-        !Font_LoadFromFile( &( gameData->renderData.fonts[FontID_Papyrus] ), papyrusFontFilePath ) )
+   if ( !GameDataFile_Load( &dataFile, dataFilePath ) )
    {
       return False;
+   }
+
+   chunk = dataFile.chunks;
+
+   for ( i = 0; i < dataFile.numChunks; i++ )
+   {
+      switch ( ( GameDataFileChunkID_t )( chunk->ID ) )
+      {
+         case GameDataFileChunkID_Bitmaps:
+            if ( !Game_LoadBitmapsChunk( gameData, chunk ) )
+            {
+               GameDataFile_ClearData( &dataFile );
+               return False;
+            }
+            break;
+         case GameDataFileChunkID_Fonts:
+            if ( !Game_LoadFontsChunk( gameData, chunk ) )
+            {
+               GameDataFile_ClearData( &dataFile );
+               return False;
+            }
+            break;
+         default:
+            snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNCHUNKID, chunk->ID );
+            Platform_Log( msg );
+            break;
+      }
+
+      chunk++;
+   }
+
+   GameDataFile_ClearData( &dataFile );
+   return True;
+}
+
+internal Bool_t Game_LoadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
+{
+   uint32_t i;
+   ImageID_t imageID;
+   GameDataFileChunkEntry_t* entry = chunk->entries;
+   Image_t* image;
+   char msg[STRING_SIZE_DEFAULT];
+
+   for ( i = 0; i < chunk->numEntries; i++ )
+   {
+      imageID = (ImageID_t)entry->ID;
+
+      if ( imageID < ImageID_Count )
+      {
+         // TODO: should we check if it already exists, or just always overwrite it?
+         image = &( gameData->renderData.images[entry->ID] );
+         Image_ClearData( image );
+
+         if ( !Image_LoadFromBitmapMemory( image, entry->memory, entry->size, entry->ID ) )
+         {
+            return False;
+         }
+      }
+      else
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNBITMAPENTRYID, entry->ID );
+         Platform_Log( msg );
+      }
+
+      entry++;
+   }
+
+   return True;
+}
+
+internal Bool_t Game_LoadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
+{
+   uint32_t i;
+   FontID_t fontID;
+   GameDataFileChunkEntry_t* entry = chunk->entries;
+   Font_t* font;
+   char msg[STRING_SIZE_DEFAULT];
+
+   for ( i = 0; i < chunk->numEntries; i++ )
+   {
+      fontID = (FontID_t)entry->ID;
+
+      if ( fontID < FontID_Count )
+      {
+         // TODO: should we check if it already exists, or just always overwrite it?
+         font = &( gameData->renderData.fonts[entry->ID] );
+         Font_ClearData( font );
+
+         if ( !Font_LoadFromMemory( font, entry->memory, entry->size, entry->ID ) )
+         {
+            return False;
+         }
+      }
+      else
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNFONTENTRYID, entry->ID );
+         Platform_Log( msg );
+      }
+
+      entry++;
    }
 
    return True;

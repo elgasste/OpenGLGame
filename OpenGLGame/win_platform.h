@@ -11,6 +11,8 @@
 #include <Shlwapi.h>
 #include <time.h>
 
+#define LOG_FILE_NAME "log.txt"
+
 typedef struct ThreadQueue_t ThreadQueue_t;
 
 typedef struct

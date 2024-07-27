@@ -12,7 +12,7 @@
 #define BMP_BI_BITFIELDS               3
 
 #define ERROR_RETURN_FALSE( s ) \
-   snprintf( errorMsg, STRING_SIZE_DEFAULT, s, fileData->filePath ); \
+   snprintf( errorMsg, STRING_SIZE_DEFAULT, s, imageID ); \
    Platform_Log( errorMsg ); \
    return False
 
@@ -33,46 +33,37 @@ typedef struct
 BmpData_t;
 
 internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer );
-internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos );
-internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos );
-internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos );
-internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, FileData_t* fileData );
-internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos, PixelBuffer_t* pixelBuffer );
+internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID );
+internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID );
+internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID );
+internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, uint32_t memSize, uint32_t imageID );
+internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, uint8_t* memPos, PixelBuffer_t* pixelBuffer, uint32_t imageID );
 
-Bool_t Bmp_LoadFromFile( const char* filePath, PixelBuffer_t* pixelBuffer )
+Bool_t Bmp_LoadFromMemory( uint8_t* memory, uint32_t memSize, PixelBuffer_t* pixelBuffer, uint32_t imageID )
 {
-   FileData_t fileData;
    BmpData_t bmpData = { 0 };
-   uint8_t* fileStartPos;
-   uint8_t* filePos;
+   uint8_t* memStartPos;
+   uint8_t* memPos = memory;
 
    pixelBuffer->memory = 0;
    pixelBuffer->dimensions.x = 0;
    pixelBuffer->dimensions.y = 0;
 
-   if ( !Platform_ReadFileData( filePath, &fileData ) )
+   memStartPos = memPos;
+
+   if ( !Bmp_ReadHeader( &bmpData, memory, memSize, imageID ) ||
+        !Bmp_ReadDIBHeader( &bmpData, memPos + BMP_HEADER_SIZE, memSize, imageID ) )
    {
       return False;
    }
 
-   filePos = (uint8_t*)fileData.contents;
-   fileStartPos = filePos;
+   memPos += BMP_HEADER_SIZE + bmpData.dibHeaderSize;
 
-   if ( !Bmp_ReadHeader( &bmpData, &fileData, filePos ) ||
-        !Bmp_ReadDIBHeader( &bmpData, &fileData, filePos + BMP_HEADER_SIZE ) )
-   {
-      Platform_ClearFileData( &fileData );
-      return False;
-   }
-
-   filePos += BMP_HEADER_SIZE + bmpData.dibHeaderSize;
-
-   if ( !Bmp_ReadPalette( &bmpData, &fileData, filePos ) ||
-        !Bmp_VerifyDataSize( &bmpData, &fileData ) ||
-        !Bmp_ReadPixelBuffer( &bmpData, &fileData, ( fileStartPos + bmpData.imageOffset ), pixelBuffer ) )
+   if ( !Bmp_ReadPalette( &bmpData, memPos, memSize, imageID ) ||
+        !Bmp_VerifyDataSize( &bmpData, memSize, imageID ) ||
+        !Bmp_ReadPixelBuffer( &bmpData, ( memStartPos + bmpData.imageOffset ), pixelBuffer, imageID ) )
    {
       Bmp_Cleanup( &bmpData, pixelBuffer );
-      Platform_ClearFileData( &fileData );
       return False;
    }
 
@@ -96,56 +87,56 @@ internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer )
    }
 }
 
-internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos )
+internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID )
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   if ( fileData->fileSize < BMP_HEADER_SIZE )
+   if ( memSize < BMP_HEADER_SIZE )
    {
-      ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+      ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
    }
 
    // first 2 bytes are the type, we currenly only support "BM"
-   if ( ( (uint16_t*)filePos )[0] != BMP_HEADERTYPE_BM )
+   if ( ( (uint16_t*)memPos )[0] != BMP_HEADERTYPE_BM )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDHEADERTYPE );
    }
 
-   filePos += 2;
+   memPos += 2;
 
    // next 4 bytes are the file size
-   if ( ( (uint32_t*)filePos )[0] != fileData->fileSize )
+   if ( ( (uint32_t*)memPos )[0] != memSize )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_HEADERCORRUPT );
    }
 
-   filePos += 8;
+   memPos += 8;
 
    // the next 4 bytes after the file size are reserved, and the last
    // 4 bytes are the image data offset
-   bmpData->imageOffset = ( (uint32_t*)filePos )[0];
+   bmpData->imageOffset = ( (uint32_t*)memPos )[0];
 
-   if ( bmpData->imageOffset >= fileData->fileSize )
+   if ( bmpData->imageOffset >= memSize )
    {
-      ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+      ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
    }
 
    return True;
 }
 
-internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos )
+internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID )
 {
    uint8_t leftoverBits;
    uint32_t compressionMethod;
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   if ( fileData->fileSize < ( BMP_HEADER_SIZE + 4 ) )
+   if ( memSize < ( BMP_HEADER_SIZE + 4 ) )
    {
-      ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+      ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
    }
 
    // first 4 bytes are the header size
-   bmpData->dibHeaderSize = ( (uint32_t*)filePos )[0];
+   bmpData->dibHeaderSize = ( (uint32_t*)memPos )[0];
 
    if ( ( bmpData->dibHeaderSize != BMP_BITMAPINFOHEADER_SIZE ) &&
         ( bmpData->dibHeaderSize != BMP_BITMAPV5HEADER_SIZE ) )
@@ -153,34 +144,34 @@ internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uin
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDDIBHEADERTYPE );
    }
 
-   if ( fileData->fileSize < ( BMP_HEADER_SIZE + bmpData->dibHeaderSize ) )
+   if ( memSize < ( BMP_HEADER_SIZE + bmpData->dibHeaderSize ) )
    {
-      ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+      ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
    }
 
-   filePos += 4;
+   memPos += 4;
 
    // next 8 bytes are the width and height, respectively (height can be negative)
-   bmpData->imageWidth = ( (int32_t*)filePos )[0];
-   bmpData->imageHeight = ( (int32_t*)filePos )[1];
+   bmpData->imageWidth = ( (int32_t*)memPos )[0];
+   bmpData->imageHeight = ( (int32_t*)memPos )[1];
 
    if ( bmpData->imageWidth <= 0 || bmpData->imageHeight == 0 )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDIMAGESIZE );
    }
 
-   filePos += 8;
+   memPos += 8;
 
    // next 2 bytes are the number of color planes (must be 1)
-   if ( ( (uint16_t*)filePos )[0] != 1 )
+   if ( ( (uint16_t*)memPos )[0] != 1 )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDCOLORPLANES );
    }
 
-   filePos += 2;
+   memPos += 2;
 
    // next 2 bytes are the number of bits per pixel
-   bmpData->bitsPerPixel = ( (uint16_t*) filePos )[0];
+   bmpData->bitsPerPixel = ( (uint16_t*) memPos )[0];
 
    if ( bmpData->bitsPerPixel != 1 &&
         bmpData->bitsPerPixel != 4 &&
@@ -196,24 +187,24 @@ internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uin
       ERROR_RETURN_FALSE( STR_BMPERR_INVALIDBPP );
    }
 
-   filePos += 2;
+   memPos += 2;
 
    // next 4 bytes are the compression method, we only support uncompressed or BI_BITFIELDS for now
-   compressionMethod = ( (uint32_t*)filePos )[0];
+   compressionMethod = ( (uint32_t*)memPos )[0];
 
    if ( ( compressionMethod != BMP_BI_NONE ) && ( compressionMethod != BMP_BI_BITFIELDS ) )
    {
       ERROR_RETURN_FALSE( STR_BMPERR_ISCOMPRESSED );
    }
 
-   filePos += 4;
+   memPos += 4;
 
    // next 4 bytes are the size of the raw image data (should be 0 for BI_RGB bitmaps)
-   bmpData->imageBytes = ( (uint32_t*)filePos )[0];
+   bmpData->imageBytes = ( (uint32_t*)memPos )[0];
 
-   if ( bmpData->imageBytes > 0 && ( bmpData->imageOffset + bmpData->imageBytes ) > fileData->fileSize )
+   if ( bmpData->imageBytes > 0 && ( bmpData->imageOffset + bmpData->imageBytes ) > memSize )
    {
-      ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+      ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
    }
 
    bmpData->strideBits = bmpData->imageWidth * bmpData->bitsPerPixel;
@@ -223,13 +214,13 @@ internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uin
 
    // next 8 bytes after the image size are the horizontal and vertical resolution,
    // which we don't care about
-   filePos += 12;
+   memPos += 12;
 
    if ( bmpData->bitsPerPixel < 32 )
    {
       // next 4 bytes after that are the number of palette
       // colors. for BPP values less than 24, this should be 2^BPP.
-      bmpData->numPaletteColors = ( (uint32_t*)filePos )[0];
+      bmpData->numPaletteColors = ( (uint32_t*)memPos )[0];
 
       if ( ( bmpData->bitsPerPixel == 24 && bmpData->numPaletteColors != 0 ) ||
            ( bmpData->numPaletteColors > (uint32_t)pow( 2, (double)( bmpData->bitsPerPixel ) ) ) )
@@ -243,7 +234,7 @@ internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, FileData_t* fileData, uin
    return True;
 }
 
-internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos )
+internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID )
 {
    uint32_t i;
    uint32_t paletteSize;
@@ -260,9 +251,9 @@ internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, FileData_t* fileData, uint8
    {
       ERROR_RETURN_FALSE( STR_BMPERR_PALETTECORRUPT );
    }
-   else if ( ( BMP_HEADER_SIZE + bmpData->dibHeaderSize + paletteSize ) > fileData->fileSize )
+   else if ( ( BMP_HEADER_SIZE + bmpData->dibHeaderSize + paletteSize ) > memSize )
    {
-      ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+      ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
    }
 
    // colors are 4 bytes in RGBA format
@@ -272,29 +263,29 @@ internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, FileData_t* fileData, uint8
    {
       // convert RGBA to ARGB format
       bmpData->paletteColors[i] = 0 |
-                                  ( (uint32_t)( filePos[3] ) << 24 ) |
-                                  ( (uint32_t)( filePos[2] ) << 16 ) |
-                                  ( (uint32_t)( filePos[1] ) << 8 ) |
-                                  (uint32_t)( filePos[0] );
-      filePos += 4;
+                                  ( (uint32_t)( memPos[3] ) << 24 ) |
+                                  ( (uint32_t)( memPos[2] ) << 16 ) |
+                                  ( (uint32_t)( memPos[1] ) << 8 ) |
+                                  (uint32_t)( memPos[0] );
+      memPos += 4;
    }
 
    return True;
 }
 
-internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, FileData_t* fileData )
+internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, uint32_t memSize, uint32_t imageID )
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   if ( ( fileData->fileSize - bmpData->imageOffset ) != ( bmpData->scanlineSize * (uint32_t)abs( bmpData->imageHeight ) ) )
+   if ( ( memSize - bmpData->imageOffset ) != ( bmpData->scanlineSize * (uint32_t)abs( bmpData->imageHeight ) ) )
    {
-      ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+      ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
    }
 
    return True;
 }
 
-internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, uint8_t* filePos, PixelBuffer_t* pixelBuffer )
+internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, uint8_t* memPos, PixelBuffer_t* pixelBuffer, uint32_t imageID )
 {
    uint8_t paddingBytes, i;
    uint16_t paletteIndex;
@@ -325,10 +316,10 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
             case 1:
                for ( i = 0; i < 8; i++, pixelBufferRowIndex++ )
                {
-                  paletteIndex = 1 & ( filePos[0] >> ( 8 - ( i + 1 ) ) );
+                  paletteIndex = 1 & ( memPos[0] >> ( 8 - ( i + 1 ) ) );
                   if ( paletteIndex >= bmpData->numPaletteColors )
                   {
-                     ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+                     ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
                   }
                   pixelBuffer32[pixelBufferRowIndex] = bmpData->paletteColors[paletteIndex];
                   scanlinePixelsUnread--;
@@ -339,15 +330,15 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
                   }
                }
                scanlineByteNum++;
-               filePos++;
+               memPos++;
                break;
             case 4:
                for ( i = 0; i < 2; i++ )
                {
-                  paletteIndex = ( i == 0 ) ? ( filePos[0] >> 4 ) : ( filePos[0] & 0xF );
+                  paletteIndex = ( i == 0 ) ? ( memPos[0] >> 4 ) : ( memPos[0] & 0xF );
                   if ( paletteIndex >= bmpData->numPaletteColors )
                   {
-                     ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+                     ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
                   }
                   pixelBuffer32[pixelBufferRowIndex] = bmpData->paletteColors[paletteIndex];
                   pixelBufferRowIndex++;
@@ -358,33 +349,33 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
                   }
                }
                scanlineByteNum++;
-               filePos++;
+               memPos++;
                break;
             case 8:
-               paletteIndex = filePos[0];
+               paletteIndex = memPos[0];
                if ( paletteIndex >= bmpData->numPaletteColors )
                {
-                  ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+                  ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
                }
                pixelBuffer32[pixelBufferRowIndex] = bmpData->paletteColors[paletteIndex];
                scanlinePixelsUnread--;
                scanlineByteNum++;
                pixelBufferRowIndex++;
-               filePos++;
+               memPos++;
                break;
             case 24:
-               color = 0xFF000000 | ( (uint32_t)filePos[2] << 16 ) | ( (uint32_t)filePos[1]  << 8 ) | (uint32_t)filePos[0];
+               color = 0xFF000000 | ( (uint32_t)memPos[2] << 16 ) | ( (uint32_t)memPos[1]  << 8 ) | (uint32_t)memPos[0];
                pixelBuffer32[pixelBufferRowIndex] = color;
                scanlinePixelsUnread--;
-               filePos += 3;
+               memPos += 3;
                scanlineByteNum += 3;
                pixelBufferRowIndex++;
                break;
             case 32:
-               color = ( (uint32_t*)filePos )[0];
+               color = ( (uint32_t*)memPos )[0];
                pixelBuffer32[pixelBufferRowIndex] = color;
                scanlinePixelsUnread--;
-               filePos += 4;
+               memPos += 4;
                scanlineByteNum += 4;
                pixelBufferRowIndex++;
                break;
@@ -396,17 +387,17 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, FileData_t* fileData, u
 
             if ( scanlineByteNum != bmpData->scanlineSize )
             {
-               ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+               ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
             }
          }
       }
 
       if ( scanlinePixelsUnread != 0 )
       {
-         ERROR_RETURN_FALSE( STR_BMPERR_FILECORRUPT );
+         ERROR_RETURN_FALSE( STR_BMPERR_MEMORYCORRUPT );
       }
 
-      filePos += paddingBytes;
+      memPos += paddingBytes;
    }
 
    return True;

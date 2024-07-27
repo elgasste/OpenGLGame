@@ -5,6 +5,6 @@
 
 typedef struct PixelBuffer_t PixelBuffer_t;
 
-Bool_t Bmp_LoadFromFile( const char* filePath, PixelBuffer_t* pixelBuffer );
+Bool_t Bmp_LoadFromMemory( uint8_t* memory, uint32_t memSize, PixelBuffer_t* pixelBuffer, uint32_t imageID );
 
 #endif
