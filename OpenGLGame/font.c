@@ -34,7 +34,7 @@ Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize, uin
    memPos32 += 3;
    bytesRead = 12;
 
-   font->glyphCollections = (FontGlyphCollection_t*)Platform_MemAlloc( sizeof( FontGlyphCollection_t ) * font->numGlyphCollections );
+   font->glyphCollections = (FontGlyphCollection_t*)Platform_MAlloc( sizeof( FontGlyphCollection_t ) * font->numGlyphCollections );
    for ( i = 0; i < font->numGlyphCollections; i++ )
    {
       font->glyphCollections[i].glyphs = 0;
@@ -57,7 +57,7 @@ Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize, uin
          ERROR_RETURN_FALSE();
       }
 
-      glyphCollection->glyphs = (FontGlyph_t*)Platform_MemAlloc( sizeof( FontGlyph_t ) * font->numGlyphs );
+      glyphCollection->glyphs = (FontGlyph_t*)Platform_MAlloc( sizeof( FontGlyph_t ) * font->numGlyphs );
       for ( j = 0; j < font->numGlyphs; j++ )
       {
          glyphCollection->glyphs[j].pixelBuffer.memory = 0;
@@ -82,7 +82,7 @@ Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize, uin
             ERROR_RETURN_FALSE();
          }
 
-         buffer->memory = (uint8_t*)Platform_MemAlloc( bufferSize );
+         buffer->memory = (uint8_t*)Platform_CAlloc( 1, bufferSize );
          for ( k = 0; k < bufferSize; k++ )
          {
             buffer->memory[k] = ( (uint8_t*)memPos32 )[k];
@@ -127,14 +127,14 @@ void Font_ClearData( Font_t* font )
 
                if ( buffer->memory )
                {
-                  Platform_MemFree( buffer->memory, (uint64_t)( buffer->dimensions.x * buffer->dimensions.y * 4 ) );
+                  Platform_Free( buffer->memory, buffer->dimensions.x * buffer->dimensions.y * 4 );
                }
             }
-            Platform_MemFree( font->glyphCollections[i].glyphs, sizeof( FontGlyph_t ) * font->numGlyphs );
+            Platform_Free( font->glyphCollections[i].glyphs, sizeof( FontGlyph_t ) * font->numGlyphs );
          }
       }
 
-      Platform_MemFree( font->glyphCollections, sizeof( FontGlyphCollection_t ) * font->numGlyphCollections );
+      Platform_Free( font->glyphCollections, sizeof( FontGlyphCollection_t ) * font->numGlyphCollections );
       font->glyphCollections = 0;
       font->curGlyphCollection = 0;
    }

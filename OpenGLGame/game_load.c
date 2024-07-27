@@ -162,7 +162,7 @@ internal void Game_LoadMenus( GameData_t* gameData )
    Menu_t* playingMenu = &( gameData->menus[MenuID_Playing] );
 
    playingMenu->numItems = 2;
-   playingMenu->items = (MenuItem_t*)Platform_MemAlloc( sizeof( MenuItem_t ) * playingMenu->numItems );
+   playingMenu->items = (MenuItem_t*)Platform_MAlloc( sizeof( MenuItem_t ) * playingMenu->numItems );
    playingMenu->items[0].ID = MenuItemID_KeepPlaying;
    snprintf( playingMenu->items[0].text, STRING_SIZE_DEFAULT, STR_MENU_KEEPPLAYING );
    playingMenu->items[1].ID = MenuItemID_Quit;

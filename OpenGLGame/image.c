@@ -21,8 +21,8 @@ void Image_ClearData( Image_t* image )
 {
    if ( image->pixelBuffer.memory )
    {
-      Platform_MemFree( image->pixelBuffer.memory,
-                        (uint64_t)( image->pixelBuffer.dimensions.x * image->pixelBuffer.dimensions.y * 4 ) );
+      Platform_Free( image->pixelBuffer.memory,
+                     (uint64_t)( image->pixelBuffer.dimensions.x * image->pixelBuffer.dimensions.y * 4 ) );
 
       image->pixelBuffer.memory = 0;
       image->pixelBuffer.dimensions.x = 0;

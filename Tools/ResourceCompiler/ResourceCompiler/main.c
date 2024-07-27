@@ -122,13 +122,13 @@ int main( int argc, char** argv )
 
 void* Platform_MemAlloc( uint64_t size )
 {
-   return VirtualAlloc( 0, size, MEM_COMMIT, PAGE_READWRITE );
+   return malloc( size );
 }
 
 void Platform_MemFree( void* memory, uint64_t size )
 {
    UNUSED_PARAM( size );
-   VirtualFree( memory, 0, MEM_RELEASE );
+   free( memory );
 }
 
 Bool_t Platform_ReadFileData( const char* filePath, FileData_t* fileData )
