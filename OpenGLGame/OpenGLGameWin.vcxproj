@@ -22,7 +22,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{f1426686-aa2c-45d2-a24e-bed41bb94c5d}</ProjectGuid>
-    <RootNamespace>OpenGLGame</RootNamespace>
+    <RootNamespace>OpenGLGameWin</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
