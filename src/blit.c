@@ -145,8 +145,9 @@ void Blit_Char( uint32_t codepoint, float scale, float screenX, float screenY, F
 
    glyph = &( font->curGlyphCollection->glyphs[codepoint - font->codepointOffset] );
    buffer = &( glyph->pixelBuffer );
+
    x = screenX + ( glyph->leftBearing * scale );
-   y = screenY + ceilf( ( ( font->curGlyphCollection->baseline + glyph->baselineOffset ) * scale ) );
+   y = screenY + ( font->curGlyphCollection->baseline + floorf( glyph->baselineOffset ) ) * scale;
 
    Blit_ColoredTextureSection( font->textureHandle, buffer,
                                x, y,

@@ -270,7 +270,7 @@ internal void LoadFontFromFile( FontData_t* fontData, const char* filePath )
    FileData_t fileData;
    uint8_t* filePos;
    stbtt_fontinfo fontInfo;
-   int32_t width, height, xOffset, yOffset, pitch, x, y, codepoint, glyphIndex, baseline, lineGap, baselineOffset, advance, leftBearing;
+   int32_t width, height, xOffset, pitch, x, y, codepoint, glyphIndex, baseline, lineGap, baselineOffset, advance, leftBearing;
    uint8_t *monoCodepointMemory, *codepointMemory, *source, *destRow;
    uint32_t* dest;
    uint8_t alpha;
@@ -316,7 +316,7 @@ internal void LoadFontFromFile( FontData_t* fontData, const char* filePath )
 
       for ( codepoint = STARTCODEPOINT; codepoint <= ENDCODEPOINT; codepoint++ )
       {
-         monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scale, codepoint, &width, &height, &xOffset, &yOffset );
+         monoCodepointMemory = stbtt_GetCodepointBitmap( &fontInfo, 0, scale, codepoint, &width, &height, &xOffset, 0 );
          pitch = width * 4;
          codepointMemory = Platform_MemAlloc( height * pitch );
          source = monoCodepointMemory;
@@ -340,7 +340,7 @@ internal void LoadFontFromFile( FontData_t* fontData, const char* filePath )
          glyphIndex = codepoint - STARTCODEPOINT;
 
          stbtt_GetCodepointBox( &fontInfo, codepoint, 0, &baselineOffset, 0, 0 );
-         collection->glyphs[glyphIndex].baselineOffset = ( baselineOffset + yOffset ) * scale;
+         collection->glyphs[glyphIndex].baselineOffset = baselineOffset * scale;
 
          stbtt_GetCodepointHMetrics( &fontInfo, codepoint, &advance, &leftBearing );
          collection->glyphs[glyphIndex].advance = advance * scale;
