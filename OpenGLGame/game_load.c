@@ -104,6 +104,7 @@ internal Bool_t Game_LoadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t
          // TODO: should we check if it already exists, or just always overwrite it?
          image = &( gameData->renderData.images[entry->ID] );
          Image_ClearData( image );
+
          if ( !Image_LoadFromBitmapMemory( image, entry->memory, entry->size, entry->ID ) )
          {
             return False;
