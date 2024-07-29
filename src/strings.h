@@ -36,17 +36,18 @@
 #define STR_BMPERR_INVALIDCOLORINDEXING   "BMP error: color indexing is not currently supported, image ID %u"
 
 #define STR_GDFERR_FILECORRUPT            "Game data file error: file is corrupt: %s"
-#define STR_GDFWARN_UNKNOWNCHUNKID        "Game data file warning: unknown chunk ID encountered: %d"
-#define STR_GDFWARN_UNKNOWNBITMAPENTRYID  "Game data file warning: unknown bitmap entry ID encountered: %d"
-#define STR_GDFWARN_UNKNOWNFONTENTRYID    "Game data file warning: unknown font entry ID encountered: %d"
+#define STR_GDFWARN_UNKNOWNCHUNKID        "Game data file warning: unknown chunk ID encountered: %u"
+#define STR_GDFWARN_UNKNOWNBITMAPENTRYID  "Game data file warning: unknown bitmap entry ID encountered: %u"
+#define STR_GDFWARN_UNKNOWNFONTENTRYID    "Game data file warning: unknown font entry ID encountered: %u"
 
 #define STR_SPRITEERR_FRAMEDIMENSIONS     "Sprite error: frame dimensions don't match texture"
 
-#define STR_FONTERR_MEMORYCORRUPT         "Font error: font memory is corrupt, font ID %d"
+#define STR_FONTERR_MEMORYCORRUPT         "Font error: font memory is corrupt, font ID %u"
 
 #define STR_DIAG_FRAMETARGETMICRO         "Target frame microseconds: %lld"
 #define STR_DIAG_FRAMEDURATIONMICRO       "Last frame microseconds: %lld"
-#define STR_DIAG_LAGFRAMES                "Lag frames: %d"
+#define STR_DIAG_LAGFRAMES                "Lag frames: %u"
+#define STR_DIAG_THREADCOUNT              "Thread count: %u"
 
 #define STR_BRUSHTEETH                    "(...But don't forget to brush your teeth!)"
 

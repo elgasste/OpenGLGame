@@ -1,5 +1,6 @@
 #include "game.h"
 #include "blit.h"
+#include "thread.h"
 
 internal void Game_RenderWorld( GameData_t* gameData );
 internal void Game_RenderMenu( GameData_t* gameData );
@@ -77,6 +78,7 @@ internal void Game_RenderDiagnostics( GameData_t* gameData )
 {
    float y;
    Font_t* font = &( gameData->renderData.fonts[FontID_Consolas] );
+   ThreadQueue_t* threadQueue = Platform_GetThreadQueue();
    char msg[STRING_SIZE_DEFAULT];
 
    Font_SetGlyphCollectionForHeight( font, 12.0f );
@@ -90,5 +92,8 @@ internal void Game_RenderDiagnostics( GameData_t* gameData )
    Blit_TextLine( msg, 1.0f, 10.0f, y, font, FontJustify_Left );
    y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_LAGFRAMES, gameData->clock.lagFrames );
+   Blit_TextLine( msg, 1.0f, 10.0f, y, font, FontJustify_Left );
+   y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
+   snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_THREADCOUNT, threadQueue->numThreads );
    Blit_TextLine( msg, 1.0f, 10.0f, y, font, FontJustify_Left );
 }
