@@ -26,6 +26,6 @@ void Blit_Image( Image_t* texture, float screenX, float screenY, float scale );
 void Blit_ColoredSprite( Sprite_t* sprite, float scale, float screenX, float screenY, uint32_t color );
 void Blit_Sprite( Sprite_t* sprite, float scale, float screenX, float screenY );
 void Blit_Char( uint32_t codepoint, float scale, float screenX, float screenY, Font_t* font );
-void Blit_TextLine( const char* text, float scale, float screenX, float screenY, Font_t* font );
+void Blit_TextLine( const char* text, float scale, float screenX, float screenY, Font_t* font, FontJustify_t justify );
 
 #endif

@@ -30,6 +30,14 @@ FontID_t;
 
 typedef enum
 {
+   FontJustify_Left = 0,
+   FontJustify_Center,
+   FontJustify_Right
+}
+FontJustify_t;
+
+typedef enum
+{
    MenuID_Playing = 0,
 
    MenuID_Count

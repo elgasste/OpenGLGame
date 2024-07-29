@@ -34,7 +34,7 @@ internal void Game_RenderWorld( GameData_t* gameData )
 
    Font_SetGlyphCollectionForHeight( font, 48.0f );
    Font_SetColor( font, 0xFF3333CC );
-   Blit_TextLine( STR_BRUSHTEETH, 1.0f, 65.0f, 240.0f, font );
+   Blit_TextLine( STR_BRUSHTEETH, 1.0f, 65.0f, 240.0f, font, FontJustify_Left );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {
@@ -61,7 +61,7 @@ internal void Game_RenderMenu( GameData_t* gameData )
 
    for ( i = 0; i < menu->numItems; i++ )
    {
-      Blit_TextLine( item->text, textScale, renderData->position.x, y, font );
+      Blit_TextLine( item->text, textScale, renderData->position.x, y, font, FontJustify_Left );
 
       if ( menu->selectedItem == i )
       {
@@ -84,11 +84,11 @@ internal void Game_RenderDiagnostics( GameData_t* gameData )
 
    y = (float)SCREEN_HEIGHT - font->curGlyphCollection->height - 10.0f;
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_FRAMETARGETMICRO, gameData->clock.targetFrameDurationMicro );
-   Blit_TextLine( msg, 1.0f, 10.0f, y, font );
+   Blit_TextLine( msg, 1.0f, 10.0f, y, font, FontJustify_Left );
    y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_FRAMEDURATIONMICRO, gameData->clock.lastFrameDurationMicro );
-   Blit_TextLine( msg, 1.0f, 10.0f, y, font );
+   Blit_TextLine( msg, 1.0f, 10.0f, y, font, FontJustify_Left );
    y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_LAGFRAMES, gameData->clock.lagFrames );
-   Blit_TextLine( msg, 1.0f, 10.0f, y, font );
+   Blit_TextLine( msg, 1.0f, 10.0f, y, font, FontJustify_Left );
 }
