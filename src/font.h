@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "pixel_buffer.h"
+#include "vector.h"
 #include "platform.h"
 
 typedef struct FontGlyph_t
@@ -41,5 +42,6 @@ Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint );
 void Font_SetCharColor( Font_t* font, uint32_t codepoint, uint32_t color );
 void Font_SetColor( Font_t* font, uint32_t color );
 void Font_SetGlyphCollectionForHeight( Font_t* font, float height );
+Vector2f_t Font_GetTextDimensions( Font_t* font, const char* text );
 
 #endif

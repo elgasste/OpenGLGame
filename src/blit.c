@@ -146,7 +146,7 @@ void Blit_Char( uint32_t codepoint, float scale, float screenX, float screenY, F
    glyph = &( font->curGlyphCollection->glyphs[codepoint - font->codepointOffset] );
    buffer = &( glyph->pixelBuffer );
 
-   x = screenX + ( glyph->leftBearing * scale );
+   x = screenX + floorf( glyph->leftBearing * scale );
    y = screenY + ( font->curGlyphCollection->baseline + floorf( glyph->baselineOffset ) ) * scale;
 
    Blit_ColoredTextureSection( font->textureHandle, buffer,
@@ -156,11 +156,17 @@ void Blit_Char( uint32_t codepoint, float scale, float screenX, float screenY, F
                                scale, glyph->color );
 }
 
-void Blit_TextLine( const char* text, float scale, float screenX, float screenY, Font_t* font )
+void Blit_TextLine( const char* text, float scale, float screenX, float screenY, Font_t* font, FontJustify_t justify )
 {
    uint32_t i;
-   float x = screenX;
+   float textWidth, x = screenX;
    FontGlyph_t* glyph;
+
+   if ( justify != FontJustify_Left )
+   {
+      textWidth = Font_GetTextDimensions( font, text ).x * scale;
+      x -= ( justify == FontJustify_Right ) ? textWidth : ( textWidth / 2.0f );
+   }
 
    for ( i = 0; i < strlen( text ); i++ )
    {
@@ -168,7 +174,7 @@ void Blit_TextLine( const char* text, float scale, float screenX, float screenY,
       {
          glyph = font->curGlyphCollection->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
          Blit_Char( (uint32_t)( text[i] ), scale, x, screenY, font );
-         x += ceilf( ( glyph->advance * scale ) );
+         x += glyph->advance * scale;
       }
    }
 }
