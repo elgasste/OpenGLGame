@@ -208,3 +208,26 @@ void Font_SetGlyphCollectionForHeight( Font_t* font, float height )
 
    font->curGlyphCollection = &( font->glyphCollections[bestIndex] );
 }
+
+Vector2f_t Font_GetTextDimensions( Font_t* font, const char* text )
+{
+   uint32_t i, codepoint;
+   Vector2f_t dimensions = { 0 };
+   FontGlyphCollection_t* collection = font->curGlyphCollection;
+   FontGlyph_t* glyph;
+
+   dimensions.y = collection->height;
+
+   for ( i = 0; i < (uint32_t)( strlen( text ) ); i++ )
+   {
+      codepoint = (uint32_t)( text[i] );
+
+      if ( Font_ContainsChar( font, codepoint ) )
+      {
+         glyph = &( collection->glyphs[codepoint - font->codepointOffset] );
+         dimensions.x += glyph->advance;
+      }
+   }
+
+   return dimensions;
+}

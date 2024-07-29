@@ -167,8 +167,8 @@ void Blit_TextLine( const char* text, float scale, float screenX, float screenY,
       if ( Font_ContainsChar( font, text[i] ) )
       {
          glyph = font->curGlyphCollection->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
-         Blit_Char( (uint32_t)( text[i] ), scale, x, screenY, font );
-         x += ceilf( ( glyph->advance * scale ) );
+         Blit_Char( (uint32_t)( text[i] ), scale, floorf( x ), screenY, font );
+         x += ( glyph->advance * scale );
       }
    }
 }
