@@ -189,7 +189,6 @@ internal void Game_HandleStateInput_Menu( GameData_t* gameData )
 
 internal void Game_HandleMenuItem_KeepPlaying( GameData_t* gameData )
 {
-   UNUSED_PARAM( gameData );
    gameData->state = GameState_Playing;
 }
 
