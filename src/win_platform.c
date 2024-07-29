@@ -105,7 +105,7 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    Game_Run( &( g_globals.gameData ) );
    Game_ClearData( &( g_globals.gameData ) );
 
-   Platform_Free( g_globals.threadInfoArray, sizeof( Win32ThreadInfo_t ) * g_globals.threadQueue.numThreads );
+   Platform_Free( g_globals.threadInfoArray, sizeof( Win32ThreadInfo_t ) * ( g_globals.threadQueue.numThreads - 1 ) );
 
    assert( g_globals.memAllocated == g_globals.memFreed );
 
@@ -133,7 +133,9 @@ internal void InitThreads()
 
    GetSystemInfo( &sysInfo );
    numThreads = ( sysInfo.dwNumberOfProcessors == 0 ) ? 1 : sysInfo.dwNumberOfProcessors;
-   g_globals.threadInfoArray = (Win32ThreadInfo_t*)Platform_MAlloc( sizeof( Win32ThreadInfo_t ) * numThreads );
+
+   // this array doesn't include the main thread, so only allocate "extra" threads
+   g_globals.threadInfoArray = (Win32ThreadInfo_t*)Platform_MAlloc( sizeof( Win32ThreadInfo_t ) * ( numThreads - 1 ) );
 
    g_globals.threadQueue.numThreads = numThreads;
    g_globals.threadQueue.completionGoal = 0;
@@ -147,7 +149,7 @@ internal void InitThreads()
       FatalError( STR_WINERR_INITTHREADS );
    }
 
-   for ( i = 0; i < numThreads; i++ )
+   for ( i = 0; i < ( numThreads - 1 ); i++ )
    {
       g_globals.threadInfoArray[i].queue = &( g_globals.threadQueue );
       g_globals.threadInfoArray[i].logicalThreadIndex = i;
