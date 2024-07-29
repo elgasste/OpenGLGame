@@ -18,7 +18,8 @@ typedef struct ThreadQueue_t ThreadQueue_t;
 typedef struct
 {
    ThreadQueue_t* queue;
-   int32_t logicalThreadIndex;
+   uint32_t threadIndex;
+   uint64_t jobsDone;
 }
 Win32ThreadInfo_t;
 

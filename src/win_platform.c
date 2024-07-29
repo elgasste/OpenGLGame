@@ -26,7 +26,7 @@ internal void InitOpenGL( HWND hWnd );
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags );
 internal DWORD WINAPI ThreadProc( LPVOID lpParam );
-internal Bool_t DoNextThreadQueueEntry();
+internal Bool_t DoNextThreadQueueEntry( Win32ThreadInfo_t* threadInfo );
 
 int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow )
 {
@@ -105,7 +105,7 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    Game_Run( &( g_globals.gameData ) );
    Game_ClearData( &( g_globals.gameData ) );
 
-   Platform_Free( g_globals.threadInfoArray, sizeof( Win32ThreadInfo_t ) * ( g_globals.threadQueue.numThreads - 1 ) );
+   Platform_Free( g_globals.threadInfoArray, sizeof( Win32ThreadInfo_t ) * g_globals.threadQueue.numThreads );
 
    assert( g_globals.memAllocated == g_globals.memFreed );
 
@@ -133,9 +133,7 @@ internal void InitThreads()
 
    GetSystemInfo( &sysInfo );
    numThreads = ( sysInfo.dwNumberOfProcessors == 0 ) ? 1 : sysInfo.dwNumberOfProcessors;
-
-   // this array doesn't include the main thread, so only allocate "extra" threads
-   g_globals.threadInfoArray = (Win32ThreadInfo_t*)Platform_MAlloc( sizeof( Win32ThreadInfo_t ) * ( numThreads - 1 ) );
+   g_globals.threadInfoArray = (Win32ThreadInfo_t*)Platform_MAlloc( sizeof( Win32ThreadInfo_t ) * numThreads );
 
    g_globals.threadQueue.numThreads = numThreads;
    g_globals.threadQueue.completionGoal = 0;
@@ -149,10 +147,16 @@ internal void InitThreads()
       FatalError( STR_WINERR_INITTHREADS );
    }
 
-   for ( i = 0; i < ( numThreads - 1 ); i++ )
+   // thread 0 is the main thread
+   g_globals.threadInfoArray[0].queue = &( g_globals.threadQueue );
+   g_globals.threadInfoArray[0].threadIndex = 0;
+   g_globals.threadInfoArray[0].jobsDone = 0;
+
+   for ( i = 1; i < numThreads; i++ )
    {
       g_globals.threadInfoArray[i].queue = &( g_globals.threadQueue );
-      g_globals.threadInfoArray[i].logicalThreadIndex = i;
+      g_globals.threadInfoArray[i].threadIndex = i;
+      g_globals.threadInfoArray[i].jobsDone = 0;
       threadHandle = CreateThread( 0, 0, ThreadProc, &( g_globals.threadInfoArray[i] ), 0, &threadId );
 
       if ( !threadHandle || threadHandle == INVALID_HANDLE_VALUE )
@@ -300,18 +304,16 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
 
 internal DWORD WINAPI ThreadProc( LPVOID lpParam )
 {
-   UNUSED_PARAM( lpParam );
-
    while ( 1 )
    {
-      if ( DoNextThreadQueueEntry() )
+      if ( DoNextThreadQueueEntry( (Win32ThreadInfo_t*)lpParam ) )
       {
          WaitForSingleObjectEx( g_globals.threadSemaphoreHandle, INFINITE, FALSE );
       }
    }
 }
 
-internal Bool_t DoNextThreadQueueEntry()
+internal Bool_t DoNextThreadQueueEntry( Win32ThreadInfo_t* threadInfo )
 {
    Bool_t shouldSleep = False;
    uint32_t entryIndex, originalNextEntry = g_globals.threadQueue.nextEntryToRead;
@@ -326,6 +328,7 @@ internal Bool_t DoNextThreadQueueEntry()
       if ( entryIndex == originalNextEntry )
       {        
          g_globals.threadQueue.entries[entryIndex].workerFnc( g_globals.threadQueue.entries[entryIndex].data );
+         threadInfo->jobsDone++;
          InterlockedIncrement( (LONG volatile *)( &( g_globals.threadQueue.completionCount ) ) );
       }
    }
@@ -573,7 +576,7 @@ void Platform_RunThreadQueue()
 {
    while( g_globals.threadQueue.completionGoal != g_globals.threadQueue.completionCount )
    {
-      DoNextThreadQueueEntry();
+      DoNextThreadQueueEntry( g_globals.threadInfoArray );
    }
 
    g_globals.threadQueue.completionGoal = 0;
