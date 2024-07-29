@@ -582,3 +582,8 @@ void Platform_RunThreadQueue()
    g_globals.threadQueue.completionGoal = 0;
    g_globals.threadQueue.completionCount = 0;
 }
+
+uint64_t Platform_GetJobsDoneByThread( uint32_t threadIndex )
+{
+   return g_globals.threadInfoArray[threadIndex].jobsDone;
+}

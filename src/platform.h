@@ -30,5 +30,6 @@ Bool_t Platform_GetAppDirectory( char* directory, uint32_t stringSize );
 ThreadQueue_t* Platform_GetThreadQueue();
 Bool_t Platform_AddThreadQueueEntry( void ( *workerFnc )(), void* data );
 void Platform_RunThreadQueue();
+uint64_t Platform_GetJobsDoneByThread( uint32_t threadIndex );
 
 #endif

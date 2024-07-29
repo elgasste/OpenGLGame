@@ -48,6 +48,7 @@
 #define STR_DIAG_FRAMEDURATIONMICRO       "Last frame microseconds: %lld"
 #define STR_DIAG_LAGFRAMES                "Lag frames: %u"
 #define STR_DIAG_THREADCOUNT              "Thread count: %u"
+#define STR_DIAG_THREADJOBSDONE           "   Jobs done by thread %u: %lld"
 
 #define STR_BRUSHTEETH                    "(...But don't forget to brush your teeth!)"
 

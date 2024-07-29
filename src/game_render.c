@@ -96,4 +96,11 @@ internal void Game_RenderDiagnostics( GameData_t* gameData )
    y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_THREADCOUNT, threadQueue->numThreads );
    Blit_TextLine( msg, 1.0f, 10.0f, y, font, FontJustify_Left );
+
+   for ( uint32_t i = 0; i < threadQueue->numThreads; i++ )
+   {
+      y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
+      snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_THREADJOBSDONE, i, Platform_GetJobsDoneByThread( i ) );
+      Blit_TextLine( msg, 1.0f, 10.0f, y, font, FontJustify_Left );
+   }
 }
