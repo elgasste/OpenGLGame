@@ -8,7 +8,7 @@ typedef struct
    HWND hWndMain;
    GameData_t gameData;
    LARGE_INTEGER performanceFrequency;
-   uint32_t keyCodeMap[(int)KeyCode_Count];
+   uint32_t buttonCodeMap[(int)ButtonCode_Count];
    Win32ThreadInfo_t* threadInfoArray;
    ThreadQueue_t threadQueue;
    HANDLE threadSemaphoreHandle;
@@ -25,6 +25,8 @@ internal void InitKeyCodeMap();
 internal void InitOpenGL( HWND hWnd );
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags );
+internal void HandleMouseMove( LPARAM posData );
+internal void HandleMouseButton( uint32_t flags, Bool_t buttonDown );
 internal DWORD WINAPI ThreadProc( LPVOID lpParam );
 internal Bool_t DoNextThreadQueueEntry( Win32ThreadInfo_t* threadInfo );
 
@@ -35,7 +37,7 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    WNDCLASSA mainWindowClass = { 0 };
    DWORD windowStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE;
    RECT expectedWindowRect = { 0 };
-   LONG clientPaddingTop, clientPaddingRight;
+   LONG clientPaddingRight, clientPaddingTop;
 
    UNUSED_PARAM( hPrevInstance );
    UNUSED_PARAM( lpCmdLine );
@@ -173,13 +175,13 @@ internal void InitThreads()
 
 internal void InitKeyCodeMap()
 {
-   g_globals.keyCodeMap[(int)KeyCode_Left] = VK_LEFT;
-   g_globals.keyCodeMap[(int)KeyCode_Up] = VK_UP;
-   g_globals.keyCodeMap[(int)KeyCode_Right] = VK_RIGHT;
-   g_globals.keyCodeMap[(int)KeyCode_Down] = VK_DOWN;
-   g_globals.keyCodeMap[(int)KeyCode_Enter] = VK_RETURN;
-   g_globals.keyCodeMap[(int)KeyCode_Escape] = VK_ESCAPE;
-   g_globals.keyCodeMap[(int)KeyCode_F8] = VK_F8;
+   g_globals.buttonCodeMap[(int)ButtonCode_Left] = VK_LEFT;
+   g_globals.buttonCodeMap[(int)ButtonCode_Up] = VK_UP;
+   g_globals.buttonCodeMap[(int)ButtonCode_Right] = VK_RIGHT;
+   g_globals.buttonCodeMap[(int)ButtonCode_Down] = VK_DOWN;
+   g_globals.buttonCodeMap[(int)ButtonCode_Enter] = VK_RETURN;
+   g_globals.buttonCodeMap[(int)ButtonCode_Escape] = VK_ESCAPE;
+   g_globals.buttonCodeMap[(int)ButtonCode_F8] = VK_F8;
 }
 
 internal void InitOpenGL( HWND hWnd )
@@ -246,6 +248,17 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
       case WM_SYSKEYUP:
          HandleKeyboardInput( (uint32_t)wParam, lParam );
          break;
+      case WM_MOUSEMOVE:
+         HandleMouseMove( lParam );
+         break;
+      case WM_LBUTTONDOWN:
+      case WM_RBUTTONDOWN:
+         HandleMouseButton( (uint32_t)wParam, True );
+         break;
+      case WM_LBUTTONUP:
+      case WM_RBUTTONUP:
+         HandleMouseButton( (uint32_t)wParam, False );
+         break;
       case WM_KILLFOCUS:
          Game_PauseEngine( &( g_globals.gameData ) );
          DefWindowProc( hWnd, uMsg, wParam, lParam );
@@ -279,26 +292,51 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
             return;
          }
 
-         for ( i = 0; i < KeyCode_Count; i++ )
+         for ( i = 0; i < ButtonCode_Count; i++ )
          {
-            if ( g_globals.keyCodeMap[i] == keyCode )
+            if ( g_globals.buttonCodeMap[i] == keyCode )
             {
-               Input_PressKey( g_globals.gameData.keyStates, (KeyCode_t)i );
+               Input_PressButton( &( g_globals.gameData.inputState ), (ButtonCode_t)i );
                break;
             }
          }
       }
       else
       {
-         for ( i = 0; i < KeyCode_Count; i++ )
+         for ( i = 0; i < ButtonCode_Count; i++ )
          {
-            if ( g_globals.keyCodeMap[i] == keyCode )
+            if ( g_globals.buttonCodeMap[i] == keyCode )
             {
-               Input_ReleaseKey( g_globals.gameData.keyStates, (KeyCode_t)i );
+               Input_ReleaseButton( &( g_globals.gameData.inputState ), (ButtonCode_t)i );
                break;
             }
          }
       }
+   }
+}
+
+internal void HandleMouseButton( uint32_t flags, Bool_t buttonDown )
+{
+   void (*inputFunc)( InputState_t*, ButtonCode_t ) = buttonDown ? Input_PressButton : Input_ReleaseButton;
+
+   if ( flags & MK_LBUTTON )
+   {
+      inputFunc( &( g_globals.gameData.inputState ), ButtonCode_MouseLeft );
+   }
+   else if ( flags & MK_RBUTTON )
+   {
+      inputFunc( &( g_globals.gameData.inputState ), ButtonCode_MouseRight );
+   }
+}
+
+internal void HandleMouseMove( LPARAM posData )
+{
+   int16_t clientX = (int16_t)posData;
+   int16_t clientY = SCREEN_HEIGHT - (int16_t)( posData >> 16 );
+
+   if ( clientX >= 0 && clientX < SCREEN_WIDTH && clientY >= 0 && clientY < SCREEN_HEIGHT )
+   {
+      Input_SetMousePos( &( g_globals.gameData.inputState ), (int32_t)clientX, (int32_t)clientY );
    }
 }
 

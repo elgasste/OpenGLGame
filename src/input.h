@@ -2,37 +2,50 @@
 #define INPUT_H
 
 #include "common.h"
+#include "vector.h"
 
 typedef enum
 {
-   KeyCode_Left = 0,
-   KeyCode_Up,
-   KeyCode_Right,
-   KeyCode_Down,
+   ButtonCode_Left = 0,
+   ButtonCode_Up,
+   ButtonCode_Right,
+   ButtonCode_Down,
 
-   KeyCode_Enter,
-   KeyCode_Escape,
+   ButtonCode_Enter,
+   ButtonCode_Escape,
 
-   KeyCode_F8,
+   ButtonCode_F8,
 
-   KeyCode_Count
+   ButtonCode_MouseLeft,
+   ButtonCode_MouseRight,
+
+   ButtonCode_Count
 }
-KeyCode_t;
+ButtonCode_t;
 
-typedef struct KeyState_t
+typedef struct ButtonState_t
 {
    Bool_t isDown;
    Bool_t wasDown;
 }
-KeyState_t;
+ButtonState_t;
 
-void Input_Init( KeyState_t* keyStates );
-void Input_UpdateStates( KeyState_t* keyStates );
-void Input_PressKey( KeyState_t* keyStates, KeyCode_t keyCode );
-void Input_ReleaseKey( KeyState_t* keyStates, KeyCode_t keyCode );
-Bool_t Input_WasKeyPressed( KeyState_t* keyStates, KeyCode_t keyCode );
-Bool_t Input_WasKeyReleased( KeyState_t* keyStates, KeyCode_t keyCode );
-Bool_t Input_IsAnyKeyDown( KeyState_t* keyStates );
-Bool_t Input_WasAnyKeyPressed( KeyState_t* keyStates );
+typedef struct InputState_t
+{
+   ButtonState_t buttonStates[ButtonCode_Count];
+   Vector2i32_t mousePos;
+   Vector2i32_t mouseDelta;
+}
+InputState_t;
+
+void Input_Init( InputState_t* inputState );
+void Input_UpdateState( InputState_t* inputState );
+void Input_PressButton( InputState_t* inputState, ButtonCode_t buttonCode );
+void Input_ReleaseButton( InputState_t* inputState, ButtonCode_t buttonCode );
+Bool_t Input_WasButtonPressed( InputState_t* inputState, ButtonCode_t buttonCode );
+Bool_t Input_WasButtonReleased( InputState_t* inputState, ButtonCode_t buttonCode );
+Bool_t Input_IsAnyButtonDown( InputState_t* inputState );
+Bool_t Input_WasAnyButtonPressed( InputState_t* inputState );
+void Input_SetMousePos( InputState_t* inputState, int32_t x, int32_t y );
 
 #endif

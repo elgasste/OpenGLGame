@@ -39,7 +39,7 @@ Star_t;
 typedef struct GameData_t
 {
    Clock_t clock;
-   KeyState_t keyStates[KeyCode_Count];
+   InputState_t inputState;
    RenderData_t renderData;
 
    Menu_t menus[MenuID_Count];
