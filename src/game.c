@@ -1,6 +1,7 @@
 #include "game.h"
 #include "image.h"
 #include "random.h"
+#include "rect.h"
 
 typedef struct
 {
@@ -56,7 +57,8 @@ Bool_t Game_Init( GameData_t* gameData )
 
    gameData->isRunning = False;
    gameData->isEngineRunning = True;
-   gameData->showDiagnostics = False;
+   gameData->diagnosticsData.showDiagnostics = False;
+   gameData->diagnosticsData.showThreadJobs = False;
    gameData->state = GameState_Playing;
    gameData->curMenuID = (MenuID_t)0;
 
@@ -147,7 +149,16 @@ internal void Game_HandleInput( GameData_t* gameData )
 {
    if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_F8 ) )
    {
-      TOGGLE_BOOL( gameData->showDiagnostics );
+      TOGGLE_BOOL( gameData->diagnosticsData.showDiagnostics );
+   }
+
+   if ( gameData->diagnosticsData.showDiagnostics &&
+        Input_WasButtonReleased( &( gameData->inputState ), ButtonCode_MouseLeft ) && 
+        Rect_PointInRectF( &( gameData->diagnosticsData.threadJobsToggleArea ),
+                           (float)( gameData->inputState.mousePos.x ),
+                           (float)( gameData->inputState.mousePos.y ) ) )
+   {
+      TOGGLE_BOOL( gameData->diagnosticsData.showThreadJobs );
    }
 
    gameData->stateInputHandlers[gameData->state]( gameData );

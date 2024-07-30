@@ -15,6 +15,16 @@
 #include "sprite.h"
 #include "font.h"
 #include "menu.h"
+#include "rect.h"
+
+typedef struct DiagnosticsData_t
+{
+   Bool_t showDiagnostics;
+   Bool_t showThreadJobs;
+
+   RectF_t threadJobsToggleArea;
+}
+DiagnosticsData_t;
 
 typedef struct RenderData_t
 {
@@ -40,6 +50,7 @@ typedef struct GameData_t
 {
    Clock_t clock;
    InputState_t inputState;
+   DiagnosticsData_t diagnosticsData;
    RenderData_t renderData;
 
    Menu_t menus[MenuID_Count];
@@ -48,7 +59,6 @@ typedef struct GameData_t
 
    Bool_t isRunning;
    Bool_t isEngineRunning;
-   Bool_t showDiagnostics;
 
    GameState_t state;
    void (*stateInputHandlers[GameState_Count])( void* );

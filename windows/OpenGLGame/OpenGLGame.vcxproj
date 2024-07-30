@@ -34,11 +34,13 @@
     <ClInclude Include="..\..\src\platform.h" />
     <ClInclude Include="..\..\src\platform_includes.h" />
     <ClInclude Include="..\..\src\random.h" />
+    <ClInclude Include="..\..\src\rect.h" />
     <ClInclude Include="..\..\src\sprite.h" />
     <ClInclude Include="..\..\src\strings.h" />
     <ClInclude Include="..\..\src\thread.h" />
     <ClInclude Include="..\..\src\vector.h" />
     <ClInclude Include="..\..\src\win_platform.h" />
+    <ClInclude Include="rect.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\blit.c" />
