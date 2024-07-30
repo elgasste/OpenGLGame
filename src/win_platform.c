@@ -96,6 +96,8 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
       FatalError( STR_WINERR_CREATEWINDOW );
    }
 
+   SetCursor( LoadCursor( 0, IDC_ARROW ) );
+
    InitKeyCodeMap();
    InitOpenGL( g_globals.hWndMain );
    InitThreads();
