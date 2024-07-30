@@ -47,7 +47,7 @@
 #define STR_DIAG_FRAMETARGETMICRO         "Target frame microseconds: %lld"
 #define STR_DIAG_FRAMEDURATIONMICRO       "Last frame microseconds: %lld"
 #define STR_DIAG_LAGFRAMES                "Lag frames: %u"
-#define STR_DIAG_THREADCOUNT              "Thread count: %u"
+#define STR_DIAG_THREADCOUNT              "Threads: %u (click for details)"
 #define STR_DIAG_THREADJOBSDONE           "   Jobs done by thread %u: %lld"
 #define STR_DIAG_MOUSEPOS                 "Mouse position: %d, %d"
 

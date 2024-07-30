@@ -1,7 +1,7 @@
 #if !defined( GAME_H )
 #define GAME_H
 
-#define STAR_COUNT            1024
+#define STAR_COUNT            128
 #define STAR_MIN_Y            146
 #define STAR_MAX_Y            767
 #define STAR_MIN_VELOCITY     20
