@@ -26,7 +26,8 @@ internal void InitOpenGL( HWND hWnd );
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags );
 internal void HandleMouseMove( LPARAM posData );
-internal void HandleMouseButton( uint32_t flags, Bool_t buttonDown );
+internal void HandleMouseButton( ButtonCode_t buttonCode, Bool_t buttonDown );
+internal void HandleMouseLeaveClient();
 internal DWORD WINAPI ThreadProc( LPVOID lpParam );
 internal Bool_t DoNextThreadQueueEntry( Win32ThreadInfo_t* threadInfo );
 
@@ -252,18 +253,24 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
          HandleMouseMove( lParam );
          break;
       case WM_LBUTTONDOWN:
+         HandleMouseButton( ButtonCode_MouseLeft, True );
+         break;
       case WM_RBUTTONDOWN:
-         HandleMouseButton( (uint32_t)wParam, True );
+         HandleMouseButton( ButtonCode_MouseRight, True );
          break;
       case WM_LBUTTONUP:
+         HandleMouseButton( ButtonCode_MouseLeft, False );
+         break;
       case WM_RBUTTONUP:
-         HandleMouseButton( (uint32_t)wParam, False );
+         HandleMouseButton( ButtonCode_MouseRight, False );
          break;
       case WM_KILLFOCUS:
+         HandleMouseLeaveClient();
          Game_PauseEngine( &( g_globals.gameData ) );
          DefWindowProc( hWnd, uMsg, wParam, lParam );
          break;
       case WM_SETFOCUS:
+         HandleMouseLeaveClient();
          Game_ResumeEngine( &( g_globals.gameData ) );
          DefWindowProc( hWnd, uMsg, wParam, lParam );
          break;
@@ -315,18 +322,32 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
    }
 }
 
-internal void HandleMouseButton( uint32_t flags, Bool_t buttonDown )
+internal void HandleMouseButton( ButtonCode_t buttonCode, Bool_t buttonDown )
 {
    void (*inputFunc)( InputState_t*, ButtonCode_t ) = buttonDown ? Input_PressButton : Input_ReleaseButton;
 
-   if ( flags & MK_LBUTTON )
+   inputFunc( &( g_globals.gameData.inputState ), buttonCode );
+
+   if ( buttonDown )
    {
-      inputFunc( &( g_globals.gameData.inputState ), ButtonCode_MouseLeft );
+      SetCapture( g_globals.hWndMain );
    }
-   else if ( flags & MK_RBUTTON )
+   else
    {
-      inputFunc( &( g_globals.gameData.inputState ), ButtonCode_MouseRight );
+      if ( !g_globals.gameData.inputState.buttonStates[ButtonCode_MouseLeft].isDown &&
+           !g_globals.gameData.inputState.buttonStates[ButtonCode_MouseRight].isDown )
+      {
+         ReleaseCapture();
+      }
    }
+
+   inputFunc( &( g_globals.gameData.inputState ), buttonCode );
+}
+
+internal void HandleMouseLeaveClient()
+{
+   Input_ReleaseButton( &( g_globals.gameData.inputState ), ButtonCode_MouseLeft );
+   Input_ReleaseButton( &( g_globals.gameData.inputState ), ButtonCode_MouseRight );
 }
 
 internal void HandleMouseMove( LPARAM posData )
