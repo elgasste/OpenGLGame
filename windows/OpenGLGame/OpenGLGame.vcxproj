@@ -40,7 +40,6 @@
     <ClInclude Include="..\..\src\thread.h" />
     <ClInclude Include="..\..\src\vector.h" />
     <ClInclude Include="..\..\src\win_platform.h" />
-    <ClInclude Include="rect.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\blit.c" />
