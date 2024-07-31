@@ -3,6 +3,15 @@
 
 #include "common.h"
 
+typedef struct GameData_t GameData_t;
+
+typedef struct ChunkIDOffsetArray_t
+{
+   uint32_t* offsets;
+   uint32_t numOffsets;
+}
+ChunkIDOffsetArray_t;
+
 typedef struct GameDataFileChunkEntry_t
 {
    uint32_t ID;
@@ -26,7 +35,6 @@ typedef struct GameDataFile_t
 }
 GameDataFile_t;
 
-Bool_t GameDataFile_Load( GameDataFile_t* gameDataFile, const char* filePath );
-void GameDataFile_ClearData( GameDataFile_t* gameDataFile );
+Bool_t GameDataFile_Load( GameData_t* gameData );
 
 #endif
