@@ -8,7 +8,7 @@ typedef struct
 }
 ChunkIDOffsetArray_t;
 
-internal Bool_t Game_LoadGameDataFile( GameData_t* gameData );
+internal Bool_t Game_ReadGameDataFile( GameData_t* gameData );
 internal Bool_t Game_ReadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
 internal Bool_t Game_ReadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
 internal Bool_t Game_ReadSpriteBasesChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
@@ -20,7 +20,7 @@ Bool_t Game_LoadData( GameData_t* gameData )
    Star_t* star;
    SpriteBase_t* starSpriteBase;
 
-   if ( !Game_LoadGameDataFile( gameData ) )
+   if ( !Game_ReadGameDataFile( gameData ) )
    {
       return False;
    }
@@ -44,7 +44,7 @@ Bool_t Game_LoadData( GameData_t* gameData )
    return True;
 }
 
-internal Bool_t Game_LoadGameDataFile( GameData_t* gameData )
+internal Bool_t Game_ReadGameDataFile( GameData_t* gameData )
 {
    uint32_t i, j, numOffsets, chunkID;
    GameDataFile_t dataFile = { 0 };
