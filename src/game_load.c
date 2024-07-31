@@ -2,8 +2,9 @@
 #include "game_data_file.h"
 
 internal Bool_t Game_LoadGameDataFile( GameData_t* gameData );
-internal Bool_t Game_LoadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
-internal Bool_t Game_LoadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
+internal Bool_t Game_ReadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
+internal Bool_t Game_ReadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
+internal Bool_t Game_ReadSpriteBasesChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
 internal void Game_LoadMenus( GameData_t* gameData );
 
 Bool_t Game_LoadData( GameData_t* gameData )
@@ -18,11 +19,25 @@ Bool_t Game_LoadData( GameData_t* gameData )
 
    Game_LoadMenus( gameData );
 
+   // TODO: remove this after updating the game data file
+   SpriteBase_t* starSpriteBase = &( gameData->renderData.spriteBases[SpriteBaseID_Star] );
+   uint32_t* mem = (uint32_t*)Platform_MAlloc( 16 );
+   mem[1] = 6;
+   mem[2] = 6;
+   ( (float*)mem )[3] = 0.1f;
+   Sprite_LoadBaseFromMemory( starSpriteBase,
+                              SpriteBaseID_Star,
+                              &( gameData->renderData.images[ImageID_Star] ),
+                              ImageID_Star,
+                              (uint8_t*)mem,
+                              16 );
+   Platform_Free( mem, 16 );
+
    for ( i = 0; i < STAR_COUNT; i++ )
    {
       star = &( gameData->stars[i] );
 
-      if ( !Sprite_Init( &( star->sprite ), &( gameData->renderData.images[ImageID_Star] ), 6, 6, 0.1f ) )
+      if ( !Sprite_LoadFromBase( &( star->sprite ), starSpriteBase ) )
       {
          return False;
       }
@@ -56,24 +71,33 @@ internal Bool_t Game_LoadGameDataFile( GameData_t* gameData )
 
    chunk = dataFile.chunks;
 
+   // TODO: update this to read in all the chunks to arrays first, then
+   // cycle through them in the correct order (to make sure images are
+   // loaded before sprite bases, etc).
    for ( i = 0; i < dataFile.numChunks; i++ )
    {
       switch ( ( GameDataFileChunkID_t )( chunk->ID ) )
       {
          case GameDataFileChunkID_Bitmaps:
-            if ( !Game_LoadBitmapsChunk( gameData, chunk ) )
+            if ( !Game_ReadBitmapsChunk( gameData, chunk ) )
             {
                GameDataFile_ClearData( &dataFile );
                return False;
             }
             break;
          case GameDataFileChunkID_Fonts:
-            if ( !Game_LoadFontsChunk( gameData, chunk ) )
+            if ( !Game_ReadFontsChunk( gameData, chunk ) )
             {
                GameDataFile_ClearData( &dataFile );
                return False;
             }
             break;
+         case GameDataFileChunkID_SpriteBases:
+            if ( !Game_ReadSpriteBasesChunk( gameData, chunk ) )
+            {
+               GameDataFile_ClearData( &dataFile );
+               return False;
+            }
          default:
             snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNCHUNKID, chunk->ID );
             Platform_Log( msg );
@@ -87,7 +111,7 @@ internal Bool_t Game_LoadGameDataFile( GameData_t* gameData )
    return True;
 }
 
-internal Bool_t Game_LoadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
+internal Bool_t Game_ReadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
 {
    uint32_t i;
    ImageID_t imageID;
@@ -121,7 +145,7 @@ internal Bool_t Game_LoadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t
    return True;
 }
 
-internal Bool_t Game_LoadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
+internal Bool_t Game_ReadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
 {
    uint32_t i;
    FontID_t fontID;
@@ -146,6 +170,57 @@ internal Bool_t Game_LoadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* 
       else
       {
          snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNFONTENTRYID, entry->ID );
+         Platform_Log( msg );
+      }
+
+      entry++;
+   }
+
+   return True;
+}
+
+internal Bool_t Game_ReadSpriteBasesChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
+{
+   uint32_t i, imageID;
+   SpriteBaseID_t baseID;
+   GameDataFileChunkEntry_t* entry = chunk->entries;
+   char msg[STRING_SIZE_DEFAULT];
+
+   for ( i = 0; i < chunk->numEntries; i++ )
+   {
+      baseID = (SpriteBaseID_t)entry->ID;
+      
+      if ( entry->size < 4 )
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_SPRITEBASECORRUPT, entry->ID );
+         Platform_Log( msg );
+         return False;
+      }
+
+      imageID = ( (uint32_t*)( entry->memory ) )[0];
+
+      if ( imageID >= ImageID_Count )
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_SPRITEBASEIMAGENOTFOUND, imageID );
+         Platform_Log( msg );
+         return False;
+      }
+
+      if ( baseID < SpriteBaseID_Count )
+      {
+         if ( !Sprite_LoadBaseFromMemory( &( gameData->renderData.spriteBases[entry->ID] ),
+                                          baseID,
+                                          &( gameData->renderData.images[imageID] ),
+                                          (ImageID_t)imageID,
+                                          entry->memory,
+                                          entry->size ) )
+         {
+            return False;
+         }
+      }
+      else
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNSPRITEBASEID, entry->ID );
          Platform_Log( msg );
       }
 
