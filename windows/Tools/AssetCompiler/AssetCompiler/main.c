@@ -3,65 +3,16 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 
-#include "font.h"
+#include "main.h"
 #include "sprite.h"
 #include "platform.h"
 
-#define STARTCODEPOINT     32       // space
-#define ENDCODEPOINT       126      // tilde
-
-#define NUM_CHUNKS         3
-
-typedef struct
-{
-   char path[STRING_SIZE_DEFAULT];
-   char dir[STRING_SIZE_DEFAULT];
-   char name[STRING_SIZE_DEFAULT];
-}
-FileParts_t;
-
-typedef struct
-{
-   char fileName[STRING_SIZE_DEFAULT];
-   uint32_t ID;
-}
-AssetFileToIDMapping_t;
-
-typedef struct
-{
-   char fileName[STRING_SIZE_DEFAULT];
-   Font_t font;
-}
-FontData_t;
-
-typedef struct
-{
-   char fileName[STRING_SIZE_DEFAULT];
-   uint32_t size;
-   uint8_t* memory;
-}
-BitmapData_t;
-
-typedef struct
-{
-   uint32_t baseID;
-   uint32_t imageID;
-   Vector2ui32_t frameDimensions;
-}
-SpriteBaseData_t;
-
-typedef struct
-{
-   uint32_t numFonts;
-   FontData_t* fontDatas;
-   uint32_t numBitmaps;
-   BitmapData_t* bitmapDatas;
-}
-GameAssets_t;
-
 // TODO: this is all manually-entered for now, but ultimately it would be
 // nice to have some kind of external tool that can compile this data.
-global float g_glyphHeights[] = { 12.0f, 16.0f, 24.0f, 48.0f, 72.0f };
+global FontIDToGlyphHeightsMapping_t g_glyphHeightsMap[] = {
+   { (uint32_t)FontID_Consolas, { 12.0f, 24.0f }, 2 },
+   { (uint32_t)FontID_Papyrus, { 48.0f }, 1 }
+};
 global AssetFileToIDMapping_t g_fontIDMap[] = {
    { "consolas.ttf", (uint32_t)FontID_Consolas },
    { "papyrus.ttf", (uint32_t)FontID_Papyrus }
@@ -74,12 +25,12 @@ global SpriteBaseData_t g_spriteBaseDatas[] = {
    { (uint32_t)SpriteBaseID_Star, (uint32_t)ImageID_Star, { 6, 6 } }
 };
 
-internal FileParts_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles );
+internal FileInfo_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles );
 internal FontData_t* LoadFontsFromDir( const char* dir, const char* filter, uint32_t* numFonts );
-internal void LoadFontFromFile( FontData_t* fontData, const char* filePath );
+internal void LoadFontFromFile( FontData_t* fontData, FileInfo_t* fileInfo );
 internal BitmapData_t* LoadBitmapsFromDir( const char* dir, const char* filter, uint32_t* numBitmaps );
-internal void WriteGameDataFile( GameAssets_t* assets, const char* dir );
-internal uint32_t GetGameDataFileSize( GameAssets_t* assets );
+internal void WriteAssetsFile( GameAssets_t* assets, const char* dir );
+internal uint32_t GetAssetsFileSize( GameAssets_t* assets );
 internal uint32_t GetFontDataMemSize( FontData_t* fontData );
 internal void WriteFontData( FontData_t* fontData, FileData_t* fileData, uint32_t fileOffset );
 internal uint32_t GetAssetIDForFileName( AssetFileToIDMapping_t mappings[], uint32_t numMappings, const char* fileName );
@@ -120,7 +71,7 @@ int main( int argc, char** argv )
 
    printf( "\n" );
 
-   WriteGameDataFile( &assets, assetsDir );
+   WriteAssetsFile( &assets, assetsDir );
 
    printf( "\n" );
 
@@ -212,12 +163,12 @@ void Platform_ClearFileData( FileData_t* fileData )
    fileData->fileSize = 0;
 }
 
-internal FileParts_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles )
+internal FileInfo_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles )
 {
    HANDLE hFile;
    WIN32_FIND_DATAA findData;
    uint32_t i = 0;
-   FileParts_t* files;
+   FileInfo_t* files;
    char msg[STRING_SIZE_DEFAULT];
 
    *numFiles = 0;
@@ -239,7 +190,7 @@ internal FileParts_t* GetFiles( const char* dir, const char* filter, uint32_t* n
    }
    while( FindNextFileA( hFile, &findData ) != 0 );
 
-   files = (FileParts_t*)Platform_MemAlloc( sizeof( FileParts_t ) * ( *numFiles ) );
+   files = (FileInfo_t*)Platform_MemAlloc( sizeof( FileInfo_t ) * ( *numFiles ) );
    hFile = FindFirstFileA( filter, &findData );
 
    do
@@ -261,7 +212,7 @@ internal FileParts_t* GetFiles( const char* dir, const char* filter, uint32_t* n
 internal FontData_t* LoadFontsFromDir( const char* dir, const char* filter, uint32_t* numFonts )
 {
    uint32_t i;
-   FileParts_t* files;
+   FileInfo_t* files;
    FontData_t* fontDatas;
    FontData_t* fontData;
 
@@ -272,14 +223,14 @@ internal FontData_t* LoadFontsFromDir( const char* dir, const char* filter, uint
    for ( i = 0; i < ( *numFonts ); i++ )
    {
       strcpy_s( fontData->fileName, STRING_SIZE_DEFAULT, files[i].name );
-      LoadFontFromFile( fontData, files[i].path );
+      LoadFontFromFile( fontData, &( files[i] ) );
       fontData++;
    }
 
    return fontDatas;
 }
 
-internal void LoadFontFromFile( FontData_t* fontData, const char* filePath )
+internal void LoadFontFromFile( FontData_t* fontData, FileInfo_t* fileInfo )
 {
    FileData_t fileData;
    uint8_t* filePos;
@@ -288,21 +239,20 @@ internal void LoadFontFromFile( FontData_t* fontData, const char* filePath )
    uint8_t *monoCodepointMemory, *codepointMemory, *source, *destRow;
    uint32_t* dest;
    uint8_t alpha;
-   uint32_t i;
+   uint32_t i, fontID;
    float scale;
    FontGlyphCollection_t* collection;
    char msg[STRING_SIZE_DEFAULT];
 
    fontData->font.codepointOffset = STARTCODEPOINT;
-   fontData->font.numGlyphCollections = (uint32_t)( sizeof( g_glyphHeights ) / 4 );
    fontData->font.numGlyphs = (uint32_t)( ( ENDCODEPOINT - STARTCODEPOINT ) + 1 );
 
-   snprintf( msg, STRING_SIZE_DEFAULT, "Reading font data from %s...", filePath );
+   snprintf( msg, STRING_SIZE_DEFAULT, "Reading font data from %s...", fileInfo->path );
    printf( msg );
 
-   if ( !Platform_ReadFileData( filePath, &fileData ) )
+   if ( !Platform_ReadFileData( fileInfo->path, &fileData ) )
    {
-      snprintf( msg, STRING_SIZE_DEFAULT, "ERROR: could not open file: %s\n\n", filePath );
+      snprintf( msg, STRING_SIZE_DEFAULT, "ERROR: could not open file: %s\n\n", fileInfo->path );
       printf( msg );
       exit( 1 );
    }
@@ -311,17 +261,19 @@ internal void LoadFontFromFile( FontData_t* fontData, const char* filePath )
 
    if ( !stbtt_InitFont( &fontInfo, filePos, stbtt_GetFontOffsetForIndex( filePos, 0 ) ) )
    {
-      snprintf( msg, STRING_SIZE_DEFAULT, "ERROR: could not load font data: %s\n\n", filePath );
+      snprintf( msg, STRING_SIZE_DEFAULT, "ERROR: could not load font data: %s\n\n", fileInfo->path );
       printf( msg );
       exit( 1 );
    }
 
+   fontID = GetAssetIDForFileName( g_fontIDMap, sizeof( g_fontIDMap ) / sizeof( AssetFileToIDMapping_t ), fileInfo->name );
+   fontData->font.numGlyphCollections = g_glyphHeightsMap[fontID].numGlyphHeights;
    fontData->font.glyphCollections = (FontGlyphCollection_t*)Platform_MemAlloc( sizeof( FontGlyphCollection_t ) * fontData->font.numGlyphCollections );
    collection = fontData->font.glyphCollections;
 
    for ( i = 0; i < fontData->font.numGlyphCollections; i++ )
    {
-      collection->height = g_glyphHeights[i];
+      collection->height = g_glyphHeightsMap[fontID].glyphHeights[i];
       scale = stbtt_ScaleForPixelHeight( &fontInfo, (float)( collection->height ) );
       stbtt_GetFontVMetrics( &fontInfo, 0, &baseline, &lineGap);
       collection->baseline = -baseline * scale;
@@ -377,7 +329,7 @@ internal void LoadFontFromFile( FontData_t* fontData, const char* filePath )
 internal BitmapData_t* LoadBitmapsFromDir( const char* dir, const char* filter, uint32_t* numBitmaps )
 {
    uint32_t i, j;
-   FileParts_t* files;
+   FileInfo_t* files;
    FileData_t fileData;
    BitmapData_t* bitmapDatas;
    BitmapData_t* bitmapData;
@@ -416,7 +368,7 @@ internal BitmapData_t* LoadBitmapsFromDir( const char* dir, const char* filter, 
    return bitmapDatas;
 }
 
-internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
+internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
 {
    uint32_t i, j, fileOffset, dataSize, numSpriteBases;
    uint8_t* filePos8;
@@ -427,12 +379,12 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
    SpriteBaseData_t* spriteBaseData;
    char msg[STRING_SIZE_DEFAULT];
 
-   fileData.fileSize = GetGameDataFileSize( assets );
+   fileData.fileSize = GetAssetsFileSize( assets );
    snprintf( msg, STRING_SIZE_DEFAULT, "Game data file size: %u bytes\n", fileData.fileSize );
    printf( msg );
 
    strcpy_s( fileData.filePath, STRING_SIZE_DEFAULT, dir );
-   strcat_s( fileData.filePath, STRING_SIZE_DEFAULT, GAME_DATA_FILENAME );
+   strcat_s( fileData.filePath, STRING_SIZE_DEFAULT, ASSETS_FILENAME );
    fileData.contents = Platform_MemAlloc( fileData.fileSize );
 
    printf( "Writing game data to destination..." );
@@ -445,7 +397,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
 
    // fonts chunk
    filePos32 = (uint32_t*)( (uint8_t*)fileData.contents + fileOffset );
-   filePos32[0] = (uint32_t)GameDataFileChunkID_Fonts;
+   filePos32[0] = (uint32_t)AssetsFileChunkID_Fonts;
    filePos32[1] = assets->numFonts;
    filePos32 += 2;
    fileOffset += 8;
@@ -469,7 +421,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
 
    // bitmaps chunk
    ( (uint32_t*)( fileData.contents ) )[2] = fileOffset;  // chunk offset
-   filePos32[0] = (uint32_t)GameDataFileChunkID_Bitmaps;
+   filePos32[0] = (uint32_t)AssetsFileChunkID_Bitmaps;
    filePos32[1] = assets->numBitmaps;
    filePos32 += 2;
    fileOffset += 8;
@@ -498,7 +450,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
    // sprite bases chunk
    numSpriteBases = (uint32_t)( sizeof( g_spriteBaseDatas ) / sizeof( SpriteBaseData_t ) );
    ( (uint32_t*)( fileData.contents ) )[3] = fileOffset;  // chunk offset
-   filePos32[0] = (uint32_t)GameDataFileChunkID_SpriteBases;
+   filePos32[0] = (uint32_t)AssetsFileChunkID_SpriteBases;
    filePos32[1] = numSpriteBases;
    filePos32 += 2;
    fileOffset += 8;
@@ -533,7 +485,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
    Platform_ClearFileData( &fileData );
 }
 
-internal uint32_t GetGameDataFileSize( GameAssets_t* assets )
+internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
 {
    uint32_t fileSize, i;
    FontData_t* fontData;

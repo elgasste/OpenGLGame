@@ -23,7 +23,7 @@ typedef int32_t Bool_t;
 #define False 0
 #define TOGGLE_BOOL( x ) x = ( x ) ? False : True
 
-#define GAME_DATA_FILENAME       "gamedata.dat"
+#define ASSETS_FILENAME          "assets.dat"
 
 #define MAX_THREADQUEUE_SIZE     256
 

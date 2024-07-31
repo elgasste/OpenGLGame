@@ -26,7 +26,7 @@
     <ClInclude Include="..\..\src\enums.h" />
     <ClInclude Include="..\..\src\font.h" />
     <ClInclude Include="..\..\src\game.h" />
-    <ClInclude Include="..\..\src\game_data_file.h" />
+    <ClInclude Include="..\..\src\assets_file.h" />
     <ClInclude Include="..\..\src\image.h" />
     <ClInclude Include="..\..\src\input.h" />
     <ClInclude Include="..\..\src\menu.h" />
@@ -47,7 +47,7 @@
     <ClCompile Include="..\..\src\clock.c" />
     <ClCompile Include="..\..\src\font.c" />
     <ClCompile Include="..\..\src\game.c" />
-    <ClCompile Include="..\..\src\game_data_file.c" />
+    <ClCompile Include="..\..\src\assets_file.c" />
     <ClCompile Include="..\..\src\game_load.c" />
     <ClCompile Include="..\..\src\game_render.c" />
     <ClCompile Include="..\..\src\image.c" />
@@ -152,7 +152,7 @@
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies)winmm.lib;opengl32.lib;Shlwapi.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)..\..\assets\gamedata.dat" "$(OutDir)" /S /Y</Command>
+      <Command>xcopy "$(SolutionDir)..\..\assets\assets.dat" "$(OutDir)" /S /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -174,7 +174,7 @@
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies)winmm.lib;opengl32.lib;Shlwapi.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)..\..\assets\gamedata.dat" "$(OutDir)" /S /Y</Command>
+      <Command>xcopy "$(SolutionDir)..\..\assets\assets.dat" "$(OutDir)" /S /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
