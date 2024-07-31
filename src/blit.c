@@ -107,13 +107,14 @@ void Blit_Image( Image_t* image, float screenX, float screenY, float scale )
 
 void Blit_ColoredSprite( Sprite_t* sprite, float screenX, float screenY, float scale, uint32_t color )
 {
-   uint32_t rowIndex = ( sprite->frameIndex ) / sprite->frameStride;
-   uint32_t colIndex = ( sprite->frameIndex ) % sprite->frameStride;
+   Vector2ui32_t* frameDim = &( sprite->base->frameDimensions );
+   uint32_t rowIndex = ( sprite->frameIndex ) / sprite->base->frameStride;
+   uint32_t colIndex = ( sprite->frameIndex ) % sprite->base->frameStride;
 
-   Blit_ColoredTextureSection( sprite->image->textureHandle, &( sprite->image->pixelBuffer ),
+   Blit_ColoredTextureSection( sprite->base->image->textureHandle, &( sprite->base->image->pixelBuffer ),
                                screenX, screenY,
-                               sprite->frameDimensions.x * colIndex, sprite->frameDimensions.y * rowIndex,
-                               sprite->frameDimensions.x, sprite->frameDimensions.y,
+                               frameDim->x * colIndex, frameDim->y * rowIndex,
+                               frameDim->x, frameDim->y,
                                scale, color );
 }
 

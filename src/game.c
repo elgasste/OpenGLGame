@@ -248,7 +248,7 @@ internal void Game_UpdateStarAsync( StarUpdateData_t* data )
          star->isResting = False;
          star->movingLeft = Random_Bool();
          star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
-         star->position.x = star->movingLeft ? SCREEN_WIDTH : -(float)( star->sprite.frameDimensions.x - 1 );
+         star->position.x = star->movingLeft ? SCREEN_WIDTH : -(float)( star->sprite.base->frameDimensions.x - 1 );
          star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
          star->restSeconds = ( Random_UInt32( 0, STAR_MAX_RESTSECONDS * 1000 ) ) / 1000.0f;
 
@@ -264,7 +264,7 @@ internal void Game_UpdateStarAsync( StarUpdateData_t* data )
          ? star->position.x - (float)star->pixelsPerSecond * gameData->clock.frameDeltaSeconds
          : star->position.x + (float)star->pixelsPerSecond * gameData->clock.frameDeltaSeconds;
 
-      if ( star->position.x < -(float)( star->sprite.frameDimensions.x ) ||
+      if ( star->position.x < -(float)( star->sprite.base->frameDimensions.x ) ||
            star->position.x > SCREEN_WIDTH )
       {
          star->isResting = True;

@@ -26,12 +26,13 @@ typedef struct DiagnosticsData_t
 }
 DiagnosticsData_t;
 
-typedef struct RenderData_t
+typedef struct GameRenderData_t
 {
    Image_t images[ImageID_Count];
    Font_t fonts[FontID_Count];
+   SpriteBase_t spriteBases[SpriteBaseID_Count];
 }
-RenderData_t;
+GameRenderData_t;
 
 typedef struct Star_t
 {
@@ -51,7 +52,7 @@ typedef struct GameData_t
    Clock_t clock;
    InputState_t inputState;
    DiagnosticsData_t diagnosticsData;
-   RenderData_t renderData;
+   GameRenderData_t renderData;
 
    Menu_t menus[MenuID_Count];
    MenuID_t curMenuID;
