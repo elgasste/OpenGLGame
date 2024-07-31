@@ -9,6 +9,7 @@ typedef struct
 ChunkIDOffsetArray_t;
 
 internal Bool_t Game_ReadGameDataFile( GameData_t* gameData );
+internal void Game_ClearChunkIDOffsets( ChunkIDOffsetArray_t* offsets, uint32_t numOffsets );
 internal Bool_t Game_ReadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
 internal Bool_t Game_ReadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
 internal Bool_t Game_ReadSpriteBasesChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
@@ -112,6 +113,7 @@ internal Bool_t Game_ReadGameDataFile( GameData_t* gameData )
       {
          snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_NOCHUNKSFOUNDFORID, i );
          Platform_Log( msg );
+         Game_ClearChunkIDOffsets( chunkIDOffsets, (uint32_t)GameDataFileChunkID_Count );
          GameDataFile_ClearData( &dataFile );
          return False;
       }
@@ -121,16 +123,26 @@ internal Bool_t Game_ReadGameDataFile( GameData_t* gameData )
          chunk = dataFile.chunks + chunkIDOffsets[chunkID].offsets[j];
          if ( !chunkLoaders[i]( gameData, chunk ) )
          {
+            Game_ClearChunkIDOffsets( chunkIDOffsets, (uint32_t)GameDataFileChunkID_Count );
             GameDataFile_ClearData( &dataFile );
             return False;
          }
       }
-
-      Platform_Free( chunkIDOffsets[chunkID].offsets, 4 * chunkIDOffsets[chunkID].numOffsets );
    }
 
+   Game_ClearChunkIDOffsets( chunkIDOffsets, (uint32_t)GameDataFileChunkID_Count );
    GameDataFile_ClearData( &dataFile );
    return True;
+}
+
+internal void Game_ClearChunkIDOffsets( ChunkIDOffsetArray_t* offsets, uint32_t numOffsets )
+{
+   uint32_t i;
+
+   for ( i = 0; i < numOffsets; i++ )
+   {
+      Platform_Free( offsets[i].offsets, 4 * offsets[i].numOffsets );
+   }
 }
 
 internal Bool_t Game_ReadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
