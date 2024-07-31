@@ -1,5 +1,5 @@
 #include "game.h"
-#include "game_data_file.h"
+#include "assets_file.h"
 
 internal void Game_LoadMenus( GameData_t* gameData );
 
@@ -9,7 +9,7 @@ Bool_t Game_LoadData( GameData_t* gameData )
    Star_t* star;
    SpriteBase_t* starSpriteBase;
 
-   if ( !GameDataFile_Load( gameData ) )
+   if ( !AssetsFile_Load( gameData ) )
    {
       return False;
    }

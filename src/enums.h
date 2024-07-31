@@ -3,13 +3,13 @@
 
 typedef enum
 {
-   GameDataFileChunkID_Bitmaps = 0,
-   GameDataFileChunkID_Fonts,
-   GameDataFileChunkID_SpriteBases,
+   AssetsFileChunkID_Bitmaps = 0,
+   AssetsFileChunkID_Fonts,
+   AssetsFileChunkID_SpriteBases,
 
-   GameDataFileChunkID_Count
+   AssetsFileChunkID_Count
 }
-GameDataFileChunkID_t;
+AssetsFileChunkID_t;
 
 typedef enum
 {

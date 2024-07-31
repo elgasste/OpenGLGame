@@ -78,8 +78,8 @@ internal FileParts_t* GetFiles( const char* dir, const char* filter, uint32_t* n
 internal FontData_t* LoadFontsFromDir( const char* dir, const char* filter, uint32_t* numFonts );
 internal void LoadFontFromFile( FontData_t* fontData, const char* filePath );
 internal BitmapData_t* LoadBitmapsFromDir( const char* dir, const char* filter, uint32_t* numBitmaps );
-internal void WriteGameDataFile( GameAssets_t* assets, const char* dir );
-internal uint32_t GetGameDataFileSize( GameAssets_t* assets );
+internal void WriteAssetsFile( GameAssets_t* assets, const char* dir );
+internal uint32_t GetAssetsFileSize( GameAssets_t* assets );
 internal uint32_t GetFontDataMemSize( FontData_t* fontData );
 internal void WriteFontData( FontData_t* fontData, FileData_t* fileData, uint32_t fileOffset );
 internal uint32_t GetAssetIDForFileName( AssetFileToIDMapping_t mappings[], uint32_t numMappings, const char* fileName );
@@ -120,7 +120,7 @@ int main( int argc, char** argv )
 
    printf( "\n" );
 
-   WriteGameDataFile( &assets, assetsDir );
+   WriteAssetsFile( &assets, assetsDir );
 
    printf( "\n" );
 
@@ -416,7 +416,7 @@ internal BitmapData_t* LoadBitmapsFromDir( const char* dir, const char* filter, 
    return bitmapDatas;
 }
 
-internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
+internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
 {
    uint32_t i, j, fileOffset, dataSize, numSpriteBases;
    uint8_t* filePos8;
@@ -427,12 +427,12 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
    SpriteBaseData_t* spriteBaseData;
    char msg[STRING_SIZE_DEFAULT];
 
-   fileData.fileSize = GetGameDataFileSize( assets );
+   fileData.fileSize = GetAssetsFileSize( assets );
    snprintf( msg, STRING_SIZE_DEFAULT, "Game data file size: %u bytes\n", fileData.fileSize );
    printf( msg );
 
    strcpy_s( fileData.filePath, STRING_SIZE_DEFAULT, dir );
-   strcat_s( fileData.filePath, STRING_SIZE_DEFAULT, GAME_DATA_FILENAME );
+   strcat_s( fileData.filePath, STRING_SIZE_DEFAULT, ASSETS_FILENAME );
    fileData.contents = Platform_MemAlloc( fileData.fileSize );
 
    printf( "Writing game data to destination..." );
@@ -445,7 +445,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
 
    // fonts chunk
    filePos32 = (uint32_t*)( (uint8_t*)fileData.contents + fileOffset );
-   filePos32[0] = (uint32_t)GameDataFileChunkID_Fonts;
+   filePos32[0] = (uint32_t)AssetsFileChunkID_Fonts;
    filePos32[1] = assets->numFonts;
    filePos32 += 2;
    fileOffset += 8;
@@ -469,7 +469,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
 
    // bitmaps chunk
    ( (uint32_t*)( fileData.contents ) )[2] = fileOffset;  // chunk offset
-   filePos32[0] = (uint32_t)GameDataFileChunkID_Bitmaps;
+   filePos32[0] = (uint32_t)AssetsFileChunkID_Bitmaps;
    filePos32[1] = assets->numBitmaps;
    filePos32 += 2;
    fileOffset += 8;
@@ -498,7 +498,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
    // sprite bases chunk
    numSpriteBases = (uint32_t)( sizeof( g_spriteBaseDatas ) / sizeof( SpriteBaseData_t ) );
    ( (uint32_t*)( fileData.contents ) )[3] = fileOffset;  // chunk offset
-   filePos32[0] = (uint32_t)GameDataFileChunkID_SpriteBases;
+   filePos32[0] = (uint32_t)AssetsFileChunkID_SpriteBases;
    filePos32[1] = numSpriteBases;
    filePos32 += 2;
    fileOffset += 8;
@@ -533,7 +533,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
    Platform_ClearFileData( &fileData );
 }
 
-internal uint32_t GetGameDataFileSize( GameAssets_t* assets )
+internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
 {
    uint32_t fileSize, i;
    FontData_t* fontData;

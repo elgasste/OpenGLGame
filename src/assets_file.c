@@ -1,27 +1,27 @@
-#include "game_data_file.h"
+#include "assets_file.h"
 #include "game.h"
 #include "platform.h"
 
 #define ERROR_RETURN_FALSE() \
    snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_GDFERR_FILECORRUPT, filePath ); \
    Platform_Log( errorMsg ); \
-   GameDataFile_ClearData( gameDataFile ); \
+   AssetsFile_ClearData( assetsFile ); \
    return False;
 
-internal Bool_t GameDataFile_LoadFile( GameDataFile_t* gameDataFile, const char* filePath );
-internal void GameDataFile_ClearData( GameDataFile_t* gameDataFile );
-internal Bool_t GameDataFile_ReadChunk( GameDataFileChunk_t* chunk,
-                                        FileData_t* fileData,
-                                        uint32_t chunkOffset );
-internal Bool_t GameDataFile_ReadFileData( GameData_t* gameData, GameDataFile_t* fileData );
-internal void GameDataFile_ClearChunkIDOffsets( ChunkIDOffsetArray_t* offsets, uint32_t numOffsets );
-internal Bool_t GameDataFile_ReadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
-internal Bool_t GameDataFile_ReadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
-internal Bool_t GameDataFile_ReadSpriteBasesChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
+internal Bool_t AssetsFile_LoadFile( AssetsFileData_t* assetsFile, const char* filePath );
+internal void AssetsFile_ClearData( AssetsFileData_t* assetsFile );
+internal Bool_t AssetsFile_ReadChunk( AssetsFileChunk_t* chunk,
+                                      FileData_t* fileData,
+                                      uint32_t chunkOffset );
+internal Bool_t AssetsFile_ReadFileData( GameData_t* gameData, AssetsFileData_t* fileData );
+internal void AssetsFile_ClearChunkIDOffsets( AssetsFileChunkIDOffsetArray_t* offsets, uint32_t numOffsets );
+internal Bool_t AssetsFile_ReadBitmapsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
+internal Bool_t AssetsFile_ReadFontsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
+internal Bool_t AssetsFile_ReadSpriteBasesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
 
-Bool_t GameDataFile_Load( GameData_t* gameData )
+Bool_t AssetsFile_Load( GameData_t* gameData )
 {
-   GameDataFile_t dataFile = { 0 };
+   AssetsFileData_t dataFile = { 0 };
    Bool_t success;
    char appDirectory[STRING_SIZE_DEFAULT];
    char dataFilePath[STRING_SIZE_DEFAULT];
@@ -31,28 +31,28 @@ Bool_t GameDataFile_Load( GameData_t* gameData )
       return False;
    }
 
-   snprintf( dataFilePath, STRING_SIZE_DEFAULT, "%s%s", appDirectory, GAME_DATA_FILENAME );
+   snprintf( dataFilePath, STRING_SIZE_DEFAULT, "%s%s", appDirectory, ASSETS_FILENAME );
 
-   if ( !GameDataFile_LoadFile( &dataFile, dataFilePath ) )
+   if ( !AssetsFile_LoadFile( &dataFile, dataFilePath ) )
    {
       return False;
    }
 
-   success = GameDataFile_ReadFileData( gameData, &dataFile );
-   GameDataFile_ClearData( &dataFile );
+   success = AssetsFile_ReadFileData( gameData, &dataFile );
+   AssetsFile_ClearData( &dataFile );
    return success;
 }
 
-internal Bool_t GameDataFile_LoadFile( GameDataFile_t* gameDataFile, const char* filePath )
+internal Bool_t AssetsFile_LoadFile( AssetsFileData_t* assetsFile, const char* filePath )
 {
    uint32_t bytesRead, i, chunkOffset;
    FileData_t fileData;
    uint32_t* filePos32;
-   GameDataFileChunk_t* chunk;
+   AssetsFileChunk_t* chunk;
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   gameDataFile->chunks = 0;
-   gameDataFile->numChunks = 0;
+   assetsFile->chunks = 0;
+   assetsFile->numChunks = 0;
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
@@ -65,29 +65,29 @@ internal Bool_t GameDataFile_LoadFile( GameDataFile_t* gameDataFile, const char*
 
    // first 4 bytes are the number of chunks
    filePos32 = (uint32_t*)fileData.contents;
-   gameDataFile->numChunks = filePos32[0];
+   assetsFile->numChunks = filePos32[0];
    filePos32++;
    bytesRead = 4;
 
    // make sure there's enough room to read all the chunk offsets
-   if ( fileData.fileSize < ( bytesRead + ( gameDataFile->numChunks * 4 ) ) )
+   if ( fileData.fileSize < ( bytesRead + ( assetsFile->numChunks * 4 ) ) )
    {
       ERROR_RETURN_FALSE();
    }
 
-   gameDataFile->chunks = (GameDataFileChunk_t*)Platform_MAlloc( sizeof( GameDataFileChunk_t ) * gameDataFile->numChunks );
-   chunk = gameDataFile->chunks;
+   assetsFile->chunks = (AssetsFileChunk_t*)Platform_MAlloc( sizeof( AssetsFileChunk_t ) * assetsFile->numChunks );
+   chunk = assetsFile->chunks;
 
-   for ( i = 0; i < gameDataFile->numChunks; i++ )
+   for ( i = 0; i < assetsFile->numChunks; i++ )
    {
       chunk->entries = 0;
       chunk->numEntries = 0;
       chunk++;
    }
 
-   chunk = gameDataFile->chunks;
+   chunk = assetsFile->chunks;
 
-   for ( i = 0; i < gameDataFile->numChunks; i++ )
+   for ( i = 0; i < assetsFile->numChunks; i++ )
    {
       chunkOffset = filePos32[0];
       filePos32++;
@@ -99,7 +99,7 @@ internal Bool_t GameDataFile_LoadFile( GameDataFile_t* gameDataFile, const char*
          ERROR_RETURN_FALSE();
       }
 
-      if ( !GameDataFile_ReadChunk( chunk, &fileData, chunkOffset ) )
+      if ( !AssetsFile_ReadChunk( chunk, &fileData, chunkOffset ) )
       {
          ERROR_RETURN_FALSE();
       }
@@ -110,15 +110,15 @@ internal Bool_t GameDataFile_LoadFile( GameDataFile_t* gameDataFile, const char*
    return True;
 }
 
-internal void GameDataFile_ClearData( GameDataFile_t* gameDataFile )
+internal void AssetsFile_ClearData( AssetsFileData_t* assetsFile )
 {
    uint32_t i, j;
-   GameDataFileChunk_t* chunk = gameDataFile->chunks;
-   GameDataFileChunkEntry_t* entry;
+   AssetsFileChunk_t* chunk = assetsFile->chunks;
+   AssetsFileChunkEntry_t* entry;
 
    if ( chunk )
    {
-      for ( i = 0; i < gameDataFile->numChunks; i++ )
+      for ( i = 0; i < assetsFile->numChunks; i++ )
       {
          entry = chunk->entries;
 
@@ -135,23 +135,23 @@ internal void GameDataFile_ClearData( GameDataFile_t* gameDataFile )
             }
          }
 
-         Platform_Free( chunk->entries, sizeof( GameDataFileChunkEntry_t ) * chunk->numEntries );
+         Platform_Free( chunk->entries, sizeof( AssetsFileChunkEntry_t ) * chunk->numEntries );
          chunk++;
       }
 
-      Platform_Free( gameDataFile->chunks, sizeof( GameDataFileChunk_t ) * gameDataFile->numChunks );
-      gameDataFile->numChunks = 0;
-      gameDataFile->chunks = 0;
+      Platform_Free( assetsFile->chunks, sizeof( AssetsFileChunk_t ) * assetsFile->numChunks );
+      assetsFile->numChunks = 0;
+      assetsFile->chunks = 0;
    }
 }
 
-internal Bool_t GameDataFile_ReadChunk( GameDataFileChunk_t* chunk,
-                                        FileData_t* fileData,
-                                        uint32_t chunkOffset )
+internal Bool_t AssetsFile_ReadChunk( AssetsFileChunk_t* chunk,
+                                      FileData_t* fileData,
+                                      uint32_t chunkOffset )
 {
    uint32_t i, j, bytesRead;
    uint8_t* filePos = (uint8_t*)( fileData->contents ) + chunkOffset;
-   GameDataFileChunkEntry_t* entry;
+   AssetsFileChunkEntry_t* entry;
 
    chunk->ID = ( (uint32_t*)filePos )[0];
    chunk->numEntries = ( (uint32_t*)filePos )[1];
@@ -164,7 +164,7 @@ internal Bool_t GameDataFile_ReadChunk( GameDataFileChunk_t* chunk,
       return False;
    }
 
-   chunk->entries = (GameDataFileChunkEntry_t*)Platform_MAlloc( sizeof( GameDataFileChunkEntry_t ) * chunk->numEntries );
+   chunk->entries = (AssetsFileChunkEntry_t*)Platform_MAlloc( sizeof( AssetsFileChunkEntry_t ) * chunk->numEntries );
    entry = chunk->entries;
 
    for ( i = 0; i < chunk->numEntries; i++ )
@@ -204,24 +204,24 @@ internal Bool_t GameDataFile_ReadChunk( GameDataFileChunk_t* chunk,
    return True;
 }
 
-internal Bool_t GameDataFile_ReadFileData( GameData_t* gameData, GameDataFile_t* dataFile )
+internal Bool_t AssetsFile_ReadFileData( GameData_t* gameData, AssetsFileData_t* dataFile )
 {
    uint32_t i, j, numOffsets, chunkID;
-   GameDataFileChunk_t* chunk;
-   ChunkIDOffsetArray_t chunkIDOffsets[GameDataFileChunkID_Count];
+   AssetsFileChunk_t* chunk;
+   AssetsFileChunkIDOffsetArray_t chunkIDOffsets[AssetsFileChunkID_Count];
    char msg[STRING_SIZE_DEFAULT];
    uint32_t chunkIDOrder[] = {
-      (uint32_t)GameDataFileChunkID_Fonts,
-      (uint32_t)GameDataFileChunkID_Bitmaps,
-      (uint32_t)GameDataFileChunkID_SpriteBases
+      (uint32_t)AssetsFileChunkID_Fonts,
+      (uint32_t)AssetsFileChunkID_Bitmaps,
+      (uint32_t)AssetsFileChunkID_SpriteBases
    };
-   Bool_t ( *chunkLoaders[] )( GameData_t*, GameDataFileChunk_t* ) = {
-      GameDataFile_ReadFontsChunk,
-      GameDataFile_ReadBitmapsChunk,
-      GameDataFile_ReadSpriteBasesChunk
+   Bool_t ( *chunkLoaders[] )( GameData_t*, AssetsFileChunk_t* ) = {
+      AssetsFile_ReadFontsChunk,
+      AssetsFile_ReadBitmapsChunk,
+      AssetsFile_ReadSpriteBasesChunk
    };
 
-   for ( i = 0; i < (uint32_t)GameDataFileChunkID_Count; i++ )
+   for ( i = 0; i < (uint32_t)AssetsFileChunkID_Count; i++ )
    {
       chunkIDOffsets[i].offsets = 0;
       chunkIDOffsets[i].numOffsets = 0;
@@ -231,7 +231,7 @@ internal Bool_t GameDataFile_ReadFileData( GameData_t* gameData, GameDataFile_t*
 
    for ( i = 0; i < dataFile->numChunks; i++ )
    {
-      if ( (GameDataFileChunkID_t)( chunk->ID ) < GameDataFileChunkID_Count )
+      if ( (AssetsFileChunkID_t)( chunk->ID ) < AssetsFileChunkID_Count )
       {
          numOffsets = chunkIDOffsets[chunk->ID].numOffsets;
          chunkIDOffsets[chunk->ID].offsets = (uint32_t*)Platform_ReAlloc( chunkIDOffsets[chunk->ID].offsets,
@@ -249,7 +249,7 @@ internal Bool_t GameDataFile_ReadFileData( GameData_t* gameData, GameDataFile_t*
       chunk++;
    }
 
-   for ( i = 0; i < (uint32_t)GameDataFileChunkID_Count; i++ )
+   for ( i = 0; i < (uint32_t)AssetsFileChunkID_Count; i++ )
    {
       chunkID = chunkIDOrder[i];
 
@@ -257,7 +257,7 @@ internal Bool_t GameDataFile_ReadFileData( GameData_t* gameData, GameDataFile_t*
       {
          snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_NOCHUNKSFOUNDFORID, i );
          Platform_Log( msg );
-         GameDataFile_ClearChunkIDOffsets( chunkIDOffsets, (uint32_t)GameDataFileChunkID_Count );
+         AssetsFile_ClearChunkIDOffsets( chunkIDOffsets, (uint32_t)AssetsFileChunkID_Count );
          return False;
       }
 
@@ -266,17 +266,17 @@ internal Bool_t GameDataFile_ReadFileData( GameData_t* gameData, GameDataFile_t*
          chunk = dataFile->chunks + chunkIDOffsets[chunkID].offsets[j];
          if ( !chunkLoaders[i]( gameData, chunk ) )
          {
-            GameDataFile_ClearChunkIDOffsets( chunkIDOffsets, (uint32_t)GameDataFileChunkID_Count );
+            AssetsFile_ClearChunkIDOffsets( chunkIDOffsets, (uint32_t)AssetsFileChunkID_Count );
             return False;
          }
       }
    }
 
-   GameDataFile_ClearChunkIDOffsets( chunkIDOffsets, (uint32_t)GameDataFileChunkID_Count );
+   AssetsFile_ClearChunkIDOffsets( chunkIDOffsets, (uint32_t)AssetsFileChunkID_Count );
    return True;
 }
 
-internal void GameDataFile_ClearChunkIDOffsets( ChunkIDOffsetArray_t* offsets, uint32_t numOffsets )
+internal void AssetsFile_ClearChunkIDOffsets( AssetsFileChunkIDOffsetArray_t* offsets, uint32_t numOffsets )
 {
    uint32_t i;
 
@@ -286,11 +286,11 @@ internal void GameDataFile_ClearChunkIDOffsets( ChunkIDOffsetArray_t* offsets, u
    }
 }
 
-internal Bool_t GameDataFile_ReadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
+internal Bool_t AssetsFile_ReadBitmapsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk )
 {
    uint32_t i;
    ImageID_t imageID;
-   GameDataFileChunkEntry_t* entry = chunk->entries;
+   AssetsFileChunkEntry_t* entry = chunk->entries;
    Image_t* image;
    char msg[STRING_SIZE_DEFAULT];
 
@@ -320,11 +320,11 @@ internal Bool_t GameDataFile_ReadBitmapsChunk( GameData_t* gameData, GameDataFil
    return True;
 }
 
-internal Bool_t GameDataFile_ReadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
+internal Bool_t AssetsFile_ReadFontsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk )
 {
    uint32_t i;
    FontID_t fontID;
-   GameDataFileChunkEntry_t* entry = chunk->entries;
+   AssetsFileChunkEntry_t* entry = chunk->entries;
    Font_t* font;
    char msg[STRING_SIZE_DEFAULT];
 
@@ -354,11 +354,11 @@ internal Bool_t GameDataFile_ReadFontsChunk( GameData_t* gameData, GameDataFileC
    return True;
 }
 
-internal Bool_t GameDataFile_ReadSpriteBasesChunk( GameData_t* gameData, GameDataFileChunk_t* chunk )
+internal Bool_t AssetsFile_ReadSpriteBasesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk )
 {
    uint32_t i, imageID;
    SpriteBaseID_t baseID;
-   GameDataFileChunkEntry_t* entry = chunk->entries;
+   AssetsFileChunkEntry_t* entry = chunk->entries;
    char msg[STRING_SIZE_DEFAULT];
 
    for ( i = 0; i < chunk->numEntries; i++ )
