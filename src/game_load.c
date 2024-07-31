@@ -11,6 +11,7 @@ Bool_t Game_LoadData( GameData_t* gameData )
 {
    uint32_t i;
    Star_t* star;
+   SpriteBase_t* starSpriteBase;
 
    if ( !Game_LoadGameDataFile( gameData ) )
    {
@@ -19,19 +20,7 @@ Bool_t Game_LoadData( GameData_t* gameData )
 
    Game_LoadMenus( gameData );
 
-   // TODO: remove this after updating the game data file
-   SpriteBase_t* starSpriteBase = &( gameData->renderData.spriteBases[SpriteBaseID_Star] );
-   uint32_t* mem = (uint32_t*)Platform_MAlloc( 16 );
-   mem[1] = 6;
-   mem[2] = 6;
-   ( (float*)mem )[3] = 0.1f;
-   Sprite_LoadBaseFromMemory( starSpriteBase,
-                              SpriteBaseID_Star,
-                              &( gameData->renderData.images[ImageID_Star] ),
-                              ImageID_Star,
-                              (uint8_t*)mem,
-                              16 );
-   Platform_Free( mem, 16 );
+   starSpriteBase = &( gameData->renderData.spriteBases[SpriteBaseID_Star] );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {

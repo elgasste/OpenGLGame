@@ -4,12 +4,13 @@
 #include "stb_truetype.h"
 
 #include "font.h"
+#include "sprite.h"
 #include "platform.h"
 
 #define STARTCODEPOINT     32       // space
 #define ENDCODEPOINT       126      // tilde
 
-#define NUM_CHUNKS         2
+#define NUM_CHUNKS         3
 
 typedef struct
 {
@@ -22,9 +23,9 @@ FileParts_t;
 typedef struct
 {
    char fileName[STRING_SIZE_DEFAULT];
-   FontID_t ID;
+   uint32_t ID;
 }
-AssetIDMapping_t;
+AssetFileToIDMapping_t;
 
 typedef struct
 {
@@ -43,6 +44,15 @@ BitmapData_t;
 
 typedef struct
 {
+   uint32_t baseID;
+   uint32_t imageID;
+   Vector2ui32_t frameDimensions;
+   float frameSeconds;
+}
+SpriteBaseData_t;
+
+typedef struct
+{
    uint32_t numFonts;
    FontData_t* fontDatas;
    uint32_t numBitmaps;
@@ -50,14 +60,19 @@ typedef struct
 }
 GameAssets_t;
 
+// TODO: this is all manually-entered for now, but ultimately it would be
+// nice to have some kind of external tool that can compile this data.
 global float g_glyphHeights[] = { 12.0f, 16.0f, 24.0f, 48.0f, 72.0f };
-global AssetIDMapping_t g_fontIDMap[] = {
+global AssetFileToIDMapping_t g_fontIDMap[] = {
    { "consolas.ttf", (uint32_t)FontID_Consolas },
    { "papyrus.ttf", (uint32_t)FontID_Papyrus }
 };
-global AssetIDMapping_t g_bitmapIDMap[] = {
+global AssetFileToIDMapping_t g_bitmapIDMap[] = {
    { "background.bmp", (uint32_t)ImageID_Background },
    { "star_sprite.bmp", (uint32_t)ImageID_Star }
+};
+global SpriteBaseData_t g_spriteBaseDatas[] = {
+   { (uint32_t)SpriteBaseID_Star, (uint32_t)ImageID_Star, { 6, 6 }, 0.1f }
 };
 
 internal FileParts_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles );
@@ -68,7 +83,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir );
 internal uint32_t GetGameDataFileSize( GameAssets_t* assets );
 internal uint32_t GetFontDataMemSize( FontData_t* fontData );
 internal void WriteFontData( FontData_t* fontData, FileData_t* fileData, uint32_t fileOffset );
-internal uint32_t GetAssetIDForFileName( AssetIDMapping_t mappings[], uint32_t numMappings, const char* fileName );
+internal uint32_t GetAssetIDForFileName( AssetFileToIDMapping_t mappings[], uint32_t numMappings, const char* fileName );
 
 int main( int argc, char** argv )
 {
@@ -404,12 +419,13 @@ internal BitmapData_t* LoadBitmapsFromDir( const char* dir, const char* filter, 
 
 internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
 {
-   uint32_t i, j, fileOffset, dataSize;
+   uint32_t i, j, fileOffset, dataSize, numSpriteBases;
    uint8_t* filePos8;
    uint32_t* filePos32;
    FileData_t fileData;
    FontData_t* fontData;
    BitmapData_t* bitmapData;
+   SpriteBaseData_t* spriteBaseData;
    char msg[STRING_SIZE_DEFAULT];
 
    fileData.fileSize = GetGameDataFileSize( assets );
@@ -440,7 +456,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
    for ( i = 0; i < assets->numFonts; i++ )
    {
       dataSize = GetFontDataMemSize( fontData );
-      filePos32[0] = GetAssetIDForFileName( g_fontIDMap, sizeof( g_fontIDMap ) / sizeof( AssetIDMapping_t ), fontData->fileName );
+      filePos32[0] = GetAssetIDForFileName( g_fontIDMap, sizeof( g_fontIDMap ) / sizeof( AssetFileToIDMapping_t ), fontData->fileName );
       filePos32[1] = dataSize;
       filePos32 += 2;
       fileOffset += 8;
@@ -463,7 +479,7 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
 
    for ( i = 0; i < assets->numBitmaps; i++ )
    {
-      filePos32[0] = GetAssetIDForFileName( g_bitmapIDMap, sizeof( g_bitmapIDMap ) / sizeof( AssetIDMapping_t ), bitmapData->fileName );
+      filePos32[0] = GetAssetIDForFileName( g_bitmapIDMap, sizeof( g_bitmapIDMap ) / sizeof( AssetFileToIDMapping_t ), bitmapData->fileName );
       filePos32[1] = bitmapData->size;
       filePos32 += 2;
       fileOffset += 8;
@@ -478,6 +494,30 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
       fileOffset += bitmapData->size;
       filePos32 = (uint32_t*)filePos8;
       bitmapData++;
+   }
+
+   // sprite bases chunk
+   numSpriteBases = (uint32_t)( sizeof( g_spriteBaseDatas ) / sizeof( SpriteBaseData_t ) );
+   ( (uint32_t*)( fileData.contents ) )[3] = fileOffset;  // chunk offset
+   filePos32[0] = (uint32_t)GameDataFileChunkID_SpriteBases;
+   filePos32[1] = numSpriteBases;
+   filePos32 += 2;
+   fileOffset += 8;
+
+   spriteBaseData = g_spriteBaseDatas;
+
+   for ( i = 0; i < numSpriteBases; i++ )
+   {
+      filePos32[0] = spriteBaseData->baseID;
+      filePos32[1] = 16;
+      filePos32[2] = spriteBaseData->imageID;
+      filePos32[3] = spriteBaseData->frameDimensions.x;
+      filePos32[4] = spriteBaseData->frameDimensions.y;
+      ( (float*)filePos32 )[5] = spriteBaseData->frameSeconds;
+
+      filePos32 += 6;
+      fileOffset += 24;
+      spriteBaseData++;
    }
 
    assert( fileOffset == fileData.fileSize );
@@ -521,6 +561,12 @@ internal uint32_t GetGameDataFileSize( GameAssets_t* assets )
       fileSize += 8;    // entry ID and size
       fileSize += bitmapData->size;
       bitmapData++;
+   }
+
+   for ( i = 0; i < (uint32_t)( sizeof( g_spriteBaseDatas ) / sizeof( SpriteBaseData_t ) ); i++ )
+   {
+      fileSize += 8;    // entry ID and size
+      fileSize += 16;   // image ID, frame dimensions, and frame seconds
    }
 
    return fileSize;
@@ -601,7 +647,7 @@ internal void WriteFontData( FontData_t* fontData, FileData_t* fileData, uint32_
    }
 }
 
-internal uint32_t GetAssetIDForFileName( AssetIDMapping_t mappings[], uint32_t numMappings, const char* fileName )
+internal uint32_t GetAssetIDForFileName( AssetFileToIDMapping_t mappings[], uint32_t numMappings, const char* fileName )
 {
    uint32_t i;
    char msg[STRING_SIZE_DEFAULT];
