@@ -8,7 +8,7 @@ typedef struct
    HWND hWndMain;
    GameData_t gameData;
    LARGE_INTEGER performanceFrequency;
-   uint32_t keyCodeMap[(int)KeyCode_Count];
+   uint32_t buttonCodeMap[(int)ButtonCode_Count];
    Win32ThreadInfo_t* threadInfoArray;
    ThreadQueue_t threadQueue;
    HANDLE threadSemaphoreHandle;
@@ -25,8 +25,11 @@ internal void InitKeyCodeMap();
 internal void InitOpenGL( HWND hWnd );
 internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam );
 internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags );
+internal void HandleMouseMove( LPARAM posData );
+internal void HandleMouseButton( ButtonCode_t buttonCode, Bool_t buttonDown );
+internal void HandleMouseLeaveClient();
 internal DWORD WINAPI ThreadProc( LPVOID lpParam );
-internal Bool_t DoNextThreadQueueEntry();
+internal Bool_t DoNextThreadQueueEntry( Win32ThreadInfo_t* threadInfo );
 
 int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow )
 {
@@ -35,7 +38,7 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
    WNDCLASSA mainWindowClass = { 0 };
    DWORD windowStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE;
    RECT expectedWindowRect = { 0 };
-   LONG clientPaddingTop, clientPaddingRight;
+   LONG clientPaddingRight, clientPaddingTop;
 
    UNUSED_PARAM( hPrevInstance );
    UNUSED_PARAM( lpCmdLine );
@@ -93,6 +96,8 @@ int CALLBACK WinMain( _In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
       FatalError( STR_WINERR_CREATEWINDOW );
    }
 
+   SetCursor( LoadCursor( 0, IDC_ARROW ) );
+
    InitKeyCodeMap();
    InitOpenGL( g_globals.hWndMain );
    InitThreads();
@@ -147,10 +152,16 @@ internal void InitThreads()
       FatalError( STR_WINERR_INITTHREADS );
    }
 
-   for ( i = 0; i < numThreads; i++ )
+   // thread 0 is the main thread
+   g_globals.threadInfoArray[0].queue = &( g_globals.threadQueue );
+   g_globals.threadInfoArray[0].threadIndex = 0;
+   g_globals.threadInfoArray[0].jobsDone = 0;
+
+   for ( i = 1; i < numThreads; i++ )
    {
       g_globals.threadInfoArray[i].queue = &( g_globals.threadQueue );
-      g_globals.threadInfoArray[i].logicalThreadIndex = i;
+      g_globals.threadInfoArray[i].threadIndex = i;
+      g_globals.threadInfoArray[i].jobsDone = 0;
       threadHandle = CreateThread( 0, 0, ThreadProc, &( g_globals.threadInfoArray[i] ), 0, &threadId );
 
       if ( !threadHandle || threadHandle == INVALID_HANDLE_VALUE )
@@ -167,13 +178,13 @@ internal void InitThreads()
 
 internal void InitKeyCodeMap()
 {
-   g_globals.keyCodeMap[(int)KeyCode_Left] = VK_LEFT;
-   g_globals.keyCodeMap[(int)KeyCode_Up] = VK_UP;
-   g_globals.keyCodeMap[(int)KeyCode_Right] = VK_RIGHT;
-   g_globals.keyCodeMap[(int)KeyCode_Down] = VK_DOWN;
-   g_globals.keyCodeMap[(int)KeyCode_Enter] = VK_RETURN;
-   g_globals.keyCodeMap[(int)KeyCode_Escape] = VK_ESCAPE;
-   g_globals.keyCodeMap[(int)KeyCode_F8] = VK_F8;
+   g_globals.buttonCodeMap[(int)ButtonCode_Left] = VK_LEFT;
+   g_globals.buttonCodeMap[(int)ButtonCode_Up] = VK_UP;
+   g_globals.buttonCodeMap[(int)ButtonCode_Right] = VK_RIGHT;
+   g_globals.buttonCodeMap[(int)ButtonCode_Down] = VK_DOWN;
+   g_globals.buttonCodeMap[(int)ButtonCode_Enter] = VK_RETURN;
+   g_globals.buttonCodeMap[(int)ButtonCode_Escape] = VK_ESCAPE;
+   g_globals.buttonCodeMap[(int)ButtonCode_F8] = VK_F8;
 }
 
 internal void InitOpenGL( HWND hWnd )
@@ -240,11 +251,28 @@ internal LRESULT CALLBACK MainWindowProc( _In_ HWND hWnd, _In_ UINT uMsg, _In_ W
       case WM_SYSKEYUP:
          HandleKeyboardInput( (uint32_t)wParam, lParam );
          break;
+      case WM_MOUSEMOVE:
+         HandleMouseMove( lParam );
+         break;
+      case WM_LBUTTONDOWN:
+         HandleMouseButton( ButtonCode_MouseLeft, True );
+         break;
+      case WM_RBUTTONDOWN:
+         HandleMouseButton( ButtonCode_MouseRight, True );
+         break;
+      case WM_LBUTTONUP:
+         HandleMouseButton( ButtonCode_MouseLeft, False );
+         break;
+      case WM_RBUTTONUP:
+         HandleMouseButton( ButtonCode_MouseRight, False );
+         break;
       case WM_KILLFOCUS:
+         HandleMouseLeaveClient();
          Game_PauseEngine( &( g_globals.gameData ) );
          DefWindowProc( hWnd, uMsg, wParam, lParam );
          break;
       case WM_SETFOCUS:
+         HandleMouseLeaveClient();
          Game_ResumeEngine( &( g_globals.gameData ) );
          DefWindowProc( hWnd, uMsg, wParam, lParam );
          break;
@@ -273,22 +301,22 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
             return;
          }
 
-         for ( i = 0; i < KeyCode_Count; i++ )
+         for ( i = 0; i < ButtonCode_Count; i++ )
          {
-            if ( g_globals.keyCodeMap[i] == keyCode )
+            if ( g_globals.buttonCodeMap[i] == keyCode )
             {
-               Input_PressKey( g_globals.gameData.keyStates, (KeyCode_t)i );
+               Input_PressButton( &( g_globals.gameData.inputState ), (ButtonCode_t)i );
                break;
             }
          }
       }
       else
       {
-         for ( i = 0; i < KeyCode_Count; i++ )
+         for ( i = 0; i < ButtonCode_Count; i++ )
          {
-            if ( g_globals.keyCodeMap[i] == keyCode )
+            if ( g_globals.buttonCodeMap[i] == keyCode )
             {
-               Input_ReleaseKey( g_globals.gameData.keyStates, (KeyCode_t)i );
+               Input_ReleaseButton( &( g_globals.gameData.inputState ), (ButtonCode_t)i );
                break;
             }
          }
@@ -296,20 +324,57 @@ internal void HandleKeyboardInput( uint32_t keyCode, LPARAM flags )
    }
 }
 
+internal void HandleMouseButton( ButtonCode_t buttonCode, Bool_t buttonDown )
+{
+   void (*inputFunc)( InputState_t*, ButtonCode_t ) = buttonDown ? Input_PressButton : Input_ReleaseButton;
+
+   inputFunc( &( g_globals.gameData.inputState ), buttonCode );
+
+   if ( buttonDown )
+   {
+      SetCapture( g_globals.hWndMain );
+   }
+   else
+   {
+      if ( !g_globals.gameData.inputState.buttonStates[ButtonCode_MouseLeft].isDown &&
+           !g_globals.gameData.inputState.buttonStates[ButtonCode_MouseRight].isDown )
+      {
+         ReleaseCapture();
+      }
+   }
+
+   inputFunc( &( g_globals.gameData.inputState ), buttonCode );
+}
+
+internal void HandleMouseLeaveClient()
+{
+   Input_ReleaseButton( &( g_globals.gameData.inputState ), ButtonCode_MouseLeft );
+   Input_ReleaseButton( &( g_globals.gameData.inputState ), ButtonCode_MouseRight );
+}
+
+internal void HandleMouseMove( LPARAM posData )
+{
+   int16_t clientX = (int16_t)posData;
+   int16_t clientY = SCREEN_HEIGHT - (int16_t)( posData >> 16 );
+
+   if ( clientX >= 0 && clientX < SCREEN_WIDTH && clientY >= 0 && clientY < SCREEN_HEIGHT )
+   {
+      Input_SetMousePos( &( g_globals.gameData.inputState ), (int32_t)clientX, (int32_t)clientY );
+   }
+}
+
 internal DWORD WINAPI ThreadProc( LPVOID lpParam )
 {
-   UNUSED_PARAM( lpParam );
-
    while ( 1 )
    {
-      if ( DoNextThreadQueueEntry() )
+      if ( DoNextThreadQueueEntry( (Win32ThreadInfo_t*)lpParam ) )
       {
          WaitForSingleObjectEx( g_globals.threadSemaphoreHandle, INFINITE, FALSE );
       }
    }
 }
 
-internal Bool_t DoNextThreadQueueEntry()
+internal Bool_t DoNextThreadQueueEntry( Win32ThreadInfo_t* threadInfo )
 {
    Bool_t shouldSleep = False;
    uint32_t entryIndex, originalNextEntry = g_globals.threadQueue.nextEntryToRead;
@@ -324,6 +389,7 @@ internal Bool_t DoNextThreadQueueEntry()
       if ( entryIndex == originalNextEntry )
       {        
          g_globals.threadQueue.entries[entryIndex].workerFnc( g_globals.threadQueue.entries[entryIndex].data );
+         threadInfo->jobsDone++;
          InterlockedIncrement( (LONG volatile *)( &( g_globals.threadQueue.completionCount ) ) );
       }
    }
@@ -571,9 +637,14 @@ void Platform_RunThreadQueue()
 {
    while( g_globals.threadQueue.completionGoal != g_globals.threadQueue.completionCount )
    {
-      DoNextThreadQueueEntry();
+      DoNextThreadQueueEntry( g_globals.threadInfoArray );
    }
 
    g_globals.threadQueue.completionGoal = 0;
    g_globals.threadQueue.completionCount = 0;
+}
+
+uint64_t Platform_GetJobsDoneByThread( uint32_t threadIndex )
+{
+   return g_globals.threadInfoArray[threadIndex].jobsDone;
 }

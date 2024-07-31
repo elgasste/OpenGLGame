@@ -1,6 +1,7 @@
 #include "game.h"
 #include "image.h"
 #include "random.h"
+#include "rect.h"
 
 typedef struct
 {
@@ -46,7 +47,7 @@ Bool_t Game_Init( GameData_t* gameData )
    }
 
    Clock_Init( &( gameData->clock ) );
-   Input_Init( gameData->keyStates );
+   Input_Init( &( gameData->inputState ) );
 
    gameData->stateInputHandlers[GameState_Playing] = Game_HandleStateInput_Playing;
    gameData->stateInputHandlers[GameState_Menu] = Game_HandleStateInput_Menu;
@@ -56,7 +57,8 @@ Bool_t Game_Init( GameData_t* gameData )
 
    gameData->isRunning = False;
    gameData->isEngineRunning = True;
-   gameData->showDiagnostics = False;
+   gameData->diagnosticsData.showDiagnostics = False;
+   gameData->diagnosticsData.showThreadJobs = False;
    gameData->state = GameState_Playing;
    gameData->curMenuID = (MenuID_t)0;
 
@@ -98,7 +100,7 @@ void Game_Run( GameData_t* gameData )
       if ( gameData->isEngineRunning )
       {
          Clock_StartFrame( &( gameData->clock ) );
-         Input_UpdateStates( gameData->keyStates );
+         Input_UpdateState( &( gameData->inputState ) );
          Platform_Tick();
          Game_HandleInput( gameData );
          Game_Tick( gameData );
@@ -145,9 +147,18 @@ void Game_TryClose( GameData_t* gameData )
 
 internal void Game_HandleInput( GameData_t* gameData )
 {
-   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_F8 ) )
+   if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_F8 ) )
    {
-      TOGGLE_BOOL( gameData->showDiagnostics );
+      TOGGLE_BOOL( gameData->diagnosticsData.showDiagnostics );
+   }
+
+   if ( gameData->diagnosticsData.showDiagnostics &&
+        Input_WasButtonReleased( &( gameData->inputState ), ButtonCode_MouseLeft ) && 
+        Rect_PointInRectF( &( gameData->diagnosticsData.threadJobsToggleArea ),
+                           (float)( gameData->inputState.mousePos.x ),
+                           (float)( gameData->inputState.mousePos.y ) ) )
+   {
+      TOGGLE_BOOL( gameData->diagnosticsData.showThreadJobs );
    }
 
    gameData->stateInputHandlers[gameData->state]( gameData );
@@ -155,7 +166,7 @@ internal void Game_HandleInput( GameData_t* gameData )
 
 internal void Game_HandleStateInput_Playing( GameData_t* gameData )
 {
-   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
+   if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Escape ) )
    {
       gameData->curMenuID = MenuID_Playing;
       Menu_Reset( &( gameData->menus[gameData->curMenuID] ) );
@@ -168,20 +179,20 @@ internal void Game_HandleStateInput_Menu( GameData_t* gameData )
 {
    Menu_t* menu = &( gameData->menus[gameData->curMenuID] );
 
-   if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Escape ) )
+   if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Escape ) )
    {
       gameData->state = GameState_Playing;
       return;
    }
-   else if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Up ) )
+   else if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Up ) )
    {
       Menu_DecrementSelectedItem( menu );
    }
-   else if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Down ) )
+   else if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Down ) )
    {
       Menu_IncrementSelectedItem( menu );
    }
-   else if ( Input_WasKeyPressed( gameData->keyStates, KeyCode_Enter ) )
+   else if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Enter ) )
    {
       gameData->menuItemInputHandlers[menu->items[menu->selectedItem].ID]( gameData );
    }

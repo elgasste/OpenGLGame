@@ -1,11 +1,11 @@
 #include "input.h"
 
-void Input_Init( KeyState_t* keyStates )
+void Input_Init( InputState_t* inputState )
 {
    uint32_t i;
-   KeyState_t* state = keyStates;
+   ButtonState_t* state = inputState->buttonStates;
 
-   for ( i = 0; i < (int)KeyCode_Count; i++ )
+   for ( i = 0; i < (int)ButtonCode_Count; i++ )
    {
       state->isDown = False;
       state->wasDown = False;
@@ -13,45 +13,45 @@ void Input_Init( KeyState_t* keyStates )
    }
 }
 
-void Input_UpdateStates( KeyState_t* keyStates )
+void Input_UpdateState( InputState_t* inputState )
 {
    uint32_t i;
-   KeyState_t* state = keyStates;
+   ButtonState_t* state = inputState->buttonStates;
 
-   for ( i = 0; i < (uint32_t)KeyCode_Count; i++ )
+   for ( i = 0; i < (uint32_t)ButtonCode_Count; i++ )
    {
       state->wasDown = state->isDown;
       state++;
    }
 }
 
-void Input_PressKey( KeyState_t* keyStates, KeyCode_t keyCode )
+void Input_PressButton( InputState_t* inputState, ButtonCode_t buttonCode )
 {
-   keyStates[(uint32_t)keyCode].isDown = True;
+   inputState->buttonStates[(uint32_t)buttonCode].isDown = True;
 }
 
-void Input_ReleaseKey( KeyState_t* keyStates, KeyCode_t keyCode )
+void Input_ReleaseButton( InputState_t* inputState, ButtonCode_t buttonCode )
 {
-   keyStates[(uint32_t)keyCode].isDown = False;
+   inputState->buttonStates[(uint32_t)buttonCode].isDown = False;
 }
 
-Bool_t Input_WasKeyPressed( KeyState_t* keyStates, KeyCode_t keyCode )
+Bool_t Input_WasButtonPressed( InputState_t* inputState, ButtonCode_t buttonCode )
 {
-   return keyStates[(uint32_t)keyCode].isDown && !keyStates[(uint32_t)keyCode].wasDown;
+   return inputState->buttonStates[(uint32_t)buttonCode].isDown && !inputState->buttonStates[(uint32_t)buttonCode].wasDown;
 }
 
-Bool_t Input_WasKeyReleased( KeyState_t* keyStates, KeyCode_t keyCode )
+Bool_t Input_WasButtonReleased( InputState_t* inputState, ButtonCode_t buttonCode )
 {
-   return !keyStates[(uint32_t)keyCode].isDown && keyStates[(uint32_t)keyCode].wasDown;
+   return !inputState->buttonStates[(uint32_t)buttonCode].isDown && inputState->buttonStates[(uint32_t)buttonCode].wasDown;
 }
 
-Bool_t Input_IsAnyKeyDown( KeyState_t* keyStates )
+Bool_t Input_IsAnyButtonDown( InputState_t* inputState )
 {
    uint32_t i;
 
-   for ( i = 0; i < (uint32_t)KeyCode_Count; i++ )
+   for ( i = 0; i < (uint32_t)ButtonCode_Count; i++ )
    {
-      if ( keyStates[i].isDown )
+      if ( inputState->buttonStates[i].isDown )
       {
          return True;
       }
@@ -60,17 +60,25 @@ Bool_t Input_IsAnyKeyDown( KeyState_t* keyStates )
    return False;
 }
 
-Bool_t Input_WasAnyKeyPressed( KeyState_t* keyStates )
+Bool_t Input_WasAnyButtonPressed( InputState_t* inputState )
 {
    uint32_t i;
 
-   for ( i = 0; i < (uint32_t)KeyCode_Count; i++ )
+   for ( i = 0; i < (uint32_t)ButtonCode_Count; i++ )
    {
-      if ( Input_WasKeyPressed( keyStates, (KeyCode_t)i ) )
+      if ( Input_WasButtonPressed( inputState, (ButtonCode_t)i ) )
       {
          return True;
       }
    }
 
    return False;
+}
+
+void Input_SetMousePos( InputState_t* inputState, int32_t x, int32_t y )
+{
+   inputState->mouseDelta.x = x - inputState->mousePos.x;
+   inputState->mouseDelta.y = y - inputState->mousePos.y;
+   inputState->mousePos.x = x;
+   inputState->mousePos.y = y;
 }

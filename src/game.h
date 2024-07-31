@@ -1,7 +1,7 @@
 #if !defined( GAME_H )
 #define GAME_H
 
-#define STAR_COUNT            1024
+#define STAR_COUNT            128
 #define STAR_MIN_Y            146
 #define STAR_MAX_Y            767
 #define STAR_MIN_VELOCITY     20
@@ -15,6 +15,16 @@
 #include "sprite.h"
 #include "font.h"
 #include "menu.h"
+#include "rect.h"
+
+typedef struct DiagnosticsData_t
+{
+   Bool_t showDiagnostics;
+   Bool_t showThreadJobs;
+
+   RectF_t threadJobsToggleArea;
+}
+DiagnosticsData_t;
 
 typedef struct RenderData_t
 {
@@ -39,7 +49,8 @@ Star_t;
 typedef struct GameData_t
 {
    Clock_t clock;
-   KeyState_t keyStates[KeyCode_Count];
+   InputState_t inputState;
+   DiagnosticsData_t diagnosticsData;
    RenderData_t renderData;
 
    Menu_t menus[MenuID_Count];
@@ -48,7 +59,6 @@ typedef struct GameData_t
 
    Bool_t isRunning;
    Bool_t isEngineRunning;
-   Bool_t showDiagnostics;
 
    GameState_t state;
    void (*stateInputHandlers[GameState_Count])( void* );
