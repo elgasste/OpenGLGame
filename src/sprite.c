@@ -14,7 +14,7 @@ Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base,
    uint32_t* memPos32 = (uint32_t*)memory;
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   if ( memSize != 16 )
+   if ( memSize != 12 )
    {
       snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_SPRITEERR_MEMORYCORRUPT, (uint32_t)baseID );
       Platform_Log( errorMsg );
@@ -24,7 +24,6 @@ Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base,
    base->image = image; // image ID is in position 0
    base->frameDimensions.x = memPos32[1];
    base->frameDimensions.y = memPos32[2];
-   base->frameSeconds = ( (float*)memory )[3];
 
    frameDim = &( base->frameDimensions );
 
@@ -41,9 +40,10 @@ Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base,
    return True;
 }
 
-Bool_t Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base )
+Bool_t Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base, float frameSeconds )
 {
    sprite->base = base;
+   sprite->frameSeconds = frameSeconds;
    Sprite_Reset( sprite );
    return True;
 }
@@ -57,7 +57,7 @@ void Sprite_Reset( Sprite_t* sprite )
 
 void Sprite_ScaleFrameTime( Sprite_t* sprite, float scalar )
 {
-   sprite->scaledFrameSeconds = sprite->base->frameSeconds * scalar;
+   sprite->scaledFrameSeconds = sprite->frameSeconds * scalar;
 }
 
 void Sprite_Tick( Sprite_t* sprite, Clock_t* clock )

@@ -47,7 +47,6 @@ typedef struct
    uint32_t baseID;
    uint32_t imageID;
    Vector2ui32_t frameDimensions;
-   float frameSeconds;
 }
 SpriteBaseData_t;
 
@@ -72,7 +71,7 @@ global AssetFileToIDMapping_t g_bitmapIDMap[] = {
    { "star_sprite.bmp", (uint32_t)ImageID_Star }
 };
 global SpriteBaseData_t g_spriteBaseDatas[] = {
-   { (uint32_t)SpriteBaseID_Star, (uint32_t)ImageID_Star, { 6, 6 }, 0.1f }
+   { (uint32_t)SpriteBaseID_Star, (uint32_t)ImageID_Star, { 6, 6 } }
 };
 
 internal FileParts_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles );
@@ -509,14 +508,13 @@ internal void WriteGameDataFile( GameAssets_t* assets, const char* dir )
    for ( i = 0; i < numSpriteBases; i++ )
    {
       filePos32[0] = spriteBaseData->baseID;
-      filePos32[1] = 16;
+      filePos32[1] = 12;
       filePos32[2] = spriteBaseData->imageID;
       filePos32[3] = spriteBaseData->frameDimensions.x;
       filePos32[4] = spriteBaseData->frameDimensions.y;
-      ( (float*)filePos32 )[5] = spriteBaseData->frameSeconds;
 
-      filePos32 += 6;
-      fileOffset += 24;
+      filePos32 += 5;
+      fileOffset += 20;
       spriteBaseData++;
    }
 
@@ -566,7 +564,7 @@ internal uint32_t GetGameDataFileSize( GameAssets_t* assets )
    for ( i = 0; i < (uint32_t)( sizeof( g_spriteBaseDatas ) / sizeof( SpriteBaseData_t ) ); i++ )
    {
       fileSize += 8;    // entry ID and size
-      fileSize += 16;   // image ID, frame dimensions, and frame seconds
+      fileSize += 12;   // image ID, frame dimensions
    }
 
    return fileSize;

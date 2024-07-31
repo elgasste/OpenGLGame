@@ -33,7 +33,7 @@ Bool_t Game_LoadData( GameData_t* gameData )
    {
       star = &( gameData->stars[i] );
 
-      if ( !Sprite_LoadFromBase( &( star->sprite ), starSpriteBase ) )
+      if ( !Sprite_LoadFromBase( &( star->sprite ), starSpriteBase, 0.1f ) )
       {
          return False;
       }
