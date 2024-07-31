@@ -36,6 +36,7 @@
 #define STR_BMPERR_INVALIDCOLORINDEXING         "BMP error: color indexing is not currently supported, image ID %u"
 
 #define STR_GDFERR_FILECORRUPT                  "Game data file error: file is corrupt: %s"
+#define STR_GDFERR_NOCHUNKSFOUNDFORID           "Game data file error: no chunks found for chunk ID: %u"
 #define STR_GDFERR_SPRITEBASECORRUPT            "Game data file error: sprite base memory is corrupt, sprite base ID %u"
 #define STR_GDFERR_SPRITEBASEIMAGENOTFOUND      "Game data file error: sprite base image ID not found: %u"
 #define STR_GDFWARN_UNKNOWNCHUNKID              "Game data file warning: unknown chunk ID encountered: %u"

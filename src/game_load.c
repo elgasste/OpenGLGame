@@ -1,6 +1,13 @@
 #include "game.h"
 #include "game_data_file.h"
 
+typedef struct
+{
+   uint32_t* offsets;
+   uint32_t numOffsets;
+}
+ChunkIDOffsetArray_t;
+
 internal Bool_t Game_LoadGameDataFile( GameData_t* gameData );
 internal Bool_t Game_ReadBitmapsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
 internal Bool_t Game_ReadFontsChunk( GameData_t* gameData, GameDataFileChunk_t* chunk );
@@ -39,12 +46,23 @@ Bool_t Game_LoadData( GameData_t* gameData )
 
 internal Bool_t Game_LoadGameDataFile( GameData_t* gameData )
 {
-   uint32_t i;
+   uint32_t i, j, numOffsets, chunkID;
    GameDataFile_t dataFile = { 0 };
    GameDataFileChunk_t* chunk;
+   ChunkIDOffsetArray_t chunkIDOffsets[GameDataFileChunkID_Count];
    char appDirectory[STRING_SIZE_DEFAULT];
    char dataFilePath[STRING_SIZE_DEFAULT];
    char msg[STRING_SIZE_DEFAULT];
+   uint32_t chunkIDOrder[] = {
+      (uint32_t)GameDataFileChunkID_Fonts,
+      (uint32_t)GameDataFileChunkID_Bitmaps,
+      (uint32_t)GameDataFileChunkID_SpriteBases
+   };
+   Bool_t ( *chunkLoaders[] )( GameData_t*, GameDataFileChunk_t* ) = {
+      Game_ReadFontsChunk,
+      Game_ReadBitmapsChunk,
+      Game_ReadSpriteBasesChunk
+   };
 
    if ( !Platform_GetAppDirectory( appDirectory, STRING_SIZE_DEFAULT ) )
    {
@@ -58,42 +76,57 @@ internal Bool_t Game_LoadGameDataFile( GameData_t* gameData )
       return False;
    }
 
+   for ( i = 0; i < (uint32_t)GameDataFileChunkID_Count; i++ )
+   {
+      chunkIDOffsets[i].offsets = 0;
+      chunkIDOffsets[i].numOffsets = 0;
+   }
+
    chunk = dataFile.chunks;
 
-   // TODO: update this to read in all the chunks to arrays first, then
-   // cycle through them in the correct order (to make sure images are
-   // loaded before sprite bases, etc).
    for ( i = 0; i < dataFile.numChunks; i++ )
    {
-      switch ( ( GameDataFileChunkID_t )( chunk->ID ) )
+      if ( (GameDataFileChunkID_t)( chunk->ID ) < GameDataFileChunkID_Count )
       {
-         case GameDataFileChunkID_Bitmaps:
-            if ( !Game_ReadBitmapsChunk( gameData, chunk ) )
-            {
-               GameDataFile_ClearData( &dataFile );
-               return False;
-            }
-            break;
-         case GameDataFileChunkID_Fonts:
-            if ( !Game_ReadFontsChunk( gameData, chunk ) )
-            {
-               GameDataFile_ClearData( &dataFile );
-               return False;
-            }
-            break;
-         case GameDataFileChunkID_SpriteBases:
-            if ( !Game_ReadSpriteBasesChunk( gameData, chunk ) )
-            {
-               GameDataFile_ClearData( &dataFile );
-               return False;
-            }
-         default:
-            snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNCHUNKID, chunk->ID );
-            Platform_Log( msg );
-            break;
+         numOffsets = chunkIDOffsets[chunk->ID].numOffsets;
+         chunkIDOffsets[chunk->ID].offsets = (uint32_t*)Platform_ReAlloc( chunkIDOffsets[chunk->ID].offsets,
+                                                                          4 * numOffsets,
+                                                                          4 * ( numOffsets + 1 ) );
+         chunkIDOffsets[chunk->ID].offsets[numOffsets] = i;
+         chunkIDOffsets[chunk->ID].numOffsets++;
+      }
+      else
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNCHUNKID, chunk->ID );
+         Platform_Log( msg );
       }
 
       chunk++;
+   }
+
+   for ( i = 0; i < (uint32_t)GameDataFileChunkID_Count; i++ )
+   {
+      chunkID = chunkIDOrder[i];
+
+      if ( chunkIDOffsets[chunkID].numOffsets == 0 )
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_NOCHUNKSFOUNDFORID, i );
+         Platform_Log( msg );
+         GameDataFile_ClearData( &dataFile );
+         return False;
+      }
+
+      for ( j = 0; j < chunkIDOffsets[chunkID].numOffsets; j++ )
+      {
+         chunk = dataFile.chunks + chunkIDOffsets[chunkID].offsets[j];
+         if ( !chunkLoaders[i]( gameData, chunk ) )
+         {
+            GameDataFile_ClearData( &dataFile );
+            return False;
+         }
+      }
+
+      Platform_Free( chunkIDOffsets[chunkID].offsets, 4 * chunkIDOffsets[chunkID].numOffsets );
    }
 
    GameDataFile_ClearData( &dataFile );
