@@ -62,28 +62,18 @@ void Blit_ColoredTextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffe
    float fnx2 = fnx1 + ( fw / pixelBuffer->dimensions.x );
    float fny2 = fny1 + ( fh / pixelBuffer->dimensions.y );
 
-   Blit_PrepareTextureForDrawing( textureHandle, pixelBuffer,
-                                  screenX, screenY,
-                                  (float)sectionWidth, (float)sectionHeight,
-                                  scale, color );
+   Blit_PrepareTextureForDrawing( textureHandle, pixelBuffer, screenX, screenY, fw, fh, scale, color );
 
-   glBegin( GL_TRIANGLES );
+   glBegin( GL_QUADS );
 
-   // lower triangle
    glTexCoord2f( fnx1, fny1 );
-   glVertex2f( 0.0f, 0.0f );
+   glVertex2f( -1.0f, -1.0f );
    glTexCoord2f( fnx2, fny1 );
-   glVertex2f( fw, 0.0f );
+   glVertex2f( 1.0f, -1.0f );
    glTexCoord2f( fnx2, fny2 );
-   glVertex2f( fw, fh );
-
-   // upper triangle
-   glTexCoord2f( fnx1, fny1 );
-   glVertex2f( 0.0f, 0.0f );
-   glTexCoord2f( fnx2, fny2 );
-   glVertex2f( fw, fh );
+   glVertex2f( 1.0f, 1.0f );
    glTexCoord2f( fnx1, fny2 );
-   glVertex2f( 0.0f, fh );
+   glVertex2f( -1.0f, 1.0f );
 
    glEnd();
 }
@@ -188,13 +178,6 @@ internal void Blit_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t
    GLint g = ( color >> 8 ) & 0xFF;
    GLint b = color & 0xFF;
    GLint a = ( color >> 24 ) & 0xFF;
-   GLfloat modelMatrix[] = 
-   {
-      2.0f / ( width / scale ), 0.0f, 0.0f, 0.0f,
-      0.0f, 2.0f / ( height / scale ), 0.0f, 0.0f,
-      0.0f, 0.0f, 1.0f, 0.0f,
-      -1.0f, -1.0f, 0.0f, 1.0f
-   };
 
    glViewport( (GLint)screenX, (GLint)screenY, (GLsizei)( width * scale ), (GLsizei)( height * scale ) );
 
@@ -226,7 +209,7 @@ internal void Blit_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t
    glLoadIdentity();
 
    glMatrixMode( GL_MODELVIEW );
-   glLoadMatrixf( modelMatrix );
+   glLoadIdentity();
 
    glMatrixMode( GL_PROJECTION );
    glLoadIdentity();
