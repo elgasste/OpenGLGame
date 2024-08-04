@@ -21,8 +21,12 @@ void Blit_TextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
                           int32_t textureX, int32_t textureY,
                           uint32_t sectionWidth, uint32_t sectionHeight,
                           float scale );
-void Blit_ColoredImage( Image_t* texture, float screenX, float screenY, float scale, uint32_t color );
-void Blit_Image( Image_t* texture, float screenX, float screenY, float scale );
+void Blit_ColoredTexture( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
+                          float screenX, float screenY,
+                          float scale, uint32_t color );
+void Blit_Texture( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float screenX, float screenY, float scale );
+void Blit_ColoredImage( Image_t* image, float screenX, float screenY, float scale, uint32_t color );
+void Blit_Image( Image_t* image, float screenX, float screenY, float scale );
 void Blit_ColoredSprite( Sprite_t* sprite, float scale, float screenX, float screenY, uint32_t color );
 void Blit_Sprite( Sprite_t* sprite, float scale, float screenX, float screenY );
 void Blit_Char( uint32_t codepoint, float scale, float screenX, float screenY, Font_t* font );
