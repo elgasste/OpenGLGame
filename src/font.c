@@ -127,9 +127,10 @@ void Font_ClearData( Font_t* font )
 
                if ( buffer->memory )
                {
-                  Platform_Free( buffer->memory, buffer->dimensions.x * buffer->dimensions.y * 4 );
+                  PixelBuffer_ClearData( buffer );
                }
             }
+
             Platform_Free( font->glyphCollections[i].glyphs, sizeof( FontGlyph_t ) * font->numGlyphs );
          }
       }
