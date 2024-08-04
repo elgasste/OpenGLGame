@@ -11,4 +11,6 @@ typedef struct PixelBuffer_t
 }
 PixelBuffer_t;
 
+void PixelBuffer_ClearData( PixelBuffer_t* pixelBuffer );
+
 #endif

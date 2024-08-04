@@ -53,6 +53,7 @@
     <ClCompile Include="..\..\src\image.c" />
     <ClCompile Include="..\..\src\input.c" />
     <ClCompile Include="..\..\src\menu.c" />
+    <ClCompile Include="..\..\src\pixel_buffer.c" />
     <ClCompile Include="..\..\src\random.c" />
     <ClCompile Include="..\..\src\sprite.c" />
     <ClCompile Include="..\..\src\win_platform.c" />

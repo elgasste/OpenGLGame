@@ -80,10 +80,7 @@ internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer )
 
    if ( pixelBuffer->memory )
    {
-      Platform_Free( pixelBuffer->memory, pixelBuffer->dimensions.x * pixelBuffer->dimensions.y * 4 );
-      pixelBuffer->memory = 0;
-      pixelBuffer->dimensions.x = 0;
-      pixelBuffer->dimensions.y = 0;
+      PixelBuffer_ClearData( pixelBuffer );
    }
 }
 
