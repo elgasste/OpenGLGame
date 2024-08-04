@@ -27,20 +27,30 @@ void Game_Render( GameData_t* gameData )
 
 internal void Game_RenderWorld( GameData_t* gameData )
 {
-   uint32_t i;
-   Star_t* star;
-   Font_t* font = &( gameData->renderData.fonts[FontID_Papyrus] );
+   Blit_Texture( gameData->tilemap.textureHandle, &( gameData->tilemap.buffer ), 100.0f, 100.0f, 1.0f );
 
-   Blit_Image( &( gameData->renderData.images[ImageID_Background] ), 0.0f, 0.0f, 1.0f );
+   // MUFFINS: for testing
+   uint32_t y = 290;
+   uint32_t tileScale = 1;
+   Bool_t applyOffset = False;
+   Tilemap_t* map = &( gameData->tilemap );
 
-   Font_SetGlyphCollectionForHeight( font, 48.0f );
-   Font_SetColor( font, 0xFF3333CC );
-   Blit_TextLine( STR_BRUSHTEETH, 1.0f, 65.0f, 240.0f, font, FontJustify_Left );
-
-   for ( i = 0; i < STAR_COUNT; i++ )
+   for ( uint32_t i = 0; i < map->dimensions.y; i++ )
    {
-      star = &( gameData->stars[i] );
-      Blit_Sprite( &( star->sprite ), star->position.x, star->position.y, star->scale );
+      uint32_t x = applyOffset ? ( 100 + ( ( map->tileset->tileDimensions.x / 2 ) * tileScale ) ) : 100;
+
+      for ( uint32_t j = 0; j < map->dimensions.x; j++ )
+      {
+         Blit_ImageSection( map->tileset->image,
+                            (float)x, (float)y,
+                            0, 0,
+                            map->tileset->tileDimensions.x, map->tileset->tileDimensions.y,
+                            (float)tileScale );
+         x += ( map->tileset->tileDimensions.x * tileScale );
+      }
+
+      y -= ( ( ( map->tileset->tileDimensions.y / 2 ) * tileScale ) - ( 6 * tileScale ) );
+      TOGGLE_BOOL( applyOffset );
    }
 }
 

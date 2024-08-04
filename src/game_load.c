@@ -2,33 +2,17 @@
 #include "assets_file.h"
 
 internal void Game_LoadMenus( GameData_t* gameData );
+internal void Game_LoadTilemap( GameData_t* gameData );
 
 Bool_t Game_LoadData( GameData_t* gameData )
 {
-   uint32_t i;
-   Star_t* star;
-   SpriteBase_t* starSpriteBase;
-
    if ( !AssetsFile_Load( gameData ) )
    {
       return False;
    }
 
+   Game_LoadTilemap( gameData );
    Game_LoadMenus( gameData );
-
-   starSpriteBase = &( gameData->renderData.spriteBases[SpriteBaseID_Star] );
-
-   for ( i = 0; i < STAR_COUNT; i++ )
-   {
-      star = &( gameData->stars[i] );
-
-      if ( !Sprite_LoadFromBase( &( star->sprite ), starSpriteBase, 0.1f ) )
-      {
-         return False;
-      }
-
-      star->isResting = True;
-   }
 
    return True;
 }
@@ -53,4 +37,10 @@ internal void Game_LoadMenus( GameData_t* gameData )
    playingMenu->renderData.textColor = 0xFFFF8800;
    playingMenu->renderData.caratColor = 0xFFFF8800;
    playingMenu->caratFadeSeconds = 0.25f;
+}
+
+internal void Game_LoadTilemap( GameData_t* gameData )
+{
+   Tileset_Init( &( gameData->renderData.tileset ), &( gameData->renderData.images[ImageID_Tileset] ), ImageID_Tileset, 32, 32 );
+   Tilemap_Init( &( gameData->tilemap ), &( gameData->renderData.tileset ), 10, 20 );
 }

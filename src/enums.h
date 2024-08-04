@@ -13,7 +13,7 @@ AssetsFileChunkID_t;
 
 typedef enum
 {
-   ImageID_Background = 0,
+   ImageID_Tileset = 0,
    ImageID_Star,
 
    ImageID_Count
@@ -31,7 +31,6 @@ SpriteBaseID_t;
 typedef enum
 {
    FontID_Consolas = 0,
-   FontID_Papyrus,
 
    FontID_Count
 }

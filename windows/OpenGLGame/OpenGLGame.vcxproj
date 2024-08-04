@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -38,6 +38,8 @@
     <ClInclude Include="..\..\src\sprite.h" />
     <ClInclude Include="..\..\src\strings.h" />
     <ClInclude Include="..\..\src\thread.h" />
+    <ClInclude Include="..\..\src\tilemap.h" />
+    <ClInclude Include="..\..\src\tileset.h" />
     <ClInclude Include="..\..\src\vector.h" />
     <ClInclude Include="..\..\src\win_platform.h" />
   </ItemGroup>
@@ -55,6 +57,8 @@
     <ClCompile Include="..\..\src\menu.c" />
     <ClCompile Include="..\..\src\random.c" />
     <ClCompile Include="..\..\src\sprite.c" />
+    <ClCompile Include="..\..\src\tilemap.c" />
+    <ClCompile Include="..\..\src\tileset.c" />
     <ClCompile Include="..\..\src\win_platform.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

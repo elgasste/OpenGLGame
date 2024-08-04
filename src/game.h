@@ -1,13 +1,6 @@
 #if !defined( GAME_H )
 #define GAME_H
 
-#define STAR_COUNT            128
-#define STAR_MIN_Y            146
-#define STAR_MAX_Y            767
-#define STAR_MIN_VELOCITY     20
-#define STAR_MAX_VELOCITY     500
-#define STAR_MAX_RESTSECONDS  5
-
 #include "common.h"
 #include "clock.h"
 #include "input.h"
@@ -16,6 +9,8 @@
 #include "font.h"
 #include "menu.h"
 #include "rect.h"
+#include "tileset.h"
+#include "tilemap.h"
 
 typedef struct DiagnosticsData_t
 {
@@ -31,21 +26,9 @@ typedef struct GameRenderData_t
    Image_t images[ImageID_Count];
    Font_t fonts[FontID_Count];
    SpriteBase_t spriteBases[SpriteBaseID_Count];
+   Tileset_t tileset;
 }
 GameRenderData_t;
-
-typedef struct Star_t
-{
-   Vector2f_t position;
-   uint32_t pixelsPerSecond;
-   Bool_t movingLeft;
-   Bool_t isResting;
-   float restSeconds;
-   float restElapsedSeconds;
-   Sprite_t sprite;
-   float scale;
-}
-Star_t;
 
 typedef struct GameData_t
 {
@@ -58,13 +41,13 @@ typedef struct GameData_t
    MenuID_t curMenuID;
    void (*menuItemInputHandlers[MenuItemID_Count])( void* );
 
+   Tilemap_t tilemap;
+
    Bool_t isRunning;
    Bool_t isEngineRunning;
 
    GameState_t state;
    void (*stateInputHandlers[GameState_Count])( void* );
-
-   Star_t stars[STAR_COUNT];
 }
 GameData_t;
 

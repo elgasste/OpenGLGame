@@ -91,6 +91,43 @@ void Blit_TextureSection( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
                                scale, 0xFFFFFFFF );
 }
 
+void Blit_Texture( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
+                   float screenX, float screenY,
+                   float scale )
+{
+   Blit_ColoredTextureSection( textureHandle, pixelBuffer,
+                               screenX, screenY,
+                               0, 0,
+                               pixelBuffer->dimensions.x, pixelBuffer->dimensions.y,
+                               scale, 0xFFFFFFFF );
+}
+
+void Blit_ColoredImageSection( Image_t* image,
+                               float screenX, float screenY,
+                               uint32_t imageX, uint32_t imageY,
+                               uint32_t sectionWidth, uint32_t sectionHeight,
+                               float scale, uint32_t color )
+{
+   Blit_ColoredTextureSection( image->textureHandle, &( image->pixelBuffer ),
+                               screenX, screenY,
+                               imageX, imageY,
+                               sectionWidth, sectionHeight,
+                               scale, color );
+}
+
+void Blit_ImageSection( Image_t* image,
+                        float screenX, float screenY,
+                        uint32_t imageX, uint32_t imageY,
+                        uint32_t sectionWidth, uint32_t sectionHeight,
+                        float scale )
+{
+   Blit_ColoredImageSection( image,
+                             screenX, screenY,
+                             imageX, imageY,
+                             sectionWidth, sectionHeight,
+                             scale, 0xFFFFFFFF );
+}
+
 void Blit_ColoredImage( Image_t* image, float screenX, float screenY, float scale, uint32_t color )
 {
    Blit_ColoredTextureSection( image->textureHandle, &( image->pixelBuffer ),

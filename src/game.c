@@ -3,47 +3,18 @@
 #include "random.h"
 #include "rect.h"
 
-typedef struct
-{
-   GameData_t* gameData;
-   Star_t* star;
-}
-StarUpdateData_t;
-
 internal void Game_HandleInput( GameData_t* gameData );
 internal void Game_HandleStateInput_Playing( GameData_t* gameData );
 internal void Game_HandleStateInput_Menu( GameData_t* gameData );
 internal void Game_HandleMenuItem_KeepPlaying( GameData_t* gameData );
 internal void Game_HandleMenuItem_Quit( GameData_t* gameData );
 internal void Game_Tick( GameData_t* gameData );
-internal void Game_UpdateStarAsync( StarUpdateData_t* data );
 
 Bool_t Game_Init( GameData_t* gameData )
 {
-   uint32_t i;
-   float frameTimeAdjustment;
-   Star_t* star = gameData->stars;
-
    if ( !Game_LoadData( gameData ) )
    {
       return False;
-   }
-
-   for ( i = 0; i < STAR_COUNT; i++ )
-   {
-      star->isResting = False;
-      star->movingLeft = Random_Bool();
-      star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
-      star->position.x = (float)Random_UInt32( 0, SCREEN_WIDTH - 1 );
-      star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
-      star->restSeconds = ( Random_UInt32( 0, STAR_MAX_RESTSECONDS * 1000 ) ) / 1000.0f;
-
-      Sprite_Reset( &( star->sprite ) );
-      frameTimeAdjustment = ( (float)Random_Percent() / 100 ) * 0.5f;
-      star->scale = ( (float)Random_Percent() / 100 );
-      Sprite_ScaleFrameTime( &( star->sprite ), 1.0f + ( Random_Bool() ? frameTimeAdjustment : -frameTimeAdjustment ) );
-
-      star++;
    }
 
    Clock_Init( &( gameData->clock ) );
@@ -89,6 +60,8 @@ void Game_ClearData( GameData_t* gameData )
       Menu_ClearItems( menu );
       menu++;
    }
+
+   Tilemap_ClearData( &( gameData->tilemap ) );
 }
 
 void Game_Run( GameData_t* gameData )
@@ -210,68 +183,10 @@ internal void Game_HandleMenuItem_Quit( GameData_t* gameData )
 
 internal void Game_Tick( GameData_t* gameData )
 {
-   uint32_t i, entryCounter = 0;
-   StarUpdateData_t dataArray[MAX_THREADQUEUE_SIZE];
-
-   for ( i = 0; i < STAR_COUNT; i++ )
-   {
-      dataArray[entryCounter].gameData = gameData;
-      dataArray[entryCounter].star = &( gameData->stars[i] );
-      Platform_AddThreadQueueEntry( Game_UpdateStarAsync, (void*)( &( dataArray[entryCounter] ) ) );
-      entryCounter++;
-
-      if ( entryCounter == MAX_THREADQUEUE_SIZE || i == ( STAR_COUNT - 1 ) )
-      {
-         Platform_RunThreadQueue();
-         entryCounter = 0;
-      }
-   }
+   Tilemap_UpdateBuffer( &( gameData->tilemap ) );
 
    if ( gameData->state == GameState_Menu )
    {
       Menu_Tick( &( gameData->menus[gameData->curMenuID] ), &( gameData->clock ) );
-   }
-}
-
-internal void Game_UpdateStarAsync( StarUpdateData_t* data )
-{
-   float frameTimeAdjustment;
-   GameData_t* gameData = data->gameData;
-   Star_t* star = data->star;
-
-   if ( star->isResting )
-   {
-      star->restElapsedSeconds += gameData->clock.frameDeltaSeconds;
-
-      if ( star->restElapsedSeconds > star->restSeconds )
-      {
-         star->isResting = False;
-         star->movingLeft = Random_Bool();
-         star->pixelsPerSecond = Random_UInt32( STAR_MIN_VELOCITY, STAR_MAX_VELOCITY );
-         star->position.x = star->movingLeft ? SCREEN_WIDTH : -(float)( star->sprite.base->frameDimensions.x - 1 );
-         star->position.y = (float)Random_UInt32( STAR_MIN_Y, STAR_MAX_Y );
-         star->restSeconds = ( Random_UInt32( 0, STAR_MAX_RESTSECONDS * 1000 ) ) / 1000.0f;
-
-         Sprite_Reset( &( star->sprite ) );
-         frameTimeAdjustment = ( (float)Random_Percent() / 100 ) * 0.5f;
-         star->scale = ( (float)Random_Percent() / 100 );
-         Sprite_ScaleFrameTime( &( star->sprite ), 1.0f + ( Random_Bool() ? frameTimeAdjustment : -frameTimeAdjustment ) );
-      }
-   }
-   else
-   {
-      star->position.x = star->movingLeft
-         ? star->position.x - (float)star->pixelsPerSecond * gameData->clock.frameDeltaSeconds
-         : star->position.x + (float)star->pixelsPerSecond * gameData->clock.frameDeltaSeconds;
-
-      if ( star->position.x < -(float)( star->sprite.base->frameDimensions.x ) ||
-           star->position.x > SCREEN_WIDTH )
-      {
-         star->isResting = True;
-      }
-      else
-      {
-         Sprite_Tick( &( star->sprite ), &( gameData->clock ) );
-      }
    }
 }
