@@ -16,6 +16,7 @@
 #include "font.h"
 #include "menu.h"
 #include "rect.h"
+#include "tileset.h"
 
 typedef struct DiagnosticsData_t
 {
@@ -31,6 +32,7 @@ typedef struct GameRenderData_t
    Image_t images[ImageID_Count];
    Font_t fonts[FontID_Count];
    SpriteBase_t spriteBases[SpriteBaseID_Count];
+   TileSet_t tileSets[TileSetID_Count];
 }
 GameRenderData_t;
 

@@ -39,17 +39,20 @@
 #define STR_GDFERR_NOCHUNKSFOUNDFORID           "Game data file error: no chunks found for chunk ID: %u"
 #define STR_GDFERR_SPRITEBASECORRUPT            "Game data file error: sprite base memory is corrupt, sprite base ID %u"
 #define STR_GDFERR_SPRITEBASEIMAGENOTFOUND      "Game data file error: sprite base image ID not found: %u"
+#define STR_GDFERR_TILESETCORRUPT               "Game data file error: tile set memory is corrupt, tile set ID %u"
+#define STR_GDFERR_TILESETIMAGENOTFOUND         "Game data file error: tile set image ID not found: %u"
 #define STR_GDFWARN_UNKNOWNCHUNKID              "Game data file warning: unknown chunk ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNBITMAPENTRYID        "Game data file warning: unknown bitmap entry ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNFONTENTRYID          "Game data file warning: unknown font entry ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNSPRITEBASEID         "Game data file warning: unknown sprite base ID encountered: %u"
+#define STR_GDFWARN_UNKNOWNTILESETID            "Game data file warning: unknown tile set ID encountered: %u"
 
 #define STR_SPRITEERR_FRAMEDIMENSIONS           "Sprite error: frame dimensions don't match texture, image ID %u"
 #define STR_SPRITEERR_MEMORYCORRUPT             "Sprite error: sprite memory is corrupt, sprite base ID %u"
 
 #define STR_FONTERR_MEMORYCORRUPT               "Font error: font memory is corrupt, font ID %u"
 
-#define STR_TILESETERR_TILEDIMENSIONS           "TileSet error: tile dimensions don't match image dimensions, image ID %u"
+#define STR_TILESETERR_TILEDIMENSIONS           "Tile set error: tile dimensions don't match image dimensions, image ID %u"
 
 #define STR_DIAG_FRAMETARGETMICRO               "Target frame microseconds: %lld"
 #define STR_DIAG_FRAMEDURATIONMICRO             "Last frame microseconds: %lld"

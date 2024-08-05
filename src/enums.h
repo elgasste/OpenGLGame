@@ -6,6 +6,7 @@ typedef enum
    AssetsFileChunkID_Bitmaps = 0,
    AssetsFileChunkID_Fonts,
    AssetsFileChunkID_SpriteBases,
+   AssetsFileChunkID_TileSets,
 
    AssetsFileChunkID_Count
 }
@@ -15,6 +16,7 @@ typedef enum
 {
    ImageID_Background = 0,
    ImageID_Star,
+   ImageID_WorldTileSet,
 
    ImageID_Count
 }
@@ -44,6 +46,14 @@ typedef enum
    FontJustify_Right
 }
 FontJustify_t;
+
+typedef enum
+{
+   TileSetID_World = 0,
+
+   TileSetID_Count
+}
+TileSetID_t;
 
 typedef enum
 {

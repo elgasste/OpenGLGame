@@ -19,10 +19,14 @@ global AssetFileToIDMapping_t g_fontIDMap[] = {
 };
 global AssetFileToIDMapping_t g_bitmapIDMap[] = {
    { "background.bmp", (uint32_t)ImageID_Background },
-   { "star_sprite.bmp", (uint32_t)ImageID_Star }
+   { "star_sprite.bmp", (uint32_t)ImageID_Star },
+   { "world_tileset.bmp", (uint32_t)ImageID_WorldTileSet }
 };
 global SpriteBaseData_t g_spriteBaseDatas[] = {
    { (uint32_t)SpriteBaseID_Star, (uint32_t)ImageID_Star, { 6, 6 } }
+};
+global TileSetData_t g_tileSetDatas[] = {
+   { (uint32_t)TileSetID_World, (uint32_t)ImageID_WorldTileSet, { 32, 32 } }
 };
 
 internal FileInfo_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles );
@@ -370,13 +374,14 @@ internal BitmapData_t* LoadBitmapsFromDir( const char* dir, const char* filter, 
 
 internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
 {
-   uint32_t i, j, fileOffset, dataSize, numSpriteBases;
+   uint32_t i, j, fileOffset, dataSize, numSpriteBases, numTileSets;
    uint8_t* filePos8;
    uint32_t* filePos32;
    FileData_t fileData;
    FontData_t* fontData;
    BitmapData_t* bitmapData;
    SpriteBaseData_t* spriteBaseData;
+   TileSetData_t* tileSetData;
    char msg[STRING_SIZE_DEFAULT];
 
    fileData.fileSize = GetAssetsFileSize( assets );
@@ -470,6 +475,29 @@ internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
       spriteBaseData++;
    }
 
+   // tilesets chunk
+   numTileSets = (uint32_t)( sizeof( g_tileSetDatas ) / sizeof( TileSetData_t ) );
+   ( (uint32_t*)( fileData.contents ) )[4] = fileOffset;  // chunk offset
+   filePos32[0] = (uint32_t)AssetsFileChunkID_TileSets;
+   filePos32[1] = numTileSets;
+   filePos32 += 2;
+   fileOffset += 8;
+
+   tileSetData = g_tileSetDatas;
+
+   for ( i = 0; i < numTileSets; i++ )
+   {
+      filePos32[0] = tileSetData->tileSetID;
+      filePos32[1] = 12;
+      filePos32[2] = tileSetData->imageID;
+      filePos32[3] = tileSetData->tileDimensions.x;
+      filePos32[4] = tileSetData->tileDimensions.y;
+
+      filePos32 += 5;
+      fileOffset += 20;
+      tileSetData++;
+   }
+
    assert( fileOffset == fileData.fileSize );
 
    if ( !Platform_WriteFileData( &fileData ) )
@@ -495,6 +523,7 @@ internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
    fileSize += ( 4 * NUM_CHUNKS );  // chunk offsets
    fileSize += ( 8 * NUM_CHUNKS );  // chunk IDs and entry counts
 
+   // fonts chunk
    fontData = assets->fontDatas;
 
    for ( i = 0; i < assets->numFonts; i++ )
@@ -504,6 +533,7 @@ internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
       fontData++;
    }
 
+   // bitmaps chunk
    bitmapData = assets->bitmapDatas;
 
    for ( i = 0; i < assets->numBitmaps; i++ )
@@ -513,10 +543,18 @@ internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
       bitmapData++;
    }
 
+   // sprite bases chunk
    for ( i = 0; i < (uint32_t)( sizeof( g_spriteBaseDatas ) / sizeof( SpriteBaseData_t ) ); i++ )
    {
       fileSize += 8;    // entry ID and size
-      fileSize += 12;   // image ID, frame dimensions
+      fileSize += 12;   // image ID and frame dimensions
+   }
+
+   // tilesets chunk
+   for ( i = 0; i < (uint32_t)( sizeof( g_tileSetDatas ) / sizeof( TileSetData_t ) ); i++ )
+   {
+      fileSize += 8;    // entry ID and size
+      fileSize += 12;   // image ID and tile dimensions
    }
 
    return fileSize;

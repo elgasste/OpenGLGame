@@ -10,8 +10,8 @@ Bool_t TileSet_Init( TileSet_t* tileSet, Image_t* image, ImageID_t imageID,
    tileSet->dimensions.y = tileSizeY;
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   if ( ( tileSizeX % image->pixelBuffer.dimensions.x != 0 ) ||
-        ( tileSizeY % image->pixelBuffer.dimensions.y != 0 ) )
+   if ( ( image->pixelBuffer.dimensions.x % tileSizeX != 0 ) ||
+        ( image->pixelBuffer.dimensions.y % tileSizeY != 0 ) )
    {
       snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_TILESETERR_TILEDIMENSIONS, (uint32_t)imageID );
       Platform_Log( errorMsg );
