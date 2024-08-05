@@ -17,6 +17,7 @@
 #include "menu.h"
 #include "rect.h"
 #include "tileset.h"
+#include "tilemap.h"
 
 typedef struct DiagnosticsData_t
 {
@@ -67,6 +68,8 @@ typedef struct GameData_t
    void (*stateInputHandlers[GameState_Count])( void* );
 
    Star_t stars[STAR_COUNT];
+
+   TileMap_t tileMaps[TileMapID_Count];
 }
 GameData_t;
 

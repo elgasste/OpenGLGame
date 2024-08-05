@@ -19,6 +19,7 @@ internal Bool_t AssetsFile_ReadBitmapsChunk( GameData_t* gameData, AssetsFileChu
 internal Bool_t AssetsFile_ReadFontsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
 internal Bool_t AssetsFile_ReadSpriteBasesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
 internal Bool_t AssetsFile_ReadTileSetsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
+internal Bool_t AssetsFile_ReadTileMapsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
 
 Bool_t AssetsFile_Load( GameData_t* gameData )
 {
@@ -215,13 +216,15 @@ internal Bool_t AssetsFile_ReadFileData( GameData_t* gameData, AssetsFileData_t*
       (uint32_t)AssetsFileChunkID_Fonts,
       (uint32_t)AssetsFileChunkID_Bitmaps,
       (uint32_t)AssetsFileChunkID_TileSets,
-      (uint32_t)AssetsFileChunkID_SpriteBases
+      (uint32_t)AssetsFileChunkID_SpriteBases,
+      (uint32_t)AssetsFileChunkID_TileMaps
    };
    Bool_t ( *chunkLoaders[] )( GameData_t*, AssetsFileChunk_t* ) = {
       AssetsFile_ReadFontsChunk,
       AssetsFile_ReadBitmapsChunk,
       AssetsFile_ReadTileSetsChunk,
-      AssetsFile_ReadSpriteBasesChunk
+      AssetsFile_ReadSpriteBasesChunk,
+      AssetsFile_ReadTileMapsChunk
    };
 
    for ( i = 0; i < (uint32_t)AssetsFileChunkID_Count; i++ )
@@ -454,6 +457,76 @@ internal Bool_t AssetsFile_ReadTileSetsChunk( GameData_t* gameData, AssetsFileCh
       else
       {
          snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNTILESETID, entry->ID );
+         Platform_Log( msg );
+      }
+
+      entry++;
+   }
+
+   return True;
+}
+
+internal Bool_t AssetsFile_ReadTileMapsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk )
+{
+   uint32_t i, j, tileSetID;
+   TileMapID_t tileMapID;
+   AssetsFileChunkEntry_t* entry = chunk->entries;
+   TileMap_t* tileMap;
+   uint32_t* memPos32;
+   char msg[STRING_SIZE_DEFAULT];
+
+   for ( i = 0; i < chunk->numEntries; i++ )
+   {
+      tileMapID = (TileMapID_t)entry->ID;
+
+      if ( entry->size < 4 )
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_TILEMAPCORRUPT, entry->ID );
+         Platform_Log( msg );
+         return False;
+      }
+
+      memPos32 = (uint32_t*)( entry->memory );
+      tileSetID = memPos32[0];
+      memPos32++;
+
+      if ( tileSetID >= TileSetID_Count )
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_TILEMAPTILESETNOTFOUND, tileSetID );
+         Platform_Log( msg );
+         return False;
+      }
+
+      if ( tileMapID < TileMapID_Count )
+      {
+         if ( entry->size < 12 )
+         {
+            snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_TILEMAPCORRUPT, tileMapID );
+            Platform_Log( msg );
+            return False;
+         }
+
+         tileMap = &( gameData->tileMaps[entry->ID] );
+
+         TileMap_Init( tileMap, &( gameData->renderData.tileSets[(uint32_t)tileSetID] ),
+                       memPos32[0], memPos32[1] );
+         memPos32 += 2;
+
+         if ( entry->size != ( 12 + ( 4 * tileMap->dimensions.x * tileMap->dimensions.y ) ) )
+         {
+            snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_TILEMAPCORRUPT, entry->ID );
+            Platform_Log( msg );
+            return False;
+         }
+
+         for ( j = 0; j < ( tileMap->dimensions.x * tileMap->dimensions.y ); j++ )
+         {
+            tileMap->tileIndexes[j] = memPos32[j];
+         }
+      }
+      else
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNTILEMAPID, entry->ID );
          Platform_Log( msg );
       }
 

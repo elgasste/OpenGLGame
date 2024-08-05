@@ -71,6 +71,7 @@ void Game_ClearData( GameData_t* gameData )
    Image_t* image = gameData->renderData.images;
    Font_t* font = gameData->renderData.fonts;
    Menu_t* menu = gameData->menus;
+   TileMap_t* tileMap = gameData->tileMaps;
 
    for ( i = 0; i < (uint32_t)ImageID_Count; i++ )
    {
@@ -88,6 +89,12 @@ void Game_ClearData( GameData_t* gameData )
    {
       Menu_ClearItems( menu );
       menu++;
+   }
+
+   for ( i = 0; i < (uint32_t)TileMapID_Count; i++ )
+   {
+      TileMap_ClearData( tileMap );
+      tileMap++;
    }
 }
 

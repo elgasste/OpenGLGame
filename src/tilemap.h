@@ -9,7 +9,7 @@ typedef struct TileSet_t TileSet_t;
 typedef struct TileMap_t
 {
    TileSet_t* tileSet;
-   uint32_t* tileIDs;
+   uint32_t* tileIndexes;
    uint32_t numTiles;
    Vector2ui32_t dimensions;
 }

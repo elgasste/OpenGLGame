@@ -7,6 +7,7 @@ typedef enum
    AssetsFileChunkID_Fonts,
    AssetsFileChunkID_SpriteBases,
    AssetsFileChunkID_TileSets,
+   AssetsFileChunkID_TileMaps,
 
    AssetsFileChunkID_Count
 }
@@ -54,6 +55,14 @@ typedef enum
    TileSetID_Count
 }
 TileSetID_t;
+
+typedef enum
+{
+   TileMapID_World = 0,
+
+   TileMapID_Count
+}
+TileMapID_t;
 
 typedef enum
 {

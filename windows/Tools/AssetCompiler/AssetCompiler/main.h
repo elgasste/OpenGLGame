@@ -4,8 +4,9 @@
 #define STARTCODEPOINT     32       // space
 #define ENDCODEPOINT       126      // tilde
 #define MAX_GLYPHHEIGHTS   10
+#define MAX_TILEMAPSIZE    1000
 
-#define NUM_CHUNKS         4
+#define NUM_CHUNKS         5
 
 #include "common.h"
 #include "font.h"
@@ -63,6 +64,15 @@ typedef struct TileSetData_t
    Vector2ui32_t tileDimensions;
 }
 TileSetData_t;
+
+typedef struct TileMapData_t
+{
+   uint32_t tileMapID;
+   uint32_t tileSetID;
+   Vector2ui32_t dimensions;
+   uint32_t tileIndexes[MAX_TILEMAPSIZE];
+}
+TileMapData_t;
 
 typedef struct GameAssets_t
 {
