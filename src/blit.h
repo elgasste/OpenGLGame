@@ -25,6 +25,16 @@ void Blit_ColoredTexture( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
                           float screenX, float screenY,
                           float scale, uint32_t color );
 void Blit_Texture( GLuint textureHandle, PixelBuffer_t* pixelBuffer, float screenX, float screenY, float scale );
+void Blit_ColoredImageSection( Image_t* image,
+                               float screenX, float screenY,
+                               uint32_t imageX, uint32_t imageY,
+                               uint32_t sectionWidth, uint32_t sectionHeight,
+                               float scale, uint32_t color );
+void Blit_ImageSection( Image_t* image,
+                        float screenX, float screenY,
+                        uint32_t imageX, uint32_t imageY,
+                        uint32_t sectionWidth, uint32_t sectionHeight,
+                        float scale );
 void Blit_ColoredImage( Image_t* image, float screenX, float screenY, float scale, uint32_t color );
 void Blit_Image( Image_t* image, float screenX, float screenY, float scale );
 void Blit_ColoredSprite( Sprite_t* sprite, float scale, float screenX, float screenY, uint32_t color );
