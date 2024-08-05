@@ -2,7 +2,8 @@
 #define TILEMAP_H
 
 #include "common.h"
-#include "vector.h"
+#include "pixel_buffer.h"
+#include "platform.h"
 
 typedef struct TileSet_t TileSet_t;
 
@@ -12,6 +13,8 @@ typedef struct TileMap_t
    uint32_t* tileIndexes;
    uint32_t numTiles;
    Vector2ui32_t dimensions;
+   PixelBuffer_t buffer;
+   GLuint textureHandle;
 }
 TileMap_t;
 

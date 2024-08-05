@@ -27,7 +27,12 @@ void Game_Render( GameData_t* gameData )
 
 internal void Game_RenderWorld( GameData_t* gameData )
 {
-   uint32_t i;
+   Blit_Texture( gameData->tileMaps[(uint32_t)TileMapID_World].textureHandle,
+                 &( gameData->tileMaps[(uint32_t)TileMapID_World].buffer ),
+                 100.0f, 100.0f,
+                 2.0f );
+
+   /*uint32_t i;
    Star_t* star;
    Font_t* font = &( gameData->renderData.fonts[FontID_Papyrus] );
 
@@ -41,7 +46,7 @@ internal void Game_RenderWorld( GameData_t* gameData )
    {
       star = &( gameData->stars[i] );
       Blit_Sprite( &( star->sprite ), star->position.x, star->position.y, star->scale );
-   }
+   }*/
 }
 
 internal void Game_RenderMenu( GameData_t* gameData )
