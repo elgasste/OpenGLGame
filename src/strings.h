@@ -49,6 +49,8 @@
 
 #define STR_FONTERR_MEMORYCORRUPT               "Font error: font memory is corrupt, font ID %u"
 
+#define STR_TILESETERR_TILEDIMENSIONS           "TileSet error: tile dimensions don't match image dimensions, image ID %u"
+
 #define STR_DIAG_FRAMETARGETMICRO               "Target frame microseconds: %lld"
 #define STR_DIAG_FRAMEDURATIONMICRO             "Last frame microseconds: %lld"
 #define STR_DIAG_LAGFRAMES                      "Lag frames: %u"

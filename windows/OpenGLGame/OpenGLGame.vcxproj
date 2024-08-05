@@ -38,6 +38,7 @@
     <ClInclude Include="..\..\src\sprite.h" />
     <ClInclude Include="..\..\src\strings.h" />
     <ClInclude Include="..\..\src\thread.h" />
+    <ClInclude Include="..\..\src\tileset.h" />
     <ClInclude Include="..\..\src\vector.h" />
     <ClInclude Include="..\..\src\win_platform.h" />
   </ItemGroup>
@@ -56,6 +57,7 @@
     <ClCompile Include="..\..\src\pixel_buffer.c" />
     <ClCompile Include="..\..\src\random.c" />
     <ClCompile Include="..\..\src\sprite.c" />
+    <ClCompile Include="..\..\src\tileset.c" />
     <ClCompile Include="..\..\src\win_platform.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
