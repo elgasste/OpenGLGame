@@ -217,7 +217,9 @@ internal void Game_HandleMenuItem_Quit( GameData_t* gameData )
 
 internal void Game_Tick( GameData_t* gameData )
 {
-   uint32_t i, entryCounter = 0;
+   TileMap_UpdateBuffer( &( gameData->tileMaps[TileMapID_World] ) );
+
+   /*uint32_t i, entryCounter = 0;
    StarUpdateData_t dataArray[MAX_THREADQUEUE_SIZE];
 
    for ( i = 0; i < STAR_COUNT; i++ )
@@ -232,7 +234,7 @@ internal void Game_Tick( GameData_t* gameData )
          Platform_RunThreadQueue();
          entryCounter = 0;
       }
-   }
+   }*/
 
    if ( gameData->state == GameState_Menu )
    {

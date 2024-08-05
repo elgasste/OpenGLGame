@@ -27,10 +27,10 @@ void Game_Render( GameData_t* gameData )
 
 internal void Game_RenderWorld( GameData_t* gameData )
 {
-   Blit_Texture( gameData->tileMaps[(uint32_t)TileMapID_World].textureHandle,
-                 &( gameData->tileMaps[(uint32_t)TileMapID_World].buffer ),
+   Blit_Texture( gameData->tileMaps[TileMapID_World].textureHandle,
+                 &( gameData->tileMaps[TileMapID_World].buffer ),
                  100.0f, 100.0f,
-                 2.0f );
+                 1.0f );
 
    /*uint32_t i;
    Star_t* star;

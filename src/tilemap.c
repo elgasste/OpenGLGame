@@ -34,3 +34,20 @@ void TileMap_ClearData( TileMap_t* tileMap )
    tileMap->dimensions.x = 0;
    tileMap->dimensions.y = 0;
 }
+
+void TileMap_UpdateBuffer( TileMap_t* tileMap )
+{
+   uint32_t i, tileX, tileY;
+   uint32_t* bufferPos32;
+
+   for ( i = 0; i < tileMap->numTiles; i++ )
+   {
+      tileX = i % tileMap->dimensions.x;
+      tileY = i / tileMap->dimensions.x;
+      bufferPos32 = (uint32_t*)( tileMap->buffer.memory )
+         + ( tileX * tileMap->tileSet->dimensions.x )
+         + ( tileY * tileMap->buffer.dimensions.x * tileMap->tileSet->dimensions.y );
+
+      TileSet_CopyTileToBuffer( tileMap->tileSet, tileMap->tileIndexes[i], &( tileMap->buffer ), bufferPos32 );
+   }
+}

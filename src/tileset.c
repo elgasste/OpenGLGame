@@ -23,3 +23,25 @@ Bool_t TileSet_Init( TileSet_t* tileSet, Image_t* image, ImageID_t imageID,
 
    return True;
 }
+
+void TileSet_CopyTileToBuffer( TileSet_t* tileSet, uint32_t tileIndex,
+                               PixelBuffer_t* buffer, uint32_t* bufferPos32 )
+{
+   uint32_t i, j;
+   uint32_t tileX = tileIndex % tileSet->stride;
+   uint32_t tileY = tileIndex / tileSet->stride;
+   uint32_t* tileSetPos32 = (uint32_t*)( tileSet->image->pixelBuffer.memory )
+      + ( tileY * tileSet->image->pixelBuffer.dimensions.x * tileSet->dimensions.y )
+      + ( tileX * tileSet->dimensions.x );
+
+   for ( i = 0; i < tileSet->dimensions.y; i++ )
+   {
+      for ( j = 0; j < tileSet->dimensions.x; j++ )
+      {
+         bufferPos32[j] = tileSetPos32[j];
+      }
+
+      tileSetPos32 += tileSet->image->pixelBuffer.dimensions.x;
+      bufferPos32 += buffer->dimensions.x;
+   }
+}
