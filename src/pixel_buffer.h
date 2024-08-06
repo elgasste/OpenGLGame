@@ -11,6 +11,7 @@ typedef struct PixelBuffer_t
 }
 PixelBuffer_t;
 
+void PixelBuffer_Init( PixelBuffer_t* pixelBuffer, uint32_t width, uint32_t height );
 void PixelBuffer_ClearData( PixelBuffer_t* pixelBuffer );
 
 #endif

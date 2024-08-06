@@ -71,8 +71,7 @@ Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize, uin
          glyph->leftBearing = ( (float*)memPos32 )[0];
          glyph->baselineOffset = ( (float*)memPos32 )[1];
          glyph->advance = ( (float*)memPos32 )[2];
-         buffer->dimensions.x = memPos32[3];
-         buffer->dimensions.y = memPos32[4];
+         PixelBuffer_Init( buffer, memPos32[3], memPos32[4] );
          memPos32 += 5;
          bytesRead += 20;
          bufferSize = ( buffer->dimensions.x * buffer->dimensions.y * 4 );
@@ -82,10 +81,12 @@ Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize, uin
             ERROR_RETURN_FALSE();
          }
 
-         buffer->memory = (uint8_t*)Platform_CAlloc( 1, bufferSize );
          for ( k = 0; k < bufferSize; k++ )
          {
-            buffer->memory[k] = ( (uint8_t*)memPos32 )[k];
+            if ( buffer->memory )
+            {
+               buffer->memory[k] = ( (uint8_t*)memPos32 )[k];
+            }
          }
 
          memPos32 += ( buffer->dimensions.x * buffer->dimensions.y );
