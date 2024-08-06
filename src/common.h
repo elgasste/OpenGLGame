@@ -30,7 +30,7 @@ typedef int32_t Bool_t;
 #define STRING_SIZE_DEFAULT      1024
 
 #define SCREEN_WIDTH             1280
-#define SCREEN_HEIGHT            720
+#define SCREEN_HEIGHT            768
 
 #define GAME_FPS                 60
 
