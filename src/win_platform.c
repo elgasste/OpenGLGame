@@ -377,16 +377,16 @@ internal DWORD WINAPI ThreadProc( LPVOID lpParam )
 internal Bool_t DoNextThreadQueueEntry( Win32ThreadInfo_t* threadInfo )
 {
    Bool_t shouldSleep = False;
-   uint32_t entryIndex, originalNextEntry = g_globals.threadQueue.nextEntryToRead;
-   uint32_t newNextEntryToRead = ( originalNextEntry + 1 ) % MAX_THREADQUEUE_SIZE;
+   uint32_t entryIndex, originalNextEntryToRead = g_globals.threadQueue.nextEntryToRead;
+   uint32_t newNextEntryToRead = ( originalNextEntryToRead + 1 ) % MAX_THREADQUEUE_SIZE;
 
-   if ( originalNextEntry != g_globals.threadQueue.nextEntryToWrite )
+   if ( originalNextEntryToRead != g_globals.threadQueue.nextEntryToWrite )
    {
       entryIndex = InterlockedCompareExchange( (LONG volatile *)( &( g_globals.threadQueue.nextEntryToRead ) ),
                                                newNextEntryToRead,
-                                               originalNextEntry );
+                                               originalNextEntryToRead );
 
-      if ( entryIndex == originalNextEntry )
+      if ( entryIndex == originalNextEntryToRead )
       {        
          g_globals.threadQueue.entries[entryIndex].workerFnc( g_globals.threadQueue.entries[entryIndex].data );
          threadInfo->jobsDone++;
@@ -616,13 +616,16 @@ ThreadQueue_t* Platform_GetThreadQueue()
 
 Bool_t Platform_AddThreadQueueEntry( void ( *workerFnc )(), void* data )
 {
+   uint32_t newNextEntryToWrite;
+   ThreadQueueEntry_t* entry;
+
    if ( g_globals.threadQueue.completionGoal >= ( MAX_THREADQUEUE_SIZE - 1 ) )
    {
       return False;
    }
 
-   uint32_t newNextEntryToWrite = ( g_globals.threadQueue.nextEntryToWrite + 1 ) % MAX_THREADQUEUE_SIZE;
-   ThreadQueueEntry_t* entry = g_globals.threadQueue.entries + g_globals.threadQueue.nextEntryToWrite;
+   newNextEntryToWrite = ( g_globals.threadQueue.nextEntryToWrite + 1 ) % MAX_THREADQUEUE_SIZE;
+   entry = g_globals.threadQueue.entries + g_globals.threadQueue.nextEntryToWrite;
    entry->workerFnc = workerFnc;
    entry->data = data;
    g_globals.threadQueue.completionGoal++;
