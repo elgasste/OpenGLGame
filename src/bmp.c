@@ -292,10 +292,7 @@ internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, uint8_t* memPos, PixelB
 
    imageHeight = (uint32_t)abs( bmpData->imageHeight );
    paddingBytes = bmpData->paddingBits / 8;
-
-   pixelBuffer->dimensions.x = bmpData->imageWidth;
-   pixelBuffer->dimensions.y = imageHeight;
-   pixelBuffer->memory = (uint8_t*)Platform_CAlloc( 1, bmpData->imageWidth * imageHeight * 4 );
+   PixelBuffer_Init( pixelBuffer, bmpData->imageWidth, imageHeight );
 
    for ( scanlineIndex = 0; scanlineIndex < imageHeight; scanlineIndex++ )
    {
