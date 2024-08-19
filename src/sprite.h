@@ -9,6 +9,7 @@ typedef struct Clock_t Clock_t;
 
 typedef struct SpriteBase_t
 {
+   SpriteBaseID_t ID;
    Image_t* image;
    Vector2ui32_t frameDimensions;
    uint32_t numFrames;
@@ -26,12 +27,7 @@ typedef struct Sprite_t
 }
 Sprite_t;
 
-Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base,
-                                  SpriteBaseID_t baseID,
-                                  Image_t* image,
-                                  ImageID_t imageID,
-                                  uint8_t* memory,
-                                  uint32_t memSize );
+Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base, Image_t* image, uint8_t* memory, uint32_t memSize );
 Bool_t Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base, float frameSeconds );
 void Sprite_Reset( Sprite_t* sprite );
 void Sprite_ScaleFrameTime( Sprite_t* sprite, float scalar );

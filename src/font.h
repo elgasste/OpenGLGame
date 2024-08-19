@@ -27,6 +27,7 @@ FontGlyphCollection_t;
 
 typedef struct Font_t
 {
+   FontID_t ID;
    uint32_t codepointOffset;
    uint32_t numGlyphCollections;
    uint32_t numGlyphs;
@@ -36,7 +37,7 @@ typedef struct Font_t
 }
 Font_t;
 
-Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize, uint32_t fontID );
+Bool_t Font_LoadFromMemory( Font_t* font, uint8_t* memory, uint32_t memSize );
 void Font_ClearData( Font_t* font );
 Bool_t Font_ContainsChar( Font_t* font, uint32_t codepoint );
 void Font_SetCharColor( Font_t* font, uint32_t codepoint, uint32_t color );
