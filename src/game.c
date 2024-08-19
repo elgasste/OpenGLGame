@@ -81,6 +81,11 @@ internal void Game_InitRenderData( GameRenderData_t* renderData )
       renderData->images[i].textureHandle = 0;
    }
 
+   for ( i = 0; i < (uint32_t)FontID_Count; i++ )
+   {
+      renderData->fonts[i].ID = (FontID_t)i;
+   }
+
    for ( i = 0; i < (uint32_t)SpriteBaseID_Count; i++ )
    {
       renderData->spriteBases[i].ID = (SpriteBaseID_t)i;

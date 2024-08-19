@@ -335,7 +335,7 @@ internal Bool_t AssetsFile_InterpretFontsChunk( GameData_t* gameData, AssetsFile
          font = &( gameData->renderData.fonts[entry->ID] );
          Font_ClearData( font );
 
-         if ( !Font_LoadFromMemory( font, entry->memory, entry->size, entry->ID ) )
+         if ( !Font_LoadFromMemory( font, entry->memory, entry->size ) )
          {
             return False;
          }
