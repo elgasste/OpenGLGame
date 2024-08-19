@@ -382,7 +382,6 @@ internal Bool_t AssetsFile_InterpretSpriteBasesChunk( GameData_t* gameData, Asse
       if ( baseID < SpriteBaseID_Count )
       {
          if ( !Sprite_LoadBaseFromMemory( &( gameData->renderData.spriteBases[entry->ID] ),
-                                          baseID,
                                           &( gameData->renderData.images[imageID] ),
                                           entry->memory,
                                           entry->size ) )

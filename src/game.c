@@ -10,6 +10,7 @@ typedef struct
 }
 StarUpdateData_t;
 
+internal void Game_InitRenderData( GameRenderData_t* renderData );
 internal void Game_HandleInput( GameData_t* gameData );
 internal void Game_HandleStateInput_Playing( GameData_t* gameData );
 internal void Game_HandleStateInput_Menu( GameData_t* gameData );
@@ -24,14 +25,7 @@ Bool_t Game_Init( GameData_t* gameData )
    float frameTimeAdjustment;
    Star_t* star = gameData->stars;
 
-   for ( i = 0; i < (uint32_t)ImageID_Count; i++ )
-   {
-      gameData->renderData.images[i].ID = (ImageID_t)i;
-      gameData->renderData.images[i].pixelBuffer.dimensions.x = 0;
-      gameData->renderData.images[i].pixelBuffer.dimensions.y = 0;
-      gameData->renderData.images[i].pixelBuffer.memory = 0;
-      gameData->renderData.images[i].textureHandle = 0;
-   }
+   Game_InitRenderData( &( gameData->renderData ) );
 
    if ( !Game_LoadData( gameData ) )
    {
@@ -72,6 +66,25 @@ Bool_t Game_Init( GameData_t* gameData )
    gameData->curMenuID = (MenuID_t)0;
 
    return True;
+}
+
+internal void Game_InitRenderData( GameRenderData_t* renderData )
+{
+   uint32_t i;
+
+   for ( i = 0; i < (uint32_t)ImageID_Count; i++ )
+   {
+      renderData->images[i].ID = (ImageID_t)i;
+      renderData->images[i].pixelBuffer.dimensions.x = 0;
+      renderData->images[i].pixelBuffer.dimensions.y = 0;
+      renderData->images[i].pixelBuffer.memory = 0;
+      renderData->images[i].textureHandle = 0;
+   }
+
+   for ( i = 0; i < (uint32_t)SpriteBaseID_Count; i++ )
+   {
+      renderData->spriteBases[i].ID = (SpriteBaseID_t)i;
+   }
 }
 
 void Game_ClearData( GameData_t* gameData )

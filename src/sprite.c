@@ -2,11 +2,7 @@
 #include "image.h"
 #include "clock.h"
 
-Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base,
-                                  SpriteBaseID_t baseID,
-                                  Image_t* image,
-                                  uint8_t* memory,
-                                  uint32_t memSize )
+Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base, Image_t* image, uint8_t* memory, uint32_t memSize )
 {
    Vector2ui32_t* imageDim = &( image->pixelBuffer.dimensions );
    Vector2ui32_t* frameDim;
@@ -15,7 +11,7 @@ Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base,
 
    if ( memSize != 12 )
    {
-      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_SPRITEERR_MEMORYCORRUPT, (uint32_t)baseID );
+      snprintf( errorMsg, STRING_SIZE_DEFAULT, STR_SPRITEERR_MEMORYCORRUPT, (uint32_t)( base->ID ) );
       Platform_Log( errorMsg );
       return False;
    }
