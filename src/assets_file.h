@@ -5,26 +5,26 @@
 
 typedef struct GameData_t GameData_t;
 
-typedef struct AssetsFileChunkIDOffsetArray_t
+typedef struct AssetsFileOffsetTable_t
 {
-   uint32_t* offsets;
    uint32_t numOffsets;
+   uint32_t* offsets;
 }
-AssetsFileChunkIDOffsetArray_t;
+AssetsFileOffsetTable_t;
 
-typedef struct AssetsFileChunkEntry_t
+typedef struct AssetsFileEntry_t
 {
    uint32_t ID;
    uint32_t size;
    uint8_t* memory;
 }
-AssetsFileChunkEntry_t;
+AssetsFileEntry_t;
 
 typedef struct AssetsFileChunk_t
 {
    uint32_t ID;
    uint32_t numEntries;
-   AssetsFileChunkEntry_t* entries;
+   AssetsFileEntry_t* entries;
 }
 AssetsFileChunk_t;
 
