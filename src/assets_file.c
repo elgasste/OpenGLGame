@@ -301,7 +301,7 @@ internal Bool_t AssetsFile_InterpretBitmapsChunk( GameData_t* gameData, AssetsFi
          image = &( gameData->renderData.images[entry->ID] );
          Image_ClearData( image );
 
-         if ( !Image_LoadFromBitmapMemory( image, entry->memory, entry->size, entry->ID ) )
+         if ( !Image_LoadFromBitmapMemory( image, entry->memory, entry->size ) )
          {
             return False;
          }
@@ -384,7 +384,6 @@ internal Bool_t AssetsFile_InterpretSpriteBasesChunk( GameData_t* gameData, Asse
          if ( !Sprite_LoadBaseFromMemory( &( gameData->renderData.spriteBases[entry->ID] ),
                                           baseID,
                                           &( gameData->renderData.images[imageID] ),
-                                          (ImageID_t)imageID,
                                           entry->memory,
                                           entry->size ) )
          {

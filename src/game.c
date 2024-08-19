@@ -24,6 +24,15 @@ Bool_t Game_Init( GameData_t* gameData )
    float frameTimeAdjustment;
    Star_t* star = gameData->stars;
 
+   for ( i = 0; i < (uint32_t)ImageID_Count; i++ )
+   {
+      gameData->renderData.images[i].ID = (ImageID_t)i;
+      gameData->renderData.images[i].pixelBuffer.dimensions.x = 0;
+      gameData->renderData.images[i].pixelBuffer.dimensions.y = 0;
+      gameData->renderData.images[i].pixelBuffer.memory = 0;
+      gameData->renderData.images[i].textureHandle = 0;
+   }
+
    if ( !Game_LoadData( gameData ) )
    {
       return False;

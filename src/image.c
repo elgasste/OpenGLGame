@@ -1,14 +1,14 @@
 #include "image.h"
 #include "bmp.h"
 
-Bool_t Image_LoadFromBitmapMemory( Image_t* image, uint8_t* memory, uint32_t memSize, uint32_t imageID )
+Bool_t Image_LoadFromBitmapMemory( Image_t* image, uint8_t* memory, uint32_t memSize )
 {
    image->pixelBuffer.memory = 0;
    image->pixelBuffer.dimensions.x = 0;
    image->pixelBuffer.dimensions.y = 0;
    image->textureHandle = 0;
 
-   if ( !Bmp_LoadFromMemory( memory, memSize, &( image->pixelBuffer ), imageID ) )
+   if ( !Bmp_LoadFromMemory( memory, memSize, &( image->pixelBuffer ), image->ID ) )
    {
       return False;
    }

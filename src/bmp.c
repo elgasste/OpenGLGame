@@ -12,7 +12,7 @@
 #define BMP_BI_BITFIELDS               3
 
 #define ERROR_RETURN_FALSE( s ) \
-   snprintf( errorMsg, STRING_SIZE_DEFAULT, s, imageID ); \
+   snprintf( errorMsg, STRING_SIZE_DEFAULT, s, (uint32_t)imageID ); \
    Platform_Log( errorMsg ); \
    return False
 
@@ -33,13 +33,13 @@ typedef struct
 BmpData_t;
 
 internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer );
-internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID );
-internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID );
-internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID );
-internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, uint32_t memSize, uint32_t imageID );
-internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, uint8_t* memPos, PixelBuffer_t* pixelBuffer, uint32_t imageID );
+internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, ImageID_t imageID );
+internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, ImageID_t imageID );
+internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, ImageID_t imageID );
+internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, uint32_t memSize, ImageID_t imageID );
+internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, uint8_t* memPos, PixelBuffer_t* pixelBuffer, ImageID_t imageID );
 
-Bool_t Bmp_LoadFromMemory( uint8_t* memory, uint32_t memSize, PixelBuffer_t* pixelBuffer, uint32_t imageID )
+Bool_t Bmp_LoadFromMemory( uint8_t* memory, uint32_t memSize, PixelBuffer_t* pixelBuffer, ImageID_t imageID )
 {
    BmpData_t bmpData = { 0 };
    uint8_t* memStartPos;
@@ -84,7 +84,7 @@ internal void Bmp_Cleanup( BmpData_t* bmpData, PixelBuffer_t* pixelBuffer )
    }
 }
 
-internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID )
+internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, ImageID_t imageID )
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
@@ -121,7 +121,7 @@ internal Bool_t Bmp_ReadHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t me
    return True;
 }
 
-internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID )
+internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, ImageID_t imageID )
 {
    uint8_t leftoverBits;
    uint32_t compressionMethod;
@@ -231,7 +231,7 @@ internal Bool_t Bmp_ReadDIBHeader( BmpData_t* bmpData, uint8_t* memPos, uint32_t
    return True;
 }
 
-internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, uint32_t imageID )
+internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, uint8_t* memPos, uint32_t memSize, ImageID_t imageID )
 {
    uint32_t i;
    uint32_t paletteSize;
@@ -270,7 +270,7 @@ internal Bool_t Bmp_ReadPalette( BmpData_t* bmpData, uint8_t* memPos, uint32_t m
    return True;
 }
 
-internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, uint32_t memSize, uint32_t imageID )
+internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, uint32_t memSize, ImageID_t imageID )
 {
    char errorMsg[STRING_SIZE_DEFAULT];
 
@@ -282,7 +282,7 @@ internal Bool_t Bmp_VerifyDataSize( BmpData_t* bmpData, uint32_t memSize, uint32
    return True;
 }
 
-internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, uint8_t* memPos, PixelBuffer_t* pixelBuffer, uint32_t imageID )
+internal Bool_t Bmp_ReadPixelBuffer( BmpData_t* bmpData, uint8_t* memPos, PixelBuffer_t* pixelBuffer, ImageID_t imageID )
 {
    uint8_t paddingBytes, i;
    uint16_t paletteIndex;

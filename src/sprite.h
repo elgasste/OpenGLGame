@@ -29,7 +29,6 @@ Sprite_t;
 Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base,
                                   SpriteBaseID_t baseID,
                                   Image_t* image,
-                                  ImageID_t imageID,
                                   uint8_t* memory,
                                   uint32_t memSize );
 Bool_t Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base, float frameSeconds );
