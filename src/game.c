@@ -180,10 +180,10 @@ internal void Game_HandleInput( GameData_t* gameData )
    }
 
    if ( gameData->diagnosticsData.showDiagnostics &&
-        Input_WasButtonReleased( &( gameData->inputState ), ButtonCode_MouseLeft ) && 
+        Input_WasMouseButtonReleased( &( gameData->inputState.mouseState ), MouseButtonCode_Left ) &&
         Rect_PointInRectF( &( gameData->diagnosticsData.threadJobsToggleArea ),
-                           (float)( gameData->inputState.mousePos.x ),
-                           (float)( gameData->inputState.mousePos.y ) ) )
+                           (float)( gameData->inputState.mouseState.pointerPos.x ),
+                           (float)( gameData->inputState.mouseState.pointerPos.y ) ) )
    {
       TOGGLE_BOOL( gameData->diagnosticsData.showThreadJobs );
    }

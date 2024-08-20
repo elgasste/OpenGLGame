@@ -71,4 +71,27 @@ typedef enum
 }
 GameState_t;
 
+typedef enum
+{
+   ButtonCode_Left = 0,
+   ButtonCode_Up,
+   ButtonCode_Right,
+   ButtonCode_Down,
+
+   ButtonCode_Enter,
+   ButtonCode_Escape,
+
+   ButtonCode_F8,
+
+   ButtonCode_Count
+}
+ButtonCode_t;
+
+typedef enum
+{
+   MouseButtonCode_Left = 0,
+   MouseButtonCode_Right
+}
+MouseButtonCode_t;
+
 #endif
