@@ -192,6 +192,8 @@ internal void Game_HandleInput( GameData_t* gameData )
 
 internal void Game_HandleStateInput_Playing( GameData_t* gameData )
 {
+   Bool_t leftDown, rightDown;
+
    if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Escape ) )
    {
       gameData->curMenuID = MenuID_Playing;
@@ -201,11 +203,14 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
       return;
    }
 
-   if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Left ) )
+   leftDown = gameData->inputState.buttonStates[ButtonCode_Left].isDown;
+   rightDown = gameData->inputState.buttonStates[ButtonCode_Right].isDown;
+
+   if ( leftDown )
    {
       Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Left );
    }
-   else if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Right ) )
+   else if ( rightDown )
    {
       Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Right );
    }

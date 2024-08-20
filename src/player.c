@@ -8,6 +8,10 @@ void Player_Tick( Player_t* player, Clock_t* clock )
 
 void Player_SetFacingDirection( Player_t* player, PlayerDirection_t direction )
 {
-   player->activeSprite = &( player->idleSprites[(uint64_t)direction] );
-   Sprite_Reset( player->activeSprite );
+   if ( player->facingDirection != direction )
+   {
+      player->facingDirection = direction;
+      player->activeSprite = &( player->idleSprites[(uint64_t)direction] );
+      Sprite_Reset( player->activeSprite );
+   }
 }
