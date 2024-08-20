@@ -11,14 +11,20 @@ typedef struct ButtonState_t
 }
 ButtonState_t;
 
+typedef struct MouseDragState_t
+{
+   Bool_t isDragging;
+   Bool_t wasDragging;
+}
+MouseDragState_t;
+
 typedef struct MouseState_t
 {
    Vector2i32_t pointerPos;
    Vector2i32_t pointerDelta;
    ButtonState_t buttonStates[2];
-   Bool_t isButtonDragging[2];
+   MouseDragState_t dragStates[2];
    Vector2i32_t dragOrigin;
-   Bool_t wasButtonClicked[2];
 }
 MouseState_t;
 
@@ -39,6 +45,7 @@ Bool_t Input_WasButtonPressed( InputState_t* inputState, ButtonCode_t buttonCode
 Bool_t Input_WasButtonReleased( InputState_t* inputState, ButtonCode_t buttonCode );
 Bool_t Input_WasMouseButtonPressed( MouseState_t* mouseState, MouseButtonCode_t buttonCode );
 Bool_t Input_WasMouseButtonReleased( MouseState_t* mouseState, MouseButtonCode_t buttonCode );
+Bool_t Input_WasMouseButtonClicked( MouseState_t* mouseState, MouseButtonCode_t buttonCode );
 Bool_t Input_IsAnyButtonDown( InputState_t* inputState );
 Bool_t Input_WasAnyButtonPressed( InputState_t* inputState );
 void Input_SetMousePos( MouseState_t* mouseState, int32_t x, int32_t y );

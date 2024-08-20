@@ -179,7 +179,7 @@ internal void Game_HandleInput( GameData_t* gameData )
    }
 
    if ( gameData->diagnosticsData.showDiagnostics &&
-        gameData->inputState.mouseState.wasButtonClicked[MouseButtonCode_Left] &&
+        Input_WasMouseButtonClicked( &( gameData->inputState.mouseState ), MouseButtonCode_Left ) &&
         Rect_PointInRectF( &( gameData->diagnosticsData.threadJobsToggleArea ),
                            (float)( gameData->inputState.mouseState.pointerPos.x ),
                            (float)( gameData->inputState.mouseState.pointerPos.y ) ) )
