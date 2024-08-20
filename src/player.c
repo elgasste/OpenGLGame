@@ -4,6 +4,15 @@
 void Player_Tick( Player_t* player, Clock_t* clock )
 {
    Sprite_Tick( player->activeSprite, clock );
+
+   if ( player->facingDirection == PlayerDirection_Left )
+   {
+      player->position.x -= ( player->velocity * clock->frameDeltaSeconds );
+   }
+   else
+   {
+      player->position.x += ( player->velocity * clock->frameDeltaSeconds );
+   }
 }
 
 void Player_SetFacingDirection( Player_t* player, PlayerDirection_t direction )
