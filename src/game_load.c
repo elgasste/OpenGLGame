@@ -45,8 +45,8 @@ Bool_t Game_LoadData( GameData_t* gameData )
                         0.13f );
    player->position.x = 100.0f;
    player->position.y = 0.0f;
-   player->isMoving = False;
    Player_SetFacingDirection( player, PlayerDirection_Right );
+   player->velocity = 0.0f;
 
    return True;
 }

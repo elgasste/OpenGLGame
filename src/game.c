@@ -206,13 +206,19 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
    leftDown = gameData->inputState.buttonStates[ButtonCode_Left].isDown;
    rightDown = gameData->inputState.buttonStates[ButtonCode_Right].isDown;
 
-   if ( leftDown )
+   if ( leftDown && !rightDown )
    {
       Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Left );
+      Player_SetVelocity( &( gameData->player ), PLAYER_MAX_VELOCITY );
    }
-   else if ( rightDown )
+   else if ( rightDown && !leftDown )
    {
       Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Right );
+      Player_SetVelocity( &( gameData->player ), PLAYER_MAX_VELOCITY );
+   }
+   else
+   {
+      Player_SetVelocity( &( gameData->player ), 0.0f );
    }
 }
 
