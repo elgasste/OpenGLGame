@@ -192,12 +192,33 @@ internal void Game_HandleInput( GameData_t* gameData )
 
 internal void Game_HandleStateInput_Playing( GameData_t* gameData )
 {
+   Bool_t leftDown, rightDown;
+
    if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Escape ) )
    {
       gameData->curMenuID = MenuID_Playing;
       Menu_Reset( &( gameData->menus[gameData->curMenuID] ) );
       gameData->state = GameState_Menu;
       gameData->curMenuID = MenuID_Playing;
+      return;
+   }
+
+   leftDown = gameData->inputState.buttonStates[ButtonCode_Left].isDown;
+   rightDown = gameData->inputState.buttonStates[ButtonCode_Right].isDown;
+
+   if ( leftDown && !rightDown )
+   {
+      Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Left );
+      Player_SetVelocity( &( gameData->player ), PLAYER_MAX_VELOCITY );
+   }
+   else if ( rightDown && !leftDown )
+   {
+      Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Right );
+      Player_SetVelocity( &( gameData->player ), PLAYER_MAX_VELOCITY );
+   }
+   else
+   {
+      Player_SetVelocity( &( gameData->player ), 0.0f );
    }
 }
 
@@ -252,6 +273,8 @@ internal void Game_Tick( GameData_t* gameData )
          entryCounter = 0;
       }
    }
+
+   Player_Tick( &( gameData->player ), &( gameData->clock ) );
 
    if ( gameData->state == GameState_Menu )
    {

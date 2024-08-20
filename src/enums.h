@@ -14,7 +14,11 @@ AssetsFileChunkID_t;
 typedef enum
 {
    ImageID_Background = 0,
-   ImageID_Star,
+   ImageID_StarSprite,
+   ImageID_PlayerSpriteIdleLeft,
+   ImageID_PlayerSpriteIdleRight,
+   ImageID_PlayerSpriteRunLeft,
+   ImageID_PlayerSpriteRunRight,
 
    ImageID_Count
 }
@@ -23,6 +27,10 @@ ImageID_t;
 typedef enum
 {
    SpriteBaseID_Star,
+   SpriteBaseID_PlayerIdleLeft,
+   SpriteBaseID_PlayerIdleRight,
+   SpriteBaseID_PlayerMoveLeft,
+   SpriteBaseID_PlayerMoveRight,
 
    SpriteBaseID_Count
 }
@@ -93,5 +101,12 @@ typedef enum
    MouseButtonCode_Right
 }
 MouseButtonCode_t;
+
+typedef enum
+{
+   PlayerDirection_Left = 0,
+   PlayerDirection_Right
+}
+PlayerDirection_t;
 
 #endif

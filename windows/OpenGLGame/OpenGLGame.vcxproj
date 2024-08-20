@@ -33,6 +33,7 @@
     <ClInclude Include="..\..\src\pixel_buffer.h" />
     <ClInclude Include="..\..\src\platform.h" />
     <ClInclude Include="..\..\src\platform_includes.h" />
+    <ClInclude Include="..\..\src\player.h" />
     <ClInclude Include="..\..\src\random.h" />
     <ClInclude Include="..\..\src\rect.h" />
     <ClInclude Include="..\..\src\sprite.h" />
@@ -54,6 +55,7 @@
     <ClCompile Include="..\..\src\input.c" />
     <ClCompile Include="..\..\src\menu.c" />
     <ClCompile Include="..\..\src\pixel_buffer.c" />
+    <ClCompile Include="..\..\src\player.c" />
     <ClCompile Include="..\..\src\random.c" />
     <ClCompile Include="..\..\src\sprite.c" />
     <ClCompile Include="..\..\src\win_platform.c" />

@@ -38,4 +38,6 @@ typedef int32_t Bool_t;
 
 #define MOUSE_CLICK_THRESHOLD    8.0f
 
+#define PLAYER_MAX_VELOCITY      200.0f
+
 #endif
