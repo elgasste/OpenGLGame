@@ -198,6 +198,16 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
       Menu_Reset( &( gameData->menus[gameData->curMenuID] ) );
       gameData->state = GameState_Menu;
       gameData->curMenuID = MenuID_Playing;
+      return;
+   }
+
+   if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Left ) )
+   {
+      Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Left );
+   }
+   else if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Right ) )
+   {
+      Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Right );
    }
 }
 

@@ -19,6 +19,6 @@ typedef struct Player_t
 Player_t;
 
 void Player_Tick( Player_t* player, Clock_t* clock );
-void Player_SetDirection( Player_t* player, PlayerDirection_t direction );
+void Player_SetFacingDirection( Player_t* player, PlayerDirection_t direction );
 
 #endif
