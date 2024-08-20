@@ -8,6 +8,7 @@ Bool_t Game_LoadData( GameData_t* gameData )
    uint32_t i;
    Star_t* star;
    SpriteBase_t* starSpriteBase;
+   Player_t* player = &( gameData->player );
 
    if ( !AssetsFile_Load( gameData ) )
    {
@@ -29,6 +30,23 @@ Bool_t Game_LoadData( GameData_t* gameData )
 
       star->isResting = True;
    }
+
+   Sprite_LoadFromBase( &( player->idleSprites[(uint64_t)PlayerDirection_Left] ),
+                        &( gameData->renderData.spriteBases[SpriteBaseID_PlayerIdleLeft] ),
+                        0.13f );
+   Sprite_LoadFromBase( &( player->idleSprites[(uint64_t)PlayerDirection_Right] ),
+                        &( gameData->renderData.spriteBases[SpriteBaseID_PlayerIdleRight] ),
+                        0.13f );
+   Sprite_LoadFromBase( &( player->moveSprites[(uint64_t)PlayerDirection_Left] ),
+                        &( gameData->renderData.spriteBases[SpriteBaseID_PlayerMoveLeft] ),
+                        0.13f );
+   Sprite_LoadFromBase( &( player->moveSprites[(uint64_t)PlayerDirection_Right] ),
+                        &( gameData->renderData.spriteBases[SpriteBaseID_PlayerMoveRight] ),
+                        0.13f );
+   player->position.x = 100.0f;
+   player->position.y = 0.0f;
+   player->isMoving = False;
+   Player_SetDirection( player, PlayerDirection_Right );
 
    return True;
 }

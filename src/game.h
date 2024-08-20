@@ -16,6 +16,7 @@
 #include "font.h"
 #include "menu.h"
 #include "rect.h"
+#include "player.h"
 
 typedef struct DiagnosticsData_t
 {
@@ -65,6 +66,7 @@ typedef struct GameData_t
    void (*stateInputHandlers[GameState_Count])( void* );
 
    Star_t stars[STAR_COUNT];
+   Player_t player;
 }
 GameData_t;
 

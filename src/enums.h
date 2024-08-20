@@ -29,8 +29,8 @@ typedef enum
    SpriteBaseID_Star,
    SpriteBaseID_PlayerIdleLeft,
    SpriteBaseID_PlayerIdleRight,
-   SpriteBaseID_PlayerRunLeft,
-   SpriteBaseID_PlayerRunRight,
+   SpriteBaseID_PlayerMoveLeft,
+   SpriteBaseID_PlayerMoveRight,
 
    SpriteBaseID_Count
 }
@@ -101,5 +101,12 @@ typedef enum
    MouseButtonCode_Right
 }
 MouseButtonCode_t;
+
+typedef enum
+{
+   PlayerDirection_Left = 0,
+   PlayerDirection_Right
+}
+PlayerDirection_t;
 
 #endif

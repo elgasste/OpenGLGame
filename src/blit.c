@@ -173,7 +173,7 @@ void Blit_Sprite( Sprite_t* sprite, float screenX, float screenY, float scale )
    Blit_ColoredSprite( sprite, screenX, screenY, scale, 0xFFFFFFFF );
 }
 
-void Blit_Char( uint32_t codepoint, float scale, float screenX, float screenY, Font_t* font )
+void Blit_Char( uint32_t codepoint, float screenX, float screenY, float scale, Font_t* font )
 {
    FontGlyph_t* glyph;
    PixelBuffer_t* buffer;
@@ -197,7 +197,7 @@ void Blit_Char( uint32_t codepoint, float scale, float screenX, float screenY, F
                                scale, glyph->color );
 }
 
-void Blit_TextLine( const char* text, float scale, float screenX, float screenY, Font_t* font, FontJustify_t justify )
+void Blit_TextLine( const char* text, float screenX, float screenY, float scale, Font_t* font, FontJustify_t justify )
 {
    uint32_t i;
    float textWidth, x = screenX;
@@ -214,7 +214,7 @@ void Blit_TextLine( const char* text, float scale, float screenX, float screenY,
       if ( Font_ContainsChar( font, text[i] ) )
       {
          glyph = font->curGlyphCollection->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
-         Blit_Char( (uint32_t)( text[i] ), scale, x, screenY, font );
+         Blit_Char( (uint32_t)( text[i] ), x, screenY, scale, font );
          x += glyph->advance * scale;
       }
    }
