@@ -75,8 +75,7 @@ internal void Game_InitRenderData( GameRenderData_t* renderData )
    for ( i = 0; i < (uint32_t)ImageID_Count; i++ )
    {
       renderData->images[i].ID = (ImageID_t)i;
-      renderData->images[i].pixelBuffer.dimensions.x = 0;
-      renderData->images[i].pixelBuffer.dimensions.y = 0;
+      VECTORI_RESET( renderData->images[i].pixelBuffer.dimensions );
       renderData->images[i].pixelBuffer.memory = 0;
       renderData->images[i].textureHandle = 0;
    }
@@ -180,10 +179,10 @@ internal void Game_HandleInput( GameData_t* gameData )
    }
 
    if ( gameData->diagnosticsData.showDiagnostics &&
-        Input_WasButtonReleased( &( gameData->inputState ), ButtonCode_MouseLeft ) && 
+        Input_WasMouseButtonClicked( &( gameData->inputState.mouseState ), MouseButtonCode_Left ) &&
         Rect_PointInRectF( &( gameData->diagnosticsData.threadJobsToggleArea ),
-                           (float)( gameData->inputState.mousePos.x ),
-                           (float)( gameData->inputState.mousePos.y ) ) )
+                           (float)( gameData->inputState.mouseState.pointerPos.x ),
+                           (float)( gameData->inputState.mouseState.pointerPos.y ) ) )
    {
       TOGGLE_BOOL( gameData->diagnosticsData.showThreadJobs );
    }

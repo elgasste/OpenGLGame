@@ -46,8 +46,7 @@ Bool_t Bmp_LoadFromMemory( uint8_t* memory, uint32_t memSize, PixelBuffer_t* pix
    uint8_t* memPos = memory;
 
    pixelBuffer->memory = 0;
-   pixelBuffer->dimensions.x = 0;
-   pixelBuffer->dimensions.y = 0;
+   VECTORI_RESET( pixelBuffer->dimensions );
 
    memStartPos = memPos;
 

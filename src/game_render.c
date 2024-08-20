@@ -116,6 +116,8 @@ internal void Game_RenderDiagnostics( GameData_t* gameData )
    }
 
    y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
-   snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_MOUSEPOS, gameData->inputState.mousePos.x, gameData->inputState.mousePos.y );
+   snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_MOUSEPOS,
+             gameData->inputState.mouseState.pointerPos.x,
+             gameData->inputState.mouseState.pointerPos.y );
    Blit_TextLine( msg, 1.0f, 10.0f, y, font, FontJustify_Left );
 }
