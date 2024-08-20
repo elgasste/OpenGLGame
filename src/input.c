@@ -69,22 +69,22 @@ void Input_ReleaseMouseButton( MouseState_t* mouseState, MouseButtonCode_t butto
 
 Bool_t Input_WasButtonPressed( InputState_t* inputState, ButtonCode_t buttonCode )
 {
-   return inputState->buttonStates[(uint32_t)buttonCode].isDown && !inputState->buttonStates[(uint32_t)buttonCode].wasDown;
+   return ( inputState->buttonStates[(uint32_t)buttonCode].isDown && !inputState->buttonStates[(uint32_t)buttonCode].wasDown ) ? True : False;
 }
 
 Bool_t Input_WasButtonReleased( InputState_t* inputState, ButtonCode_t buttonCode )
 {
-   return !inputState->buttonStates[(uint32_t)buttonCode].isDown && inputState->buttonStates[(uint32_t)buttonCode].wasDown;
+   return ( !inputState->buttonStates[(uint32_t)buttonCode].isDown && inputState->buttonStates[(uint32_t)buttonCode].wasDown ) ? True : False;
 }
 
 Bool_t Input_WasMouseButtonPressed( MouseState_t* mouseState, MouseButtonCode_t buttonCode )
 {
-   return mouseState->buttonStates[(uint32_t)buttonCode].isDown && mouseState->buttonStates[(uint32_t)buttonCode].wasDown;
+   return ( mouseState->buttonStates[(uint32_t)buttonCode].isDown && mouseState->buttonStates[(uint32_t)buttonCode].wasDown ) ? True : False;
 }
 
 Bool_t Input_WasMouseButtonReleased( MouseState_t* mouseState, MouseButtonCode_t buttonCode )
 {
-   return !mouseState->buttonStates[(uint32_t)buttonCode].isDown && mouseState->buttonStates[(uint32_t)buttonCode].wasDown;
+   return ( !mouseState->buttonStates[(uint32_t)buttonCode].isDown && mouseState->buttonStates[(uint32_t)buttonCode].wasDown ) ? True : False;
 }
 
 Bool_t Input_WasMouseButtonClicked( MouseState_t* mouseState, MouseButtonCode_t buttonCode )
