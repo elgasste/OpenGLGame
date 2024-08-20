@@ -36,4 +36,6 @@ typedef int32_t Bool_t;
 
 #define FONT_DEFAULT_HEIGHT      24
 
+#define MOUSE_CLICK_THRESHOLD    8.0f
+
 #endif

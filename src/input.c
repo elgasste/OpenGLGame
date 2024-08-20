@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "input.h"
 
 void Input_Init( InputState_t* inputState )
@@ -12,8 +14,10 @@ void Input_Init( InputState_t* inputState )
       state++;
    }
 
-   inputState->mouseState.isButtonDragging[MouseButtonCode_Left] = False;
-   inputState->mouseState.isButtonDragging[MouseButtonCode_Right] = False;
+   inputState->mouseState.isButtonDragging[(uint32_t)MouseButtonCode_Left] = False;
+   inputState->mouseState.isButtonDragging[(uint32_t)MouseButtonCode_Right] = False;
+   inputState->mouseState.wasButtonClicked[(uint32_t)MouseButtonCode_Left] = False;
+   inputState->mouseState.wasButtonClicked[(uint32_t)MouseButtonCode_Right] = False;
 }
 
 void Input_UpdateState( InputState_t* inputState )
@@ -30,6 +34,7 @@ void Input_UpdateState( InputState_t* inputState )
    for ( i = 0; i < 2; i++ )
    {
       inputState->mouseState.buttonStates[i].wasDown = inputState->mouseState.buttonStates[i].isDown;
+      inputState->mouseState.wasButtonClicked[i] = False;
    }
 }
 
@@ -57,6 +62,21 @@ void Input_PressMouseButton( MouseState_t* mouseState, MouseButtonCode_t buttonC
 
 void Input_ReleaseMouseButton( MouseState_t* mouseState, MouseButtonCode_t buttonCode )
 {
+   uint32_t deltaX, deltaY;
+   float dragDistance;
+
+   if ( mouseState->isButtonDragging[(uint32_t)buttonCode] )
+   {
+      deltaX = mouseState->pointerPos.x - mouseState->dragOrigin.x;
+      deltaY = mouseState->pointerPos.y - mouseState->dragOrigin.y;
+      dragDistance = sqrtf( (float)( deltaX * deltaX ) + (float)( deltaY * deltaY ) );
+
+      if ( dragDistance <= MOUSE_CLICK_THRESHOLD )
+      {
+         mouseState->wasButtonClicked[buttonCode] = True;
+      }
+   }
+
    mouseState->buttonStates[(uint32_t)buttonCode].isDown = False;
    mouseState->isButtonDragging[(uint32_t)buttonCode] = False;
 }

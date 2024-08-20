@@ -18,6 +18,7 @@ typedef struct MouseState_t
    ButtonState_t buttonStates[2];
    Bool_t isButtonDragging[2];
    Vector2i32_t dragOrigin;
+   Bool_t wasButtonClicked[2];
 }
 MouseState_t;
 
