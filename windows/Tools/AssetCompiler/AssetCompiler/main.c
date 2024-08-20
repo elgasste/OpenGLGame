@@ -19,10 +19,18 @@ global AssetFileToIDMapping_t g_fontIDMap[] = {
 };
 global AssetFileToIDMapping_t g_bitmapIDMap[] = {
    { "background.bmp", (uint32_t)ImageID_Background },
-   { "star_sprite.bmp", (uint32_t)ImageID_Star }
+   { "star_sprite.bmp", (uint32_t)ImageID_StarSprite },
+   { "player_sprite_idle_left.bmp", (uint32_t)ImageID_PlayerSpriteIdleLeft },
+   { "player_sprite_idle_right.bmp", (uint32_t)ImageID_PlayerSpriteIdleRight },
+   { "player_sprite_run_left.bmp", (uint32_t)ImageID_PlayerSpriteRunLeft },
+   { "player_sprite_run_right.bmp", (uint32_t)ImageID_PlayerSpriteRunRight }
 };
 global SpriteBaseData_t g_spriteBaseDatas[] = {
-   { (uint32_t)SpriteBaseID_Star, (uint32_t)ImageID_Star, { 6, 6 } }
+   { (uint32_t)SpriteBaseID_Star, (uint32_t)ImageID_StarSprite, { 6, 6 } },
+   { (uint32_t)SpriteBaseID_PlayerIdleLeft, (uint32_t)ImageID_PlayerSpriteIdleLeft, { 40, 40 } },
+   { (uint32_t)SpriteBaseID_PlayerIdleRight, (uint32_t)ImageID_PlayerSpriteIdleRight, { 40, 40 } },
+   { (uint32_t)SpriteBaseID_PlayerRunLeft, (uint32_t)ImageID_PlayerSpriteRunLeft, { 40, 40 } },
+   { (uint32_t)SpriteBaseID_PlayerRunRight, (uint32_t)ImageID_PlayerSpriteRunRight, { 40, 40 } }
 };
 
 internal FileInfo_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles );
