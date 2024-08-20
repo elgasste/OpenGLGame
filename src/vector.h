@@ -3,6 +3,9 @@
 
 #include "common.h"
 
+#define VECTORI_RESET( v ) v.x = 0; v.y = 0
+#define VECTORF_RESET( v ) v.x = 0.0f; v.y = 0.0f
+
 typedef struct Vector2f_t
 {
    float x;

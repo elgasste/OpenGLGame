@@ -75,8 +75,7 @@ internal void Game_InitRenderData( GameRenderData_t* renderData )
    for ( i = 0; i < (uint32_t)ImageID_Count; i++ )
    {
       renderData->images[i].ID = (ImageID_t)i;
-      renderData->images[i].pixelBuffer.dimensions.x = 0;
-      renderData->images[i].pixelBuffer.dimensions.y = 0;
+      VECTORI_RESET( renderData->images[i].pixelBuffer.dimensions );
       renderData->images[i].pixelBuffer.memory = 0;
       renderData->images[i].textureHandle = 0;
    }

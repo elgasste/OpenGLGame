@@ -4,8 +4,7 @@
 Bool_t Image_LoadFromBitmapMemory( Image_t* image, uint8_t* memory, uint32_t memSize )
 {
    image->pixelBuffer.memory = 0;
-   image->pixelBuffer.dimensions.x = 0;
-   image->pixelBuffer.dimensions.y = 0;
+   VECTORI_RESET( image->pixelBuffer.dimensions );
    image->textureHandle = 0;
 
    if ( !Bmp_LoadFromMemory( memory, memSize, &( image->pixelBuffer ), image->ID ) )
