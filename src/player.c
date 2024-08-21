@@ -10,6 +10,9 @@ void Player_Init( Player_t* player )
    player->canExtendJump = False;
 }
 
+// MUFFINS: this doesn't take into account the difference between the direction the
+// player is facing vs. the direction the player is moving. there's clearly a
+// lot more work to be done in here.
 void Player_Tick( Player_t* player, Clock_t* clock )
 {
    uint32_t index;
@@ -60,13 +63,26 @@ void Player_Tick( Player_t* player, Clock_t* clock )
 
 void Player_SetFacingDirection( Player_t* player, PlayerDirection_t direction )
 {
-   if ( player->facingDirection != direction && !player->isAirborne )
+   uint32_t index;
+
+   if ( player->facingDirection != direction )
    {
       player->facingDirection = direction;
-      player->activeSprite = player->moveVelocity == 0.0f
-         ? &( player->idleSprites[(uint64_t)direction] )
-         : &( player->moveSprites[(uint64_t)direction] );
-      Sprite_Reset( player->activeSprite );
+
+      if ( player->isAirborne )
+      {
+         player->activeSprite = &( player->jumpSprites[(uint64_t)direction] );
+         index = ( player->jumpVelocity > PLAYER_JUMP_FRAME_THRESHOLD ) ? 0
+            : ( player->jumpVelocity < -PLAYER_JUMP_FRAME_THRESHOLD ) ? 2 : 1;
+         Sprite_SetFrameIndex( player->activeSprite, index );
+      }
+      else
+      {
+         player->activeSprite = player->moveVelocity == 0.0f
+            ? &( player->idleSprites[(uint64_t)direction] )
+            : &( player->moveSprites[(uint64_t)direction] );
+         Sprite_Reset( player->activeSprite );
+      }
    }
 }
 
