@@ -182,6 +182,7 @@ internal void InitKeyCodeMap()
    g_globals.buttonCodeMap[(int)ButtonCode_Up] = VK_UP;
    g_globals.buttonCodeMap[(int)ButtonCode_Right] = VK_RIGHT;
    g_globals.buttonCodeMap[(int)ButtonCode_Down] = VK_DOWN;
+   g_globals.buttonCodeMap[(int)ButtonCode_Space] = VK_SPACE;
    g_globals.buttonCodeMap[(int)ButtonCode_Enter] = VK_RETURN;
    g_globals.buttonCodeMap[(int)ButtonCode_Escape] = VK_ESCAPE;
    g_globals.buttonCodeMap[(int)ButtonCode_F8] = VK_F8;

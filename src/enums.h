@@ -90,6 +90,7 @@ typedef enum
    ButtonCode_Right,
    ButtonCode_Down,
 
+   ButtonCode_Space,
    ButtonCode_Enter,
    ButtonCode_Escape,
 

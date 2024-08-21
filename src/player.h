@@ -11,7 +11,10 @@ typedef struct Player_t
 {
    Vector2f_t position;
    PlayerDirection_t facingDirection;
-   float velocity;
+   float moveVelocity;
+   float jumpVelocity;
+   Bool_t isAirborne;
+
    Sprite_t idleSprites[2];
    Sprite_t moveSprites[2];
    Sprite_t jumpSprites[2];
@@ -21,6 +24,7 @@ Player_t;
 
 void Player_Tick( Player_t* player, Clock_t* clock );
 void Player_SetFacingDirection( Player_t* player, PlayerDirection_t direction );
-void Player_SetVelocity( Player_t* player, float velocity );
+void Player_SetMoveVelocity( Player_t* player, float velocity );
+void Player_StartJump( Player_t* player );
 
 #endif

@@ -209,16 +209,21 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
    if ( leftDown && !rightDown )
    {
       Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Left );
-      Player_SetVelocity( &( gameData->player ), PLAYER_MAX_VELOCITY );
+      Player_SetMoveVelocity( &( gameData->player ), PLAYER_MAX_MOVE_VELOCITY );
    }
    else if ( rightDown && !leftDown )
    {
       Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Right );
-      Player_SetVelocity( &( gameData->player ), PLAYER_MAX_VELOCITY );
+      Player_SetMoveVelocity( &( gameData->player ), PLAYER_MAX_MOVE_VELOCITY );
    }
    else
    {
-      Player_SetVelocity( &( gameData->player ), 0.0f );
+      Player_SetMoveVelocity( &( gameData->player ), 0.0f );
+   }
+
+   if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Space ) )
+   {
+      Player_StartJump( &( gameData->player ) );
    }
 }
 
