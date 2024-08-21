@@ -43,6 +43,7 @@ internal void Game_RenderWorld( GameData_t* gameData )
       Blit_Sprite( &( star->sprite ), star->position.x, star->position.y, star->scale );
    }
 
+   // TODO: in a real game we wouldn't be scaling this here
    Blit_Sprite( gameData->player.activeSprite, gameData->player.position.x, gameData->player.position.y, 2.0f );
 }
 

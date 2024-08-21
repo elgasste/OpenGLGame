@@ -1,5 +1,6 @@
 #include "player.h"
 #include "clock.h"
+#include "image.h"
 
 void Player_Init( Player_t* player )
 {
@@ -39,10 +40,21 @@ void Player_Tick( Player_t* player, Clock_t* clock )
    if ( player->facingDirection == PlayerDirection_Left )
    {
       player->position.x -= ( player->moveVelocity * clock->frameDeltaSeconds );
+
+      if ( player->position.x < 0.0f )
+      {
+         player->position.x = 0.0f;
+      }
    }
    else
    {
       player->position.x += ( player->moveVelocity * clock->frameDeltaSeconds );
+
+      // TODO: in a real game we wouldn't be scaling these values here
+      if ( ( ( player->position.x + ( player->activeSprite->base->frameDimensions.x * 2.0f ) ) ) >= SCREEN_WIDTH )
+      {
+         player->position.x = (float)( SCREEN_WIDTH - ( player->activeSprite->base->frameDimensions.x * 2.0f ) );
+      }
    }
 }
 
