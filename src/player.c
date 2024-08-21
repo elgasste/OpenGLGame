@@ -1,6 +1,14 @@
 #include "player.h"
 #include "clock.h"
 
+void Player_Init( Player_t* player )
+{
+   player->moveVelocity = 0.0f;
+   player->jumpVelocity = 0.0f;
+   player->isAirborne = False;
+   player->canExtendJump = False;
+}
+
 void Player_Tick( Player_t* player, Clock_t* clock )
 {
    uint32_t index;
@@ -73,7 +81,23 @@ void Player_StartJump( Player_t* player )
    {
       player->isAirborne = True;
       player->jumpVelocity = PLAYER_MAX_JUMP_VELOCITY;
+      player->canExtendJump = True;
+      player->jumpExtensionSeconds = 0.0f;
       player->activeSprite = &( player->jumpSprites[(uint32_t)( player->facingDirection )] );
       Sprite_SetFrameIndex( player->activeSprite, 0 );
+   }
+}
+
+void Player_ExtendJump( Player_t* player, Clock_t* clock )
+{
+   if ( player->isAirborne && player->canExtendJump )
+   {
+      player->jumpVelocity = PLAYER_MAX_JUMP_VELOCITY;
+      player->jumpExtensionSeconds += clock->frameDeltaSeconds;
+
+      if ( player->jumpExtensionSeconds > PLAYER_MAX_JUMP_EXT_SECONDS )
+      {
+         player->canExtendJump = False;
+      }
    }
 }

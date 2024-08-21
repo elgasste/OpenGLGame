@@ -225,6 +225,15 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
    {
       Player_StartJump( &( gameData->player ) );
    }
+
+   if ( gameData->player.isAirborne && Input_WasButtonReleased( &( gameData->inputState ), ButtonCode_Space ) )
+   {
+      gameData->player.canExtendJump = False;
+   }
+   else if ( gameData->inputState.buttonStates[ButtonCode_Space].isDown )
+   {
+      Player_ExtendJump( &( gameData->player ), &( gameData->clock ) );
+   }
 }
 
 internal void Game_HandleStateInput_Menu( GameData_t* gameData )

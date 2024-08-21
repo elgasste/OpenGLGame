@@ -49,11 +49,10 @@ Bool_t Game_LoadData( GameData_t* gameData )
    Sprite_LoadFromBase( &( player->jumpSprites[(uint64_t)PlayerDirection_Right] ),
                         &( gameData->renderData.spriteBases[SpriteBaseID_PlayerJumpRight] ),
                         0.0f );
+   Player_Init( player );
    player->position.x = 100.0f;
    player->position.y = 0.0f;
    Player_SetFacingDirection( player, PlayerDirection_Right );
-   player->moveVelocity = 0.0f;
-   player->jumpVelocity = 0.0f;
 
    return True;
 }
