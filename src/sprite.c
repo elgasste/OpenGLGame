@@ -55,6 +55,14 @@ void Sprite_ScaleFrameTime( Sprite_t* sprite, float scalar )
    sprite->scaledFrameSeconds = sprite->frameSeconds * scalar;
 }
 
+void Sprite_SetFrameIndex( Sprite_t* sprite, uint32_t index )
+{
+   if ( index < sprite->base->numFrames )
+   {
+      sprite->frameIndex = index;
+   }
+}
+
 void Sprite_Tick( Sprite_t* sprite, Clock_t* clock )
 {
    sprite->secondsElapsed += clock->frameDeltaSeconds;

@@ -23,21 +23,25 @@ typedef int32_t Bool_t;
 #define False 0
 #define TOGGLE_BOOL( x ) x = ( x ) ? False : True
 
-#define ASSETS_FILENAME          "assets.dat"
+#define ASSETS_FILENAME                "assets.dat"
 
-#define MAX_THREADQUEUE_SIZE     256
+#define MAX_THREADQUEUE_SIZE           256
 
-#define STRING_SIZE_DEFAULT      1024
+#define STRING_SIZE_DEFAULT            1024
 
-#define SCREEN_WIDTH             1280
-#define SCREEN_HEIGHT            720
+#define SCREEN_WIDTH                   1280
+#define SCREEN_HEIGHT                  720
 
-#define GAME_FPS                 60
+#define GAME_FPS                       60
 
-#define FONT_DEFAULT_HEIGHT      24
+#define FONT_DEFAULT_HEIGHT            24
 
-#define MOUSE_CLICK_THRESHOLD    8.0f
+#define MOUSE_CLICK_THRESHOLD          8.0f
 
-#define PLAYER_MAX_VELOCITY      200.0f
+#define PLAYER_MAX_MOVE_VELOCITY       300.0f
+#define PLAYER_MAX_JUMP_VELOCITY       800.0f
+#define PLAYER_GRAVITY_DECELERATION    3000.0f    // per second
+#define PLAYER_JUMP_FRAME_THRESHOLD    80.0f
+#define PLAYER_MAX_JUMP_EXT_SECONDS    0.2f
 
 #endif

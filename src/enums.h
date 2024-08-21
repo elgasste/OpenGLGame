@@ -19,6 +19,8 @@ typedef enum
    ImageID_PlayerSpriteIdleRight,
    ImageID_PlayerSpriteRunLeft,
    ImageID_PlayerSpriteRunRight,
+   ImageID_PlayerSpriteJumpLeft,
+   ImageID_PlayerSpriteJumpRight,
 
    ImageID_Count
 }
@@ -31,6 +33,8 @@ typedef enum
    SpriteBaseID_PlayerIdleRight,
    SpriteBaseID_PlayerMoveLeft,
    SpriteBaseID_PlayerMoveRight,
+   SpriteBaseID_PlayerJumpLeft,
+   SpriteBaseID_PlayerJumpRight,
 
    SpriteBaseID_Count
 }
@@ -86,6 +90,7 @@ typedef enum
    ButtonCode_Right,
    ButtonCode_Down,
 
+   ButtonCode_Space,
    ButtonCode_Enter,
    ButtonCode_Escape,
 

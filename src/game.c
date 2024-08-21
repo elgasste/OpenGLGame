@@ -209,16 +209,30 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
    if ( leftDown && !rightDown )
    {
       Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Left );
-      Player_SetVelocity( &( gameData->player ), PLAYER_MAX_VELOCITY );
+      Player_SetMoveVelocity( &( gameData->player ), PLAYER_MAX_MOVE_VELOCITY );
    }
    else if ( rightDown && !leftDown )
    {
       Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Right );
-      Player_SetVelocity( &( gameData->player ), PLAYER_MAX_VELOCITY );
+      Player_SetMoveVelocity( &( gameData->player ), PLAYER_MAX_MOVE_VELOCITY );
    }
    else
    {
-      Player_SetVelocity( &( gameData->player ), 0.0f );
+      Player_SetMoveVelocity( &( gameData->player ), 0.0f );
+   }
+
+   if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Space ) )
+   {
+      Player_StartJump( &( gameData->player ) );
+   }
+
+   if ( gameData->player.isAirborne && Input_WasButtonReleased( &( gameData->inputState ), ButtonCode_Space ) )
+   {
+      gameData->player.canExtendJump = False;
+   }
+   else if ( gameData->inputState.buttonStates[ButtonCode_Space].isDown )
+   {
+      Player_ExtendJump( &( gameData->player ), &( gameData->clock ) );
    }
 }
 
@@ -274,11 +288,14 @@ internal void Game_Tick( GameData_t* gameData )
       }
    }
 
-   Player_Tick( &( gameData->player ), &( gameData->clock ) );
-
-   if ( gameData->state == GameState_Menu )
+   switch ( gameData->state )
    {
-      Menu_Tick( &( gameData->menus[gameData->curMenuID] ), &( gameData->clock ) );
+      case GameState_Playing:
+         Player_Tick( &( gameData->player ), &( gameData->clock ) );
+         break;
+      case GameState_Menu:
+         Menu_Tick( &( gameData->menus[gameData->curMenuID] ), &( gameData->clock ) );
+         break;
    }
 }
 
