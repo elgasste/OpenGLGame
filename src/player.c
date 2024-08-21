@@ -3,16 +3,24 @@
 
 void Player_Tick( Player_t* player, Clock_t* clock )
 {
+   uint32_t index;
+
    if ( player->isAirborne )
    {
       player->jumpVelocity -= ( PLAYER_GRAVITY_DECELERATION * clock->frameDeltaSeconds );
       player->position.y += ( player->jumpVelocity * clock->frameDeltaSeconds );
 
+      index = ( player->jumpVelocity > PLAYER_JUMP_FRAME_THRESHOLD ) ? 0
+         : ( player->jumpVelocity < -PLAYER_JUMP_FRAME_THRESHOLD ) ? 2 : 1;
+      Sprite_SetFrameIndex( player->activeSprite, index );
+
       if ( player->position.y <= 0.0f )
       {
          player->position.y = 0.0f;
          player->isAirborne = False;
-         Player_SetFacingDirection( player, player->facingDirection );
+         player->activeSprite = player->moveVelocity == 0.0f
+            ? &( player->idleSprites[(uint64_t)( player->facingDirection )] )
+            : &( player->moveSprites[(uint64_t)( player->facingDirection )] );
       }
    }
    else
@@ -63,7 +71,9 @@ void Player_StartJump( Player_t* player )
 {
    if ( !player->isAirborne )
    {
-      player->jumpVelocity = PLAYER_MAX_JUMP_VELOCITY;
       player->isAirborne = True;
+      player->jumpVelocity = PLAYER_MAX_JUMP_VELOCITY;
+      player->activeSprite = &( player->jumpSprites[(uint32_t)( player->facingDirection )] );
+      Sprite_SetFrameIndex( player->activeSprite, 0 );
    }
 }

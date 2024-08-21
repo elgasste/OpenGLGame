@@ -41,5 +41,6 @@ typedef int32_t Bool_t;
 #define PLAYER_MAX_MOVE_VELOCITY       300.0f
 #define PLAYER_MAX_JUMP_VELOCITY       1000.0f
 #define PLAYER_GRAVITY_DECELERATION    3000.0f    // per second
+#define PLAYER_JUMP_FRAME_THRESHOLD    80.0f
 
 #endif

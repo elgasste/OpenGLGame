@@ -39,10 +39,10 @@ Bool_t Game_LoadData( GameData_t* gameData )
                         0.13f );
    Sprite_LoadFromBase( &( player->moveSprites[(uint64_t)PlayerDirection_Left] ),
                         &( gameData->renderData.spriteBases[SpriteBaseID_PlayerMoveLeft] ),
-                        0.13f );
+                        0.1f );
    Sprite_LoadFromBase( &( player->moveSprites[(uint64_t)PlayerDirection_Right] ),
                         &( gameData->renderData.spriteBases[SpriteBaseID_PlayerMoveRight] ),
-                        0.13f );
+                        0.1f );
    Sprite_LoadFromBase( &( player->jumpSprites[(uint64_t)PlayerDirection_Left] ),
                         &( gameData->renderData.spriteBases[SpriteBaseID_PlayerJumpLeft] ),
                         0.0f );

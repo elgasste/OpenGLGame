@@ -31,6 +31,7 @@ Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base, Image_t* image, uint8_t* m
 Bool_t Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base, float frameSeconds );
 void Sprite_Reset( Sprite_t* sprite );
 void Sprite_ScaleFrameTime( Sprite_t* sprite, float scalar );
+void Sprite_SetFrameIndex( Sprite_t* sprite, uint32_t index );
 void Sprite_Tick( Sprite_t* sprite, Clock_t* clock );
 
 #endif
