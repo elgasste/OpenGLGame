@@ -14,6 +14,7 @@ typedef struct Player_t
    float velocity;
    Sprite_t idleSprites[2];
    Sprite_t moveSprites[2];
+   Sprite_t jumpSprites[2];
    Sprite_t* activeSprite;
 }
 Player_t;
