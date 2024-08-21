@@ -274,11 +274,14 @@ internal void Game_Tick( GameData_t* gameData )
       }
    }
 
-   Player_Tick( &( gameData->player ), &( gameData->clock ) );
-
-   if ( gameData->state == GameState_Menu )
+   switch ( gameData->state )
    {
-      Menu_Tick( &( gameData->menus[gameData->curMenuID] ), &( gameData->clock ) );
+      case GameState_Playing:
+         Player_Tick( &( gameData->player ), &( gameData->clock ) );
+         break;
+      case GameState_Menu:
+         Menu_Tick( &( gameData->menus[gameData->curMenuID] ), &( gameData->clock ) );
+         break;
    }
 }
 
