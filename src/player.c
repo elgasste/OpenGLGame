@@ -6,8 +6,8 @@
 
 void Player_Init( Player_t* player )
 {
-   player->runVelocity = 0.0f;
-   player->jumpVelocity = 0.0f;
+   player->velocity.x = 0.0f;
+   player->velocity.y = 0.0f;
    player->isAirborne = False;
    player->canExtendJump = False;
 }
@@ -18,18 +18,18 @@ void Player_Tick( Player_t* player, Clock_t* clock )
 
    if ( player->isAirborne )
    {
-      player->jumpVelocity -= ( player->gravityDeceleration * clock->frameDeltaSeconds );
-      player->position.y += ( player->jumpVelocity * clock->frameDeltaSeconds );
+      player->velocity.y -= ( player->gravityDeceleration * clock->frameDeltaSeconds );
+      player->position.y += ( player->velocity.y * clock->frameDeltaSeconds );
 
-      index = ( player->jumpVelocity > player->jumpFrameThreshold ) ? 0
-         : ( player->jumpVelocity < -( player->jumpFrameThreshold ) ) ? 2 : 1;
+      index = ( player->velocity.y > player->jumpFrameThreshold ) ? 0
+         : ( player->velocity.y < -( player->jumpFrameThreshold ) ) ? 2 : 1;
       Sprite_SetFrameIndex( player->activeSprite, index );
 
       if ( player->position.y <= 0.0f )
       {
          player->position.y = 0.0f;
          player->isAirborne = False;
-         player->activeSprite = player->runVelocity == 0.0f
+         player->activeSprite = player->velocity.x == 0.0f
             ? &( player->idleSprites[(uint64_t)( player->facingDirection )] )
             : &( player->runSprites[(uint64_t)( player->facingDirection )] );
       }
@@ -39,7 +39,7 @@ void Player_Tick( Player_t* player, Clock_t* clock )
       Sprite_Tick( player->activeSprite, clock );
    }
 
-   player->position.x += ( player->runVelocity * clock->frameDeltaSeconds );
+   player->position.x += ( player->velocity.x * clock->frameDeltaSeconds );
 
    if ( player->position.x < 0.0f )
    {
@@ -64,7 +64,7 @@ void Player_SetFacingDirection( Player_t* player, PlayerDirection_t direction )
       }
       else
       {
-         player->activeSprite = player->runVelocity == 0.0f
+         player->activeSprite = player->velocity.x == 0.0f
             ? &( player->idleSprites[(uint64_t)direction] )
             : &( player->runSprites[(uint64_t)direction] );
          Sprite_Reset( player->activeSprite );
@@ -78,50 +78,47 @@ void Player_Accelerate( Player_t* player, Clock_t* clock, PlayerDirection_t dire
 
    velocityDelta = player->runAcceleration * clock->frameDeltaSeconds;
    newVelocity = ( direction == PlayerDirection_Left )
-      ? ( player->runVelocity - velocityDelta )
-      : ( player->runVelocity + velocityDelta );
+      ? ( player->velocity.x - velocityDelta )
+      : ( player->velocity.x + velocityDelta );
    newVelocity = ( direction == PlayerDirection_Left )
-      ? fmaxf( newVelocity, -( player->maxRunVelocity ) )
-      : fminf( newVelocity, player->maxRunVelocity );
+      ? fmaxf( newVelocity, -( player->maxVelocity.x ) )
+      : fminf( newVelocity, player->maxVelocity.x );
 
    if ( !player->isAirborne )
    {
-      if ( player->runVelocity == 0.0f && newVelocity != 0.0f )
+      if ( player->velocity.x == 0.0f && newVelocity != 0.0f )
       {
          player->activeSprite = &( player->runSprites[(uint32_t)player->facingDirection] );
       }
-      else if ( newVelocity == 0.0f && player->runVelocity != 0.0f )
+      else if ( newVelocity == 0.0f && player->velocity.x != 0.0f )
       {
          player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
       }
    }
 
-   player->runVelocity = newVelocity;
+   player->velocity.x = newVelocity;
 }
 
 void Player_Decelerate( Player_t* player, Clock_t* clock )
 {
-   if ( player->runVelocity < 0.0f )
-   {
-      player->runVelocity += ( player->runAcceleration * clock->frameDeltaSeconds );
+   float decayer;
 
-      if ( player->runVelocity > 0.0f )
+   if ( player->velocity.x != 0.0f )
+   {
+      decayer = ( player->velocity.x > 0.0f ) ? -1.0f : 1.0f;
+      player->velocity.x += ( ( player->runAcceleration * clock->frameDeltaSeconds ) * decayer );
+
+      if ( ( decayer > 0.0f && player->velocity.x > 0.0f ) || ( decayer < 0.0f && player->velocity.x < 0.0f ) )
       {
-         player->runVelocity = 0.0f;
-         player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
+         player->velocity.x = 0.0f;
+
+         if ( !player->isAirborne )
+         {
+            player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
+         }
       }
    }
-   else if ( player->runVelocity > 0.0f )
-   {
-      player->runVelocity -= ( player->runAcceleration * clock->frameDeltaSeconds );
-
-      if ( player->runVelocity < 0.0f )
-      {
-         player->runVelocity = 0.0f;
-         player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
-      }
-   }
-   else
+   else if ( !player->isAirborne )
    {
       player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
    }
@@ -132,7 +129,7 @@ void Player_StartJump( Player_t* player )
    if ( !player->isAirborne )
    {
       player->isAirborne = True;
-      player->jumpVelocity = player->maxJumpVelocity;
+      player->velocity.y = player->maxVelocity.y;
       player->canExtendJump = True;
       player->jumpExtensionSeconds = 0.0f;
       player->activeSprite = &( player->jumpSprites[(uint32_t)( player->facingDirection )] );
@@ -144,7 +141,7 @@ void Player_ExtendJump( Player_t* player, Clock_t* clock )
 {
    if ( player->isAirborne && player->canExtendJump )
    {
-      player->jumpVelocity = player->maxJumpVelocity;
+      player->velocity.y = player->maxVelocity.y;
       player->jumpExtensionSeconds += clock->frameDeltaSeconds;
 
       if ( player->jumpExtensionSeconds > player->maxJumpExtensionSeconds )

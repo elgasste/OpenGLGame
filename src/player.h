@@ -11,13 +11,11 @@ typedef struct Player_t
 {
    Vector2f_t position;
    PlayerDirection_t facingDirection;
-   float runVelocity;
-   float maxRunVelocity;
+   Vector2f_t velocity;
+   Vector2f_t maxVelocity;
    float runAcceleration;
-   float jumpVelocity;
-   float maxJumpVelocity;
-   Bool_t isAirborne;
    float gravityDeceleration;
+   Bool_t isAirborne;
    float jumpFrameThreshold;
    Bool_t canExtendJump;
    float jumpExtensionSeconds;
