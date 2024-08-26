@@ -121,6 +121,10 @@ void Player_Decelerate( Player_t* player, Clock_t* clock )
          player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
       }
    }
+   else
+   {
+      player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
+   }
 }
 
 void Player_StartJump( Player_t* player )
