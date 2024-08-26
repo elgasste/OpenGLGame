@@ -53,6 +53,7 @@ Bool_t Game_LoadData( GameData_t* gameData )
    player->position.x = 100.0f;
    player->position.y = 0.0f;
    player->maxRunVelocity = 300.0f;
+   player->runAcceleration = 3000.0f;
    player->maxJumpVelocity = 800.0f;
    player->gravityDeceleration = 3000.0f;
    player->jumpFrameThreshold = 80.0f;
