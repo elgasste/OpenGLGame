@@ -101,27 +101,24 @@ void Player_Accelerate( Player_t* player, Clock_t* clock, PlayerDirection_t dire
 
 void Player_Decelerate( Player_t* player, Clock_t* clock )
 {
-   if ( player->runVelocity < 0.0f )
-   {
-      player->runVelocity += ( player->runAcceleration * clock->frameDeltaSeconds );
+   float decayer;
 
-      if ( player->runVelocity > 0.0f )
+   if ( player->runVelocity != 0.0f )
+   {
+      decayer = ( player->runVelocity > 0.0f ) ? -1.0f : 1.0f;
+      player->runVelocity += ( ( player->runAcceleration * clock->frameDeltaSeconds ) * decayer );
+
+      if ( ( decayer > 0.0f && player->runVelocity > 0.0f ) || ( decayer < 0.0f && player->runVelocity < 0.0f ) )
       {
          player->runVelocity = 0.0f;
-         player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
-      }
-   }
-   else if ( player->runVelocity > 0.0f )
-   {
-      player->runVelocity -= ( player->runAcceleration * clock->frameDeltaSeconds );
 
-      if ( player->runVelocity < 0.0f )
-      {
-         player->runVelocity = 0.0f;
-         player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
+         if ( !player->isAirborne )
+         {
+            player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
+         }
       }
    }
-   else
+   else if ( !player->isAirborne )
    {
       player->activeSprite = &( player->idleSprites[(uint32_t)player->facingDirection] );
    }
