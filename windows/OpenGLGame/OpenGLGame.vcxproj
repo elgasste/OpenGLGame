@@ -36,6 +36,7 @@
     <ClInclude Include="..\..\src\player.h" />
     <ClInclude Include="..\..\src\random.h" />
     <ClInclude Include="..\..\src\rect.h" />
+    <ClInclude Include="..\..\src\render_data.h" />
     <ClInclude Include="..\..\src\sprite.h" />
     <ClInclude Include="..\..\src\strings.h" />
     <ClInclude Include="..\..\src\thread.h" />

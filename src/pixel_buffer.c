@@ -13,5 +13,5 @@ void PixelBuffer_ClearData( PixelBuffer_t* pixelBuffer )
    Platform_Free( pixelBuffer->memory, (uint64_t)( pixelBuffer->dimensions.x * pixelBuffer->dimensions.y * 4 ) );
 
    pixelBuffer->memory = 0;
-   VECTORI_RESET( pixelBuffer->dimensions );
+   VECTOR2I_RESET( pixelBuffer->dimensions );
 }

@@ -5,7 +5,7 @@
 #define ENDCODEPOINT       126      // tilde
 #define MAX_GLYPHHEIGHTS   10
 
-#define NUM_CHUNKS         3
+#define NUM_CHUNKS         4
 
 #include "common.h"
 #include "font.h"
@@ -55,6 +55,16 @@ typedef struct SpriteBaseData_t
    Vector2ui32_t frameDimensions;
 }
 SpriteBaseData_t;
+
+typedef struct SpriteData_t
+{
+   uint32_t spriteID;
+   uint32_t spriteBaseID;
+   Vector4f_t hitBox;
+   Vector2f_t hitBoxOffset;
+   float frameSeconds;
+}
+SpriteData_t;
 
 typedef struct GameAssets_t
 {

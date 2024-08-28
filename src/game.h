@@ -11,9 +11,7 @@
 #include "common.h"
 #include "clock.h"
 #include "input.h"
-#include "image.h"
-#include "sprite.h"
-#include "font.h"
+#include "render_data.h"
 #include "menu.h"
 #include "rect.h"
 #include "player.h"
@@ -26,14 +24,6 @@ typedef struct DiagnosticsData_t
    RectF_t threadJobsToggleArea;
 }
 DiagnosticsData_t;
-
-typedef struct GameRenderData_t
-{
-   Image_t images[ImageID_Count];
-   Font_t fonts[FontID_Count];
-   SpriteBase_t spriteBases[SpriteBaseID_Count];
-}
-GameRenderData_t;
 
 typedef struct Star_t
 {
@@ -53,7 +43,7 @@ typedef struct GameData_t
    Clock_t clock;
    InputState_t inputState;
    DiagnosticsData_t diagnosticsData;
-   GameRenderData_t renderData;
+   RenderData_t renderData;
 
    Menu_t menus[MenuID_Count];
    MenuID_t curMenuID;

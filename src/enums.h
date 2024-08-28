@@ -6,6 +6,7 @@ typedef enum
    AssetsFileChunkID_Bitmaps = 0,
    AssetsFileChunkID_Fonts,
    AssetsFileChunkID_SpriteBases,
+   AssetsFileChunkID_Sprites,
 
    AssetsFileChunkID_Count
 }
@@ -31,14 +32,27 @@ typedef enum
    SpriteBaseID_Star,
    SpriteBaseID_PlayerIdleLeft,
    SpriteBaseID_PlayerIdleRight,
-   SpriteBaseID_PlayerMoveLeft,
-   SpriteBaseID_PlayerMoveRight,
+   SpriteBaseID_PlayerRunLeft,
+   SpriteBaseID_PlayerRunRight,
    SpriteBaseID_PlayerJumpLeft,
    SpriteBaseID_PlayerJumpRight,
 
    SpriteBaseID_Count
 }
 SpriteBaseID_t;
+
+typedef enum
+{
+   SpriteID_PlayerIdleLeft,
+   SpriteID_PlayerIdleRight,
+   SpriteID_PlayerRunLeft,
+   SpriteID_PlayerRunRight,
+   SpriteID_PlayerJumpLeft,
+   SpriteID_PlayerJumpRight,
+
+   SpriteID_Count
+}
+SpriteID_t;
 
 typedef enum
 {

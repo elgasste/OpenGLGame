@@ -35,12 +35,11 @@ Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base, Image_t* image, uint8_t* m
    return True;
 }
 
-Bool_t Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base, float frameSeconds )
+void Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base, float frameSeconds )
 {
    sprite->base = base;
    sprite->frameSeconds = frameSeconds;
    Sprite_Reset( sprite );
-   return True;
 }
 
 void Sprite_Reset( Sprite_t* sprite )

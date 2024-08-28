@@ -6,6 +6,7 @@
 #include "sprite.h"
 
 typedef struct Clock_t Clock_t;
+typedef struct RenderData_t RenderData_t;
 
 typedef struct Player_t
 {
@@ -21,14 +22,14 @@ typedef struct Player_t
    float jumpExtensionSeconds;
    float maxJumpExtensionSeconds;
 
-   Sprite_t idleSprites[2];
-   Sprite_t runSprites[2];
-   Sprite_t jumpSprites[2];
+   Sprite_t* idleSprites[2];
+   Sprite_t* runSprites[2];
+   Sprite_t* jumpSprites[2];
    Sprite_t* activeSprite;
 }
 Player_t;
 
-void Player_Init( Player_t* player );
+void Player_Init( Player_t* player, RenderData_t* renderData );
 void Player_Tick( Player_t* player, Clock_t* clock );
 void Player_SetFacingDirection( Player_t* player, PlayerDirection_t direction );
 void Player_Accelerate( Player_t* player, Clock_t* clock, PlayerDirection_t direction );
