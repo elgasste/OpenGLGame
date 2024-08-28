@@ -29,12 +29,12 @@ global AssetFileToIDMapping_t g_bitmapIDMap[] = {
 };
 global SpriteBaseData_t g_spriteBaseDatas[] = {
    { (uint32_t)SpriteBaseID_Star, (uint32_t)ImageID_StarSprite, { 6, 6 } },
-   { (uint32_t)SpriteBaseID_PlayerIdleLeft, (uint32_t)ImageID_PlayerSpriteIdleLeft, { 40, 40 } },
-   { (uint32_t)SpriteBaseID_PlayerIdleRight, (uint32_t)ImageID_PlayerSpriteIdleRight, { 40, 40 } },
-   { (uint32_t)SpriteBaseID_PlayerRunLeft, (uint32_t)ImageID_PlayerSpriteRunLeft, { 40, 40 } },
-   { (uint32_t)SpriteBaseID_PlayerRunRight, (uint32_t)ImageID_PlayerSpriteRunRight, { 40, 40 } },
-   { (uint32_t)SpriteBaseID_PlayerJumpLeft, (uint32_t)ImageID_PlayerSpriteJumpLeft, { 40, 40 } },
-   { (uint32_t)SpriteBaseID_PlayerJumpRight, (uint32_t)ImageID_PlayerSpriteJumpRight, { 40, 40 } }
+   { (uint32_t)SpriteBaseID_PlayerIdleLeft, (uint32_t)ImageID_PlayerSpriteIdleLeft, { 93, 112 } },
+   { (uint32_t)SpriteBaseID_PlayerIdleRight, (uint32_t)ImageID_PlayerSpriteIdleRight, { 93, 112 } },
+   { (uint32_t)SpriteBaseID_PlayerRunLeft, (uint32_t)ImageID_PlayerSpriteRunLeft, { 93, 112 } },
+   { (uint32_t)SpriteBaseID_PlayerRunRight, (uint32_t)ImageID_PlayerSpriteRunRight, { 93, 112 } },
+   { (uint32_t)SpriteBaseID_PlayerJumpLeft, (uint32_t)ImageID_PlayerSpriteJumpLeft, { 93, 112 } },
+   { (uint32_t)SpriteBaseID_PlayerJumpRight, (uint32_t)ImageID_PlayerSpriteJumpRight, { 93, 112 } }
 };
 global SpriteData_t g_spriteDatas[] = {
    { (uint32_t)SpriteID_PlayerIdleLeft, (uint32_t)SpriteBaseID_PlayerIdleLeft, { 0.0f, 0.0f, 40.0f, 40.0f }, { 0.0f, 0.0f }, 0.13f },
