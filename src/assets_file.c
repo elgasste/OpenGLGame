@@ -406,8 +406,8 @@ internal Bool_t AssetsFile_InterpretSpriteBasesChunk( GameData_t* gameData, Asse
 
 internal Bool_t AssetsFile_InterpretSpritesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk )
 {
-   uint32_t i;
-   SpriteID_t spriteID, spriteBaseID;
+   uint32_t i, spriteBaseID;
+   SpriteID_t spriteID;
    AssetsFileEntry_t* entry = chunk->entries;
    Sprite_t* sprite;
    float* memF;
@@ -437,13 +437,11 @@ internal Bool_t AssetsFile_InterpretSpritesChunk( GameData_t* gameData, AssetsFi
       {
          sprite = &( gameData->renderData.sprites[entry->ID] );
          memF = (float*)( entry->memory );
-         Sprite_LoadFromBase( sprite, &( gameData->renderData.spriteBases[spriteBaseID] ), memF[7] );
+         Sprite_LoadFromBase( sprite, &( gameData->renderData.spriteBases[spriteBaseID] ), memF[5] );
          sprite->hitBox.x = memF[1];
          sprite->hitBox.y = memF[2];
          sprite->hitBox.w = memF[3];
          sprite->hitBox.h = memF[4];
-         sprite->hitBoxOffset.x = memF[5];
-         sprite->hitBoxOffset.y = memF[6];
       }
       else
       {

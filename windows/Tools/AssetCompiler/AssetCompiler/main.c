@@ -37,12 +37,12 @@ global SpriteBaseData_t g_spriteBaseDatas[] = {
    { (uint32_t)SpriteBaseID_PlayerJumpRight, (uint32_t)ImageID_PlayerSpriteJumpRight, { 93, 112 } }
 };
 global SpriteData_t g_spriteDatas[] = {
-   { (uint32_t)SpriteID_PlayerIdleLeft, (uint32_t)SpriteBaseID_PlayerIdleLeft, { 0.0f, 0.0f, 40.0f, 40.0f }, { 0.0f, 0.0f }, 0.13f },
-   { (uint32_t)SpriteID_PlayerIdleRight, (uint32_t)SpriteBaseID_PlayerIdleRight, { 0.0f, 0.0f, 40.0f, 40.0f }, { 0.0f, 0.0f }, 0.13f },
-   { (uint32_t)SpriteID_PlayerRunLeft, (uint32_t)SpriteBaseID_PlayerRunLeft, { 0.0f, 0.0f, 40.0f, 40.0f }, { 0.0f, 0.0f }, 0.1f },
-   { (uint32_t)SpriteID_PlayerRunRight, (uint32_t)SpriteBaseID_PlayerRunRight, { 0.0f, 0.0f, 40.0f, 40.0f }, { 0.0f, 0.0f }, 0.1f },
-   { (uint32_t)SpriteID_PlayerJumpLeft, (uint32_t)SpriteBaseID_PlayerJumpLeft, { 0.0f, 0.0f, 40.0f, 40.0f }, { 0.0f, 0.0f }, 0.0f },
-   { (uint32_t)SpriteID_PlayerJumpRight, (uint32_t)SpriteBaseID_PlayerJumpRight, { 0.0f, 0.0f, 40.0f, 40.0f }, { 0.0f, 0.0f }, 0.0f },
+   { (uint32_t)SpriteID_PlayerIdleLeft, (uint32_t)SpriteBaseID_PlayerIdleLeft, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.13f },
+   { (uint32_t)SpriteID_PlayerIdleRight, (uint32_t)SpriteBaseID_PlayerIdleRight, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.13f },
+   { (uint32_t)SpriteID_PlayerRunLeft, (uint32_t)SpriteBaseID_PlayerRunLeft, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.1f },
+   { (uint32_t)SpriteID_PlayerRunRight, (uint32_t)SpriteBaseID_PlayerRunRight, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.1f },
+   { (uint32_t)SpriteID_PlayerJumpLeft, (uint32_t)SpriteBaseID_PlayerJumpLeft, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.0f },
+   { (uint32_t)SpriteID_PlayerJumpRight, (uint32_t)SpriteBaseID_PlayerJumpRight, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.0f },
 };
 
 internal FileInfo_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles );
@@ -506,18 +506,16 @@ internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
    {
       filePosF = (float*)filePos32;
       filePos32[0] = spriteData->spriteID;
-      filePos32[1] = 32;
+      filePos32[1] = 24;
       filePos32[2] = spriteData->spriteBaseID;
       filePosF[3] = spriteData->hitBox.x;
       filePosF[4] = spriteData->hitBox.y;
       filePosF[5] = spriteData->hitBox.w;
       filePosF[6] = spriteData->hitBox.h;
-      filePosF[7] = spriteData->hitBoxOffset.x;
-      filePosF[8] = spriteData->hitBoxOffset.y;
-      filePosF[9] = spriteData->frameSeconds;
+      filePosF[7] = spriteData->frameSeconds;
 
-      filePos32 += 10;
-      fileOffset += 40;
+      filePos32 += 8;
+      fileOffset += 32;
       spriteData++;
    }
 
@@ -578,7 +576,7 @@ internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
       for ( i = 0; i < (uint32_t)( sizeof( g_spriteDatas ) / sizeof( SpriteData_t ) ); i++ )
       {
          fileSize += 8;    // entry ID and size
-         fileSize += 32;   // sprite base ID, hit box dimensions, hit box offset, and frame seconds
+         fileSize += 24;   // sprite base ID, hit box, and frame seconds
       }
    }
 

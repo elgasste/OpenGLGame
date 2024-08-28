@@ -61,7 +61,6 @@ typedef struct SpriteData_t
    uint32_t spriteID;
    uint32_t spriteBaseID;
    Vector4f_t hitBox;
-   Vector2f_t hitBoxOffset;
    float frameSeconds;
 }
 SpriteData_t;

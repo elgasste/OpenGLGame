@@ -27,8 +27,6 @@ Bool_t Game_LoadData( GameData_t* gameData )
    }
 
    Player_Init( player, &( gameData->renderData ) );
-   player->position.x = 100.0f;
-   player->position.y = 0.0f;
    player->maxVelocity.x = 300.0f;
    player->maxVelocity.y = 800.0f;
    player->runAcceleration = 3000.0f;
@@ -36,6 +34,8 @@ Bool_t Game_LoadData( GameData_t* gameData )
    player->jumpFrameThreshold = 80.0f;
    player->maxJumpExtensionSeconds = 0.2f;
    Player_SetFacingDirection( player, PlayerDirection_Right );
+   player->position.x = -( player->activeSprite->hitBox.x );
+   player->position.y = -( player->activeSprite->hitBox.y );
 
    return True;
 }

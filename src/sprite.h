@@ -23,7 +23,6 @@ typedef struct Sprite_t
    SpriteBase_t* base;
    uint32_t frameIndex;
    Vector4f_t hitBox;
-   Vector2f_t hitBoxOffset;
    float frameSeconds;
    float secondsElapsed;
    float scaledFrameSeconds;
