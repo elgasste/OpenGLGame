@@ -19,8 +19,10 @@ SpriteBase_t;
 
 typedef struct Sprite_t
 {
+   SpriteID_t ID;
    SpriteBase_t* base;
    uint32_t frameIndex;
+   Vector4f_t hitBox;
    float frameSeconds;
    float secondsElapsed;
    float scaledFrameSeconds;
@@ -28,7 +30,7 @@ typedef struct Sprite_t
 Sprite_t;
 
 Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base, Image_t* image, uint8_t* memory, uint32_t memSize );
-Bool_t Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base, float frameSeconds );
+void Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base, float frameSeconds );
 void Sprite_Reset( Sprite_t* sprite );
 void Sprite_ScaleFrameTime( Sprite_t* sprite, float scalar );
 void Sprite_SetFrameIndex( Sprite_t* sprite, uint32_t index );

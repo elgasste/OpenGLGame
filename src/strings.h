@@ -39,10 +39,13 @@
 #define STR_GDFERR_NOCHUNKSFOUNDFORID           "Game data file error: no chunks found for chunk ID: %u"
 #define STR_GDFERR_SPRITEBASECORRUPT            "Game data file error: sprite base memory is corrupt, sprite base ID %u"
 #define STR_GDFERR_SPRITEBASEIMAGENOTFOUND      "Game data file error: sprite base image ID not found: %u"
+#define STR_GDFERR_SPRITECORRUPT                "Game data file error: sprite memory is corrupt, sprite ID %u"
+#define STR_GDFERR_SPRITEBASENOTFOUND           "Game data file error: sprite base ID not found: %u"
 #define STR_GDFWARN_UNKNOWNCHUNKID              "Game data file warning: unknown chunk ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNBITMAPENTRYID        "Game data file warning: unknown bitmap entry ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNFONTENTRYID          "Game data file warning: unknown font entry ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNSPRITEBASEID         "Game data file warning: unknown sprite base ID encountered: %u"
+#define STR_GDFWARN_UNKNOWNSPRITEID             "Game data file warning: unknown sprite ID encountered: %u"
 
 #define STR_SPRITEERR_FRAMEDIMENSIONS           "Sprite error: frame dimensions don't match texture, image ID %u"
 #define STR_SPRITEERR_MEMORYCORRUPT             "Sprite error: sprite memory is corrupt, sprite base ID %u"

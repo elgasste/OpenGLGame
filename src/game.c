@@ -10,7 +10,7 @@ typedef struct
 }
 StarUpdateData_t;
 
-internal void Game_InitRenderData( GameRenderData_t* renderData );
+internal void Game_InitRenderData( RenderData_t* renderData );
 internal void Game_HandleInput( GameData_t* gameData );
 internal void Game_HandleStateInput_Playing( GameData_t* gameData );
 internal void Game_HandleStateInput_Menu( GameData_t* gameData );
@@ -68,14 +68,14 @@ Bool_t Game_Init( GameData_t* gameData )
    return True;
 }
 
-internal void Game_InitRenderData( GameRenderData_t* renderData )
+internal void Game_InitRenderData( RenderData_t* renderData )
 {
    uint32_t i;
 
    for ( i = 0; i < (uint32_t)ImageID_Count; i++ )
    {
       renderData->images[i].ID = (ImageID_t)i;
-      VECTORI_RESET( renderData->images[i].pixelBuffer.dimensions );
+      VECTOR2I_RESET( renderData->images[i].pixelBuffer.dimensions );
       renderData->images[i].pixelBuffer.memory = 0;
       renderData->images[i].textureHandle = 0;
    }
@@ -209,16 +209,16 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
    if ( leftDown && !rightDown )
    {
       Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Left );
-      Player_Accelerate( &( gameData->player ), &( gameData->clock ), PlayerDirection_Left );
+      Player_AccelerateRun( &( gameData->player ), &( gameData->clock ), PlayerDirection_Left );
    }
    else if ( rightDown && !leftDown )
    {
       Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Right );
-      Player_Accelerate( &( gameData->player ), &( gameData->clock ), PlayerDirection_Right );
+      Player_AccelerateRun( &( gameData->player ), &( gameData->clock ), PlayerDirection_Right );
    }
    else
    {
-      Player_Decelerate( &( gameData->player ), &( gameData->clock ) );
+      Player_DecelerateRun( &( gameData->player ), &( gameData->clock ) );
    }
 
    if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Space ) )

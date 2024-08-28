@@ -35,12 +35,11 @@ Bool_t Sprite_LoadBaseFromMemory( SpriteBase_t* base, Image_t* image, uint8_t* m
    return True;
 }
 
-Bool_t Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base, float frameSeconds )
+void Sprite_LoadFromBase( Sprite_t* sprite, SpriteBase_t* base, float frameSeconds )
 {
    sprite->base = base;
    sprite->frameSeconds = frameSeconds;
    Sprite_Reset( sprite );
-   return True;
 }
 
 void Sprite_Reset( Sprite_t* sprite )
@@ -65,6 +64,11 @@ void Sprite_SetFrameIndex( Sprite_t* sprite, uint32_t index )
 
 void Sprite_Tick( Sprite_t* sprite, Clock_t* clock )
 {
+   if ( sprite->scaledFrameSeconds == 0.0f )
+   {
+      return;
+   }
+
    sprite->secondsElapsed += clock->frameDeltaSeconds;
 
    while ( sprite->secondsElapsed > sprite->scaledFrameSeconds )

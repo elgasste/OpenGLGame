@@ -16,6 +16,7 @@ internal void AssetsFile_ClearOffsetTable( AssetsFileOffsetTable_t* offsetTable,
 internal Bool_t AssetsFile_InterpretBitmapsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
 internal Bool_t AssetsFile_InterpretFontsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
 internal Bool_t AssetsFile_InterpretSpriteBasesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
+internal Bool_t AssetsFile_InterpretSpritesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
 
 Bool_t AssetsFile_Load( GameData_t* gameData )
 {
@@ -209,12 +210,14 @@ internal Bool_t AssetsFile_Interpret( AssetsFileData_t* assetsFileData, GameData
    uint32_t chunkIDOrder[] = {
       (uint32_t)AssetsFileChunkID_Fonts,
       (uint32_t)AssetsFileChunkID_Bitmaps,
-      (uint32_t)AssetsFileChunkID_SpriteBases
+      (uint32_t)AssetsFileChunkID_SpriteBases,
+      (uint32_t)AssetsFileChunkID_Sprites
    };
    Bool_t ( *chunkLoaders[] )( GameData_t*, AssetsFileChunk_t* ) = {
       AssetsFile_InterpretFontsChunk,
       AssetsFile_InterpretBitmapsChunk,
-      AssetsFile_InterpretSpriteBasesChunk
+      AssetsFile_InterpretSpriteBasesChunk,
+      AssetsFile_InterpretSpritesChunk
    };
 
    for ( i = 0; i < (uint32_t)AssetsFileChunkID_Count; i++ )
@@ -392,6 +395,57 @@ internal Bool_t AssetsFile_InterpretSpriteBasesChunk( GameData_t* gameData, Asse
       else
       {
          snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNSPRITEBASEID, entry->ID );
+         Platform_Log( msg );
+      }
+
+      entry++;
+   }
+
+   return True;
+}
+
+internal Bool_t AssetsFile_InterpretSpritesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk )
+{
+   uint32_t i, spriteBaseID;
+   SpriteID_t spriteID;
+   AssetsFileEntry_t* entry = chunk->entries;
+   Sprite_t* sprite;
+   float* memF;
+   char msg[STRING_SIZE_DEFAULT];
+
+   for ( i = 0; i < chunk->numEntries; i++ )
+   {
+      spriteID = (SpriteID_t)entry->ID;
+
+      if ( entry->size < 4 )
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_SPRITECORRUPT, entry->ID );
+         Platform_Log( msg );
+         return False;
+      }
+
+      spriteBaseID = ( (uint32_t*)( entry->memory ) )[0];
+
+      if ( spriteBaseID >= SpriteBaseID_Count )
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_SPRITEBASENOTFOUND, spriteBaseID );
+         Platform_Log( msg );
+         return False;
+      }
+
+      if ( spriteID < SpriteID_Count )
+      {
+         sprite = &( gameData->renderData.sprites[entry->ID] );
+         memF = (float*)( entry->memory );
+         Sprite_LoadFromBase( sprite, &( gameData->renderData.spriteBases[spriteBaseID] ), memF[5] );
+         sprite->hitBox.x = memF[1];
+         sprite->hitBox.y = memF[2];
+         sprite->hitBox.w = memF[3];
+         sprite->hitBox.h = memF[4];
+      }
+      else
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNSPRITEID, entry->ID );
          Platform_Log( msg );
       }
 

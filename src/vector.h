@@ -3,8 +3,8 @@
 
 #include "common.h"
 
-#define VECTORI_RESET( v ) v.x = 0; v.y = 0
-#define VECTORF_RESET( v ) v.x = 0.0f; v.y = 0.0f
+#define VECTOR2I_RESET( v ) v.x = 0; v.y = 0
+#define VECTOR2F_RESET( v ) v.x = 0.0f; v.y = 0.0f
 
 typedef struct Vector2f_t
 {
@@ -13,33 +13,14 @@ typedef struct Vector2f_t
 }
 Vector2f_t;
 
-typedef struct Vector2i8_t
+typedef struct Vector4f_t
 {
-   int8_t x;
-   int8_t y;
+   float x;
+   float y;
+   float w;
+   float h;
 }
-Vector2i8_t;
-
-typedef struct Vector2ui8_t
-{
-   uint8_t x;
-   uint8_t y;
-}
-Vector2ui8_t;
-
-typedef struct Vector2i16_t
-{
-   int16_t x;
-   int16_t y;
-}
-Vector2i16_t;
-
-typedef struct Vector2ui16_t
-{
-   uint16_t x;
-   uint16_t y;
-}
-Vector2ui16_t;
+Vector4f_t;
 
 typedef struct Vector2i32_t
 {
