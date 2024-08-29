@@ -15,4 +15,6 @@ typedef struct RenderData_t
 }
 RenderData_t;
 
+void RenderData_Init( RenderData_t* renderData );
+
 #endif

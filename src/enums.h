@@ -22,6 +22,11 @@ typedef enum
    ImageID_PlayerSpriteRunRight,
    ImageID_PlayerSpriteJumpLeft,
    ImageID_PlayerSpriteJumpRight,
+   ImageID_PlayerSpriteAttackLeft1,
+   ImageID_PlayerSpriteAttackLeft2,
+   ImageID_PlayerSpriteAttackLeft3,
+   ImageID_PlayerSpriteAttackRight1,
+   ImageID_PlayerSpriteAttackRight2,
 
    ImageID_Count
 }
@@ -36,6 +41,11 @@ typedef enum
    SpriteBaseID_PlayerRunRight,
    SpriteBaseID_PlayerJumpLeft,
    SpriteBaseID_PlayerJumpRight,
+   SpriteBaseID_PlayerAttackLeft1,
+   SpriteBaseID_PlayerAttackLeft2,
+   SpriteBaseID_PlayerAttackLeft3,
+   SpriteBaseID_PlayerAttackRight1,
+   SpriteBaseID_PlayerAttackRight2,
 
    SpriteBaseID_Count
 }
@@ -49,6 +59,11 @@ typedef enum
    SpriteID_PlayerRunRight,
    SpriteID_PlayerJumpLeft,
    SpriteID_PlayerJumpRight,
+   SpriteID_PlayerAttackLeft1,
+   SpriteID_PlayerAttackLeft2,
+   SpriteID_PlayerAttackLeft3,
+   SpriteID_PlayerAttackRight1,
+   SpriteID_PlayerAttackRight2,
 
    SpriteID_Count
 }

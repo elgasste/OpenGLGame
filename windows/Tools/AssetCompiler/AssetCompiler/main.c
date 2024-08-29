@@ -25,7 +25,11 @@ global AssetFileToIDMapping_t g_bitmapIDMap[] = {
    { "player_sprite_run_left.bmp", (uint32_t)ImageID_PlayerSpriteRunLeft },
    { "player_sprite_run_right.bmp", (uint32_t)ImageID_PlayerSpriteRunRight },
    { "player_sprite_jump_left.bmp", (uint32_t)ImageID_PlayerSpriteJumpLeft },
-   { "player_sprite_jump_right.bmp", (uint32_t)ImageID_PlayerSpriteJumpRight }
+   { "player_sprite_jump_right.bmp", (uint32_t)ImageID_PlayerSpriteJumpRight },
+   { "player_sprite_attack_left_1.bmp", (uint32_t)ImageID_PlayerSpriteAttackLeft1 },
+   { "player_sprite_attack_right_1.bmp", (uint32_t)ImageID_PlayerSpriteAttackRight1 },
+   { "player_sprite_attack_left_2.bmp", (uint32_t)ImageID_PlayerSpriteAttackLeft2 },
+   { "player_sprite_attack_right_2.bmp", (uint32_t)ImageID_PlayerSpriteAttackRight2 }
 };
 global SpriteBaseData_t g_spriteBaseDatas[] = {
    { (uint32_t)SpriteBaseID_Star, (uint32_t)ImageID_StarSprite, { 6, 6 } },
@@ -34,7 +38,11 @@ global SpriteBaseData_t g_spriteBaseDatas[] = {
    { (uint32_t)SpriteBaseID_PlayerRunLeft, (uint32_t)ImageID_PlayerSpriteRunLeft, { 93, 112 } },
    { (uint32_t)SpriteBaseID_PlayerRunRight, (uint32_t)ImageID_PlayerSpriteRunRight, { 93, 112 } },
    { (uint32_t)SpriteBaseID_PlayerJumpLeft, (uint32_t)ImageID_PlayerSpriteJumpLeft, { 93, 112 } },
-   { (uint32_t)SpriteBaseID_PlayerJumpRight, (uint32_t)ImageID_PlayerSpriteJumpRight, { 93, 112 } }
+   { (uint32_t)SpriteBaseID_PlayerJumpRight, (uint32_t)ImageID_PlayerSpriteJumpRight, { 93, 112 } },
+   { (uint32_t)SpriteBaseID_PlayerAttackLeft1, (uint32_t)ImageID_PlayerSpriteAttackLeft1, { 93, 112 } },
+   { (uint32_t)SpriteBaseID_PlayerAttackRight1, (uint32_t)ImageID_PlayerSpriteAttackRight1, { 93, 112 } },
+   { (uint32_t)SpriteBaseID_PlayerAttackLeft2, (uint32_t)ImageID_PlayerSpriteAttackLeft2, { 93, 112 } },
+   { (uint32_t)SpriteBaseID_PlayerAttackRight2, (uint32_t)ImageID_PlayerSpriteAttackRight2, { 93, 112 } }
 };
 global SpriteData_t g_spriteDatas[] = {
    { (uint32_t)SpriteID_PlayerIdleLeft, (uint32_t)SpriteBaseID_PlayerIdleLeft, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.13f },
@@ -43,6 +51,10 @@ global SpriteData_t g_spriteDatas[] = {
    { (uint32_t)SpriteID_PlayerRunRight, (uint32_t)SpriteBaseID_PlayerRunRight, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.1f },
    { (uint32_t)SpriteID_PlayerJumpLeft, (uint32_t)SpriteBaseID_PlayerJumpLeft, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.0f },
    { (uint32_t)SpriteID_PlayerJumpRight, (uint32_t)SpriteBaseID_PlayerJumpRight, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.0f },
+   { (uint32_t)SpriteID_PlayerAttackLeft1, (uint32_t)SpriteBaseID_PlayerAttackLeft1, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.07f },
+   { (uint32_t)SpriteID_PlayerAttackRight1, (uint32_t)SpriteBaseID_PlayerAttackRight1, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.07f },
+   { (uint32_t)SpriteID_PlayerAttackLeft2, (uint32_t)SpriteBaseID_PlayerAttackLeft2, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.07f },
+   { (uint32_t)SpriteID_PlayerAttackRight2, (uint32_t)SpriteBaseID_PlayerAttackRight2, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.07f }
 };
 
 internal FileInfo_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles );

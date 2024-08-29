@@ -58,6 +58,7 @@
     <ClCompile Include="..\..\src\pixel_buffer.c" />
     <ClCompile Include="..\..\src\player.c" />
     <ClCompile Include="..\..\src\random.c" />
+    <ClCompile Include="..\..\src\render_data.c" />
     <ClCompile Include="..\..\src\sprite.c" />
     <ClCompile Include="..\..\src\win_platform.c" />
   </ItemGroup>
