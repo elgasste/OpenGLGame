@@ -21,10 +21,13 @@ typedef struct Player_t
    Bool_t canExtendJump;
    float jumpExtensionSeconds;
    float maxJumpExtensionSeconds;
+   Bool_t isAttacking;
+   float attackSeconds;
 
    Sprite_t* idleSprites[2];
    Sprite_t* runSprites[2];
    Sprite_t* jumpSprites[2];
+   Sprite_t* attackSprites[2];
    Sprite_t* activeSprite;
 }
 Player_t;
@@ -36,5 +39,6 @@ void Player_AccelerateRun( Player_t* player, Clock_t* clock, PlayerDirection_t d
 void Player_DecelerateRun( Player_t* player, Clock_t* clock );
 void Player_StartJump( Player_t* player );
 void Player_ExtendJump( Player_t* player, Clock_t* clock );
+void Player_Attack( Player_t* player );
 
 #endif

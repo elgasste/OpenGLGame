@@ -4,6 +4,10 @@
 #include "clock.h"
 #include "render_data.h"
 
+internal void Player_CoolDownAttack( Player_t* player, Clock_t* clock );
+internal void Player_ApplyGravity( Player_t* player, Clock_t* clock );
+internal void Player_ClipToBounds( Player_t* player );
+
 void Player_Init( Player_t* player, RenderData_t* renderData )
 {
    player->idleSprites[0] = &( renderData->sprites[SpriteID_PlayerIdleLeft] );
@@ -12,67 +16,33 @@ void Player_Init( Player_t* player, RenderData_t* renderData )
    player->runSprites[1] = &( renderData->sprites[SpriteID_PlayerRunRight] );
    player->jumpSprites[0] = &( renderData->sprites[SpriteID_PlayerJumpLeft] );
    player->jumpSprites[1] = &( renderData->sprites[SpriteID_PlayerJumpRight] );
+   player->attackSprites[0] = &( renderData->sprites[SpriteID_PlayerAttackLeft1] );
+   player->attackSprites[1] = &( renderData->sprites[SpriteID_PlayerAttackRight1] );
 
    player->velocity.x = 0.0f;
    player->velocity.y = 0.0f;
    player->isAirborne = False;
    player->canExtendJump = False;
+   player->isAttacking = False;
 }
 
 void Player_Tick( Player_t* player, Clock_t* clock )
 {
-   uint32_t index;
+   Player_CoolDownAttack( player, clock );
+   Player_ApplyGravity( player, clock );
 
-   player->velocity.y -= ( player->gravityDeceleration * clock->frameDeltaSeconds );
-   player->position.y += ( player->velocity.y * clock->frameDeltaSeconds );
-
-   if ( ( player->position.y + player->activeSprite->hitBox.y ) <= 0.0f )
-   {
-      player->position.y = -( player->activeSprite->hitBox.y );
-      player->velocity.y = 0.0f;
-
-      if ( player->isAirborne )
-      {
-         player->isAirborne = False;
-         player->activeSprite = player->velocity.x == 0.0f
-            ? player->idleSprites[(uint64_t)( player->facingDirection )]
-            : player->runSprites[(uint64_t)( player->facingDirection )];
-      }
-   }
-   else
-   {
-      if ( !player->isAirborne )
-      {
-         player->activeSprite = player->jumpSprites[(uint32_t)( player->facingDirection )];
-      }
-
-      player->isAirborne = True;
-      index = ( player->velocity.y > player->jumpFrameThreshold ) ? 0
-         : ( player->velocity.y < -( player->jumpFrameThreshold ) ) ? 2 : 1;
-      Sprite_SetFrameIndex( player->activeSprite, index );
-   }
-
-   if ( !player->isAirborne )
+   if ( !player->isAirborne || player->isAttacking )
    {
       Sprite_Tick( player->activeSprite, clock );
    }
 
    player->position.x += ( player->velocity.x * clock->frameDeltaSeconds );
-
-   // TODO: in a real game we wouldn't be scaling these values here
-   if ( ( player->position.x + ( player->activeSprite->hitBox.x * 2.0f ) ) < 0.0f )
-   {
-      player->position.x = -( player->activeSprite->hitBox.x * 2.0f );
-   }
-   else if ( ( player->position.x + ( ( player->activeSprite->hitBox.x + player->activeSprite->hitBox.w ) * 2.0f ) ) >= SCREEN_WIDTH )
-   {
-      player->position.x = (float)( SCREEN_WIDTH - ( player->activeSprite->hitBox.w * 2.0f ) - ( player->activeSprite->hitBox.x * 2.0f ) );
-   }
+   Player_ClipToBounds( player );
 }
 
 void Player_SetFacingDirection( Player_t* player, PlayerDirection_t direction )
 {
-   if ( player->facingDirection != direction )
+   if ( player->facingDirection != direction && !player->isAttacking )
    {
       player->facingDirection = direction;
 
@@ -94,6 +64,11 @@ void Player_AccelerateRun( Player_t* player, Clock_t* clock, PlayerDirection_t d
 {
    float velocityDelta, newVelocity;
 
+   if ( player->isAttacking )
+   {
+      return;
+   }
+
    velocityDelta = player->runAcceleration * clock->frameDeltaSeconds;
    newVelocity = ( direction == PlayerDirection_Left )
       ? ( player->velocity.x - velocityDelta )
@@ -102,15 +77,17 @@ void Player_AccelerateRun( Player_t* player, Clock_t* clock, PlayerDirection_t d
       ? fmaxf( newVelocity, -( player->maxVelocity.x ) )
       : fminf( newVelocity, player->maxVelocity.x );
 
-   if ( !player->isAirborne )
+   if ( !player->isAirborne && !player->isAttacking )
    {
       if ( player->velocity.x == 0.0f && newVelocity != 0.0f )
       {
          player->activeSprite = player->runSprites[(uint32_t)player->facingDirection];
+         Sprite_Reset( player->activeSprite );
       }
       else if ( newVelocity == 0.0f && player->velocity.x != 0.0f )
       {
          player->activeSprite = player->idleSprites[(uint32_t)player->facingDirection];
+         Sprite_Reset( player->activeSprite );
       }
    }
 
@@ -130,13 +107,13 @@ void Player_DecelerateRun( Player_t* player, Clock_t* clock )
       {
          player->velocity.x = 0.0f;
 
-         if ( !player->isAirborne )
+         if ( !player->isAirborne && !player->isAttacking )
          {
             player->activeSprite = player->idleSprites[(uint32_t)player->facingDirection];
          }
       }
    }
-   else if ( !player->isAirborne )
+   else if ( !player->isAirborne && !player->isAttacking )
    {
       player->activeSprite = player->idleSprites[(uint32_t)player->facingDirection];
    }
@@ -144,7 +121,7 @@ void Player_DecelerateRun( Player_t* player, Clock_t* clock )
 
 void Player_StartJump( Player_t* player )
 {
-   if ( !player->isAirborne )
+   if ( !player->isAirborne && !player->isAttacking )
    {
       player->isAirborne = True;
       player->velocity.y = player->maxVelocity.y;
@@ -166,5 +143,106 @@ void Player_ExtendJump( Player_t* player, Clock_t* clock )
       {
          player->canExtendJump = False;
       }
+   }
+}
+
+void Player_Attack( Player_t* player )
+{
+   if ( !player->isAttacking )
+   {
+      player->isAttacking = True;
+      player->attackSeconds = 0.0f;
+      player->activeSprite = player->attackSprites[(uint32_t)(player->facingDirection)];
+      Sprite_Reset( player->activeSprite );
+
+      if ( !player->isAirborne )
+      {
+         player->velocity.x = 0.0f;
+      }
+   }
+}
+
+internal void Player_CoolDownAttack( Player_t* player, Clock_t* clock )
+{
+   uint32_t index;
+
+   if ( player->isAttacking )
+   {
+      player->attackSeconds += clock->frameDeltaSeconds;
+
+      if ( player->attackSeconds > ( player->activeSprite->frameSeconds * player->activeSprite->base->numFrames ) )
+      {
+         player->isAttacking = False;
+
+         if ( player->isAirborne )
+         {
+            player->activeSprite = player->jumpSprites[(uint32_t)( player->facingDirection )];
+            index = ( player->velocity.y > player->jumpFrameThreshold ) ? 0
+               : ( player->velocity.y < -( player->jumpFrameThreshold ) ) ? 2 : 1;
+            Sprite_SetFrameIndex( player->activeSprite, index );
+         }
+         if ( !player->isAirborne )
+         {
+            player->activeSprite = player->velocity.x == 0.0f
+               ? player->idleSprites[(uint32_t)( player->facingDirection )]
+               : player->runSprites[(uint32_t)( player->facingDirection )];
+         }
+      }
+   }
+}
+
+internal void Player_ApplyGravity( Player_t* player, Clock_t* clock )
+{
+   uint32_t index;
+
+   player->velocity.y -= ( player->gravityDeceleration * clock->frameDeltaSeconds );
+   player->position.y += ( player->velocity.y * clock->frameDeltaSeconds );
+
+   if ( ( player->position.y + player->activeSprite->hitBox.y ) <= 0.0f )
+   {
+      // we've hit the ground
+      player->position.y = -( player->activeSprite->hitBox.y );
+      player->velocity.y = 0.0f;
+
+      if ( player->isAirborne )
+      {
+         player->isAirborne = False;
+
+         if ( !player->isAttacking )
+         {
+            player->activeSprite = player->velocity.x == 0.0f
+               ? player->idleSprites[(uint32_t)( player->facingDirection )]
+               : player->runSprites[(uint32_t)( player->facingDirection )];
+         }
+      }
+   }
+   else
+   {
+      if ( !player->isAirborne && !player->isAttacking )
+      {
+         player->activeSprite = player->jumpSprites[(uint32_t)( player->facingDirection )];
+      }
+
+      player->isAirborne = True;
+
+      if ( !player->isAttacking )
+      {
+         index = ( player->velocity.y > player->jumpFrameThreshold ) ? 0
+            : ( player->velocity.y < -( player->jumpFrameThreshold ) ) ? 2 : 1;
+         Sprite_SetFrameIndex( player->activeSprite, index );
+      }
+   }
+}
+
+internal void Player_ClipToBounds( Player_t* player )
+{
+   // TODO: in a real game we wouldn't be scaling these values here
+   if ( ( player->position.x + ( player->activeSprite->hitBox.x * 2.0f ) ) < 0.0f )
+   {
+      player->position.x = -( player->activeSprite->hitBox.x * 2.0f );
+   }
+   else if ( ( player->position.x + ( ( player->activeSprite->hitBox.x + player->activeSprite->hitBox.w ) * 2.0f ) ) >= SCREEN_WIDTH )
+   {
+      player->position.x = (float)( SCREEN_WIDTH - ( player->activeSprite->hitBox.w * 2.0f ) - ( player->activeSprite->hitBox.x * 2.0f ) );
    }
 }
