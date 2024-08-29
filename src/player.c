@@ -18,12 +18,15 @@ void Player_Init( Player_t* player, RenderData_t* renderData )
    player->jumpSprites[1] = &( renderData->sprites[SpriteID_PlayerJumpRight] );
    player->attackSprites[0] = &( renderData->sprites[SpriteID_PlayerAttackLeft1] );
    player->attackSprites[1] = &( renderData->sprites[SpriteID_PlayerAttackRight1] );
+   player->attackSprites[2] = &( renderData->sprites[SpriteID_PlayerAttackLeft2] );
+   player->attackSprites[3] = &( renderData->sprites[SpriteID_PlayerAttackRight2] );
 
    player->velocity.x = 0.0f;
    player->velocity.y = 0.0f;
    player->isAirborne = False;
    player->canExtendJump = False;
    player->isAttacking = False;
+   player->attackSpriteOffset = 0;
 }
 
 void Player_Tick( Player_t* player, Clock_t* clock )
@@ -152,8 +155,9 @@ void Player_Attack( Player_t* player )
    {
       player->isAttacking = True;
       player->attackSeconds = 0.0f;
-      player->activeSprite = player->attackSprites[(uint32_t)(player->facingDirection)];
+      player->activeSprite = player->attackSprites[(uint32_t)(player->facingDirection) + player->attackSpriteOffset];
       Sprite_Reset( player->activeSprite );
+      player->attackSpriteOffset = player->attackSpriteOffset == 0 ? 2 : 0;
 
       if ( !player->isAirborne )
       {

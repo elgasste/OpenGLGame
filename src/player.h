@@ -23,11 +23,12 @@ typedef struct Player_t
    float maxJumpExtensionSeconds;
    Bool_t isAttacking;
    float attackSeconds;
+   uint32_t attackSpriteOffset;
 
    Sprite_t* idleSprites[2];
    Sprite_t* runSprites[2];
    Sprite_t* jumpSprites[2];
-   Sprite_t* attackSprites[2];
+   Sprite_t* attackSprites[4];
    Sprite_t* activeSprite;
 }
 Player_t;
