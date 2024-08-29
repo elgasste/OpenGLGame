@@ -56,8 +56,8 @@ void Player_SetFacingDirection( Player_t* player, PlayerDirection_t direction )
       else
       {
          player->activeSprite = player->velocity.x == 0.0f
-            ? player->idleSprites[(uint64_t)direction]
-            : player->runSprites[(uint64_t)direction];
+            ? player->idleSprites[(uint32_t)direction]
+            : player->runSprites[(uint32_t)direction];
          Sprite_Reset( player->activeSprite );
       }
    }
