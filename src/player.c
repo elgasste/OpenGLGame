@@ -185,7 +185,7 @@ internal void Player_CoolDownAttack( Player_t* player, Clock_t* clock )
                : ( player->velocity.y < -( player->jumpFrameThreshold ) ) ? 2 : 1;
             Sprite_SetFrameIndex( player->activeSprite, index );
          }
-         if ( !player->isAirborne )
+         else
          {
             player->activeSprite = player->velocity.x == 0.0f
                ? player->idleSprites[(uint32_t)( player->facingDirection )]

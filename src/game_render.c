@@ -35,7 +35,7 @@ internal void Game_RenderWorld( GameData_t* gameData )
 
    Font_SetGlyphCollectionForHeight( font, 48.0f );
    Font_SetColor( font, 0xFF3333CC );
-   Blit_TextLine( STR_BRUSHTEETH, 65.0f, 240.0f, 1.0f, font, FontJustify_Left );
+   Blit_TextLine( STR_FLYINGWHALES, 65.0f, 240.0f, 1.0f, font, FontJustify_Left );
 
    for ( i = 0; i < STAR_COUNT; i++ )
    {
