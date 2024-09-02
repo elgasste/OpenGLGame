@@ -199,6 +199,7 @@ internal void Player_ApplyGravity( Player_t* player, Clock_t* clock )
 {
    uint32_t index;
 
+   // TODO: terminal velocity?
    player->velocity.y -= ( player->gravityDeceleration * clock->frameDeltaSeconds );
    player->position.y += ( player->velocity.y * clock->frameDeltaSeconds );
 
@@ -222,6 +223,7 @@ internal void Player_ApplyGravity( Player_t* player, Clock_t* clock )
    }
    else
    {
+      // we're in the air
       if ( !player->isAirborne && !player->isAttacking )
       {
          player->activeSprite = player->jumpSprites[(uint32_t)( player->facingDirection )];
