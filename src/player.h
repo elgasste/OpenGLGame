@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include "common.h"
+#include "entity.h"
 #include "vector.h"
 #include "sprite.h"
 
@@ -10,13 +11,9 @@ typedef struct RenderData_t RenderData_t;
 
 typedef struct Player_t
 {
-   Vector2f_t position;
+   Entity_t entity;
    PlayerDirection_t facingDirection;
-   Vector2f_t velocity;
-   Vector2f_t maxVelocity;
    float runAcceleration;
-   float gravityDeceleration;
-   Bool_t isAirborne;
    float jumpFrameThreshold;
    Bool_t canExtendJump;
    float jumpExtensionSeconds;

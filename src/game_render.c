@@ -44,7 +44,7 @@ internal void Game_RenderWorld( GameData_t* gameData )
    }
 
    // TODO: in a real game we wouldn't be scaling this here
-   Blit_Sprite( gameData->player.activeSprite, gameData->player.position.x, gameData->player.position.y, 2.0f );
+   Blit_Sprite( gameData->player.activeSprite, gameData->player.entity.position.x, gameData->player.entity.position.y, 2.0f );
 }
 
 internal void Game_RenderMenu( GameData_t* gameData )

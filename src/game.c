@@ -207,7 +207,7 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
       Player_Attack( &( gameData->player ) );
    }
 
-   if ( gameData->player.isAirborne && Input_WasButtonReleased( &( gameData->inputState ), ButtonCode_Up ) )
+   if ( gameData->player.entity.isAirborne && Input_WasButtonReleased( &( gameData->inputState ), ButtonCode_Up ) )
    {
       gameData->player.canExtendJump = False;
    }
