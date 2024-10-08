@@ -467,6 +467,11 @@ void* Platform_ReAlloc( void* memory, uint64_t oldSize, uint64_t newSize )
    return realloc( memory, newSize );
 }
 
+void* Platform_MemCpy( void* dest, void* src, uint64_t size )
+{
+   return memcpy( dest, src, size );
+}
+
 void Platform_Free( void* memory, uint64_t size )
 {
    g_globals.memFreed += size;

@@ -42,6 +42,7 @@
     <ClInclude Include="..\..\src\thread.h" />
     <ClInclude Include="..\..\src\vector.h" />
     <ClInclude Include="..\..\src\win_platform.h" />
+    <ClInclude Include="wad_file.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\blit.c" />
@@ -61,6 +62,7 @@
     <ClCompile Include="..\..\src\render_data.c" />
     <ClCompile Include="..\..\src\sprite.c" />
     <ClCompile Include="..\..\src\win_platform.c" />
+    <ClCompile Include="wad_file.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
