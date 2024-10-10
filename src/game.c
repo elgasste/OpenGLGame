@@ -139,8 +139,6 @@ internal void Game_HandleInput( GameData_t* gameData )
 
 internal void Game_HandleStateInput_Playing( GameData_t* gameData )
 {
-   Bool_t leftDown, rightDown;
-
    if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Escape ) )
    {
       gameData->curMenuID = MenuID_Playing;
@@ -148,43 +146,6 @@ internal void Game_HandleStateInput_Playing( GameData_t* gameData )
       gameData->state = GameState_Menu;
       gameData->curMenuID = MenuID_Playing;
       return;
-   }
-
-   leftDown = gameData->inputState.buttonStates[ButtonCode_Left].isDown;
-   rightDown = gameData->inputState.buttonStates[ButtonCode_Right].isDown;
-
-   if ( leftDown && !rightDown )
-   {
-      Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Left );
-      Player_AccelerateRun( &( gameData->player ), &( gameData->clock ), PlayerDirection_Left );
-   }
-   else if ( rightDown && !leftDown )
-   {
-      Player_SetFacingDirection( &( gameData->player ), PlayerDirection_Right );
-      Player_AccelerateRun( &( gameData->player ), &( gameData->clock ), PlayerDirection_Right );
-   }
-   else
-   {
-      Player_DecelerateRun( &( gameData->player ), &( gameData->clock ) );
-   }
-
-   if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Up ) )
-   {
-      Player_StartJump( &( gameData->player ) );
-   }
-
-   if ( Input_WasButtonPressed( &( gameData->inputState ), ButtonCode_Space ) )
-   {
-      Player_Attack( &( gameData->player ) );
-   }
-
-   if ( gameData->player.isAirborne && Input_WasButtonReleased( &( gameData->inputState ), ButtonCode_Up ) )
-   {
-      gameData->player.canExtendJump = False;
-   }
-   else if ( gameData->inputState.buttonStates[ButtonCode_Up].isDown )
-   {
-      Player_ExtendJump( &( gameData->player ), &( gameData->clock ) );
    }
 }
 
@@ -225,9 +186,6 @@ internal void Game_Tick( GameData_t* gameData )
 {
    switch ( gameData->state )
    {
-      case GameState_Playing:
-         Player_Tick( &( gameData->player ), &( gameData->clock ) );
-         break;
       case GameState_Menu:
          Menu_Tick( &( gameData->menus[gameData->curMenuID] ), &( gameData->clock ) );
          break;

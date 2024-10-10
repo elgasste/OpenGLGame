@@ -34,9 +34,6 @@ internal void Game_RenderWorld( GameData_t* gameData )
    Font_SetGlyphCollectionForHeight( font, 48.0f );
    Font_SetColor( font, 0xFF3333CC );
    Blit_TextLine( STR_FLYINGWHALES, 65.0f, 240.0f, 1.0f, font, FontJustify_Left );
-
-   // TODO: in a real game we wouldn't be scaling this here
-   Blit_Sprite( gameData->player.activeSprite, gameData->player.position.x, gameData->player.position.y, 2.0f );
 }
 
 internal void Game_RenderMenu( GameData_t* gameData )

@@ -14,7 +14,6 @@
 #include "render_data.h"
 #include "menu.h"
 #include "rect.h"
-#include "player.h"
 
 typedef struct DiagnosticsData_t
 {
@@ -41,8 +40,6 @@ typedef struct GameData_t
 
    GameState_t state;
    void (*stateInputHandlers[GameState_Count])( void* );
-
-   Player_t player;
 }
 GameData_t;
 
