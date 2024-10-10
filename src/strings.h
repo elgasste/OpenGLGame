@@ -59,8 +59,6 @@
 #define STR_DIAG_THREADJOBSDONE                 "   Jobs done by thread %u: %lld"
 #define STR_DIAG_MOUSEPOS                       "Mouse position: %d, %d"
 
-#define STR_FLYINGWHALES                        "(...and watch out for flying whales)"
-
 #define STR_MENU_KEEPPLAYING                    "Keep Playing"
 #define STR_MENU_QUIT                           "Quit"
 

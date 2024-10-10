@@ -14,8 +14,7 @@ AssetsFileLumpID_t;
 
 typedef enum
 {
-   ImageID_Background = 0,
-   ImageID_Player,
+   ImageID_Player = 0,
 
    ImageID_Count
 }
@@ -40,7 +39,6 @@ SpriteID_t;
 typedef enum
 {
    FontID_Consolas = 0,
-   FontID_Papyrus,
 
    FontID_Count
 }

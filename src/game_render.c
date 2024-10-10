@@ -27,13 +27,7 @@ void Game_Render( GameData_t* gameData )
 
 internal void Game_RenderWorld( GameData_t* gameData )
 {
-   Font_t* font = &( gameData->renderData.fonts[FontID_Papyrus] );
-
-   Blit_Image( &( gameData->renderData.images[ImageID_Background] ), 0.0f, 0.0f, 1.0f );
-
-   Font_SetGlyphCollectionForHeight( font, 48.0f );
-   Font_SetColor( font, 0xFF3333CC );
-   Blit_TextLine( STR_FLYINGWHALES, 65.0f, 240.0f, 1.0f, font, FontJustify_Left );
+   UNUSED_PARAM( gameData );
 }
 
 internal void Game_RenderMenu( GameData_t* gameData )

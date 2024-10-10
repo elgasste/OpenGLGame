@@ -10,15 +10,12 @@
 // TODO: this is all manually-entered for now, but ultimately it would be
 // nice to have some kind of external tool that can compile this data.
 global FontIDToGlyphHeightsMapping_t g_glyphHeightsMap[] = {
-   { (uint32_t)FontID_Consolas, { 12.0f, 24.0f }, 2 },
-   { (uint32_t)FontID_Papyrus, { 48.0f }, 1 }
+   { (uint32_t)FontID_Consolas, { 12.0f, 24.0f }, 2 }
 };
 global AssetFileToIDMapping_t g_fontIDMap[] = {
-   { "consolas.ttf", (uint32_t)FontID_Consolas },
-   { "papyrus.ttf", (uint32_t)FontID_Papyrus }
+   { "consolas.ttf", (uint32_t)FontID_Consolas }
 };
 global AssetFileToIDMapping_t g_bitmapIDMap[] = {
-   { "background.bmp", (uint32_t)ImageID_Background },
    { "player_sprite.bmp", (uint32_t)ImageID_Player }
 };
 global SpriteBaseData_t g_spriteBaseDatas[] = {
