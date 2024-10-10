@@ -14,7 +14,9 @@ AssetsFileLumpID_t;
 
 typedef enum
 {
-   ImageID_Player = 0,
+   ImageID_Text = 0,
+   ImageID_MessageBoxBorders,
+   ImageID_Player,
 
    ImageID_Count
 }

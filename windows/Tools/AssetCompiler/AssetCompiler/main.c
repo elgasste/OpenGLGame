@@ -16,6 +16,8 @@ global AssetFileToIDMapping_t g_fontIDMap[] = {
    { "consolas.ttf", (uint32_t)FontID_Consolas }
 };
 global AssetFileToIDMapping_t g_bitmapIDMap[] = {
+   { "text.bmp", (uint32_t)ImageID_Text },
+   { "message_box_borders.bmp", (uint32_t)ImageID_MessageBoxBorders },
    { "player_sprite.bmp", (uint32_t)ImageID_Player }
 };
 global SpriteBaseData_t g_spriteBaseDatas[] = {
