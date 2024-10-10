@@ -2,6 +2,7 @@
 #include "image.h"
 #include "random.h"
 #include "rect.h"
+#include "wad.h"
 
 typedef struct
 {
@@ -91,6 +92,8 @@ void Game_ClearData( GameData_t* gameData )
       Menu_ClearItems( menu );
       menu++;
    }
+
+   Wad_Clear( &( gameData->wad ) );
 }
 
 void Game_Run( GameData_t* gameData )

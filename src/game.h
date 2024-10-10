@@ -15,6 +15,7 @@
 #include "menu.h"
 #include "rect.h"
 #include "player.h"
+#include "wad.h"
 
 typedef struct DiagnosticsData_t
 {
@@ -57,6 +58,7 @@ typedef struct GameData_t
 
    Star_t stars[STAR_COUNT];
    Player_t player;
+   Wad_t wad;
 }
 GameData_t;
 

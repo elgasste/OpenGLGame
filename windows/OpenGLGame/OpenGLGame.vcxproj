@@ -41,8 +41,9 @@
     <ClInclude Include="..\..\src\strings.h" />
     <ClInclude Include="..\..\src\thread.h" />
     <ClInclude Include="..\..\src\vector.h" />
+    <ClInclude Include="..\..\src\wad.h" />
+    <ClInclude Include="..\..\src\wad_file.h" />
     <ClInclude Include="..\..\src\win_platform.h" />
-    <ClInclude Include="wad_file.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\blit.c" />
@@ -61,8 +62,9 @@
     <ClCompile Include="..\..\src\random.c" />
     <ClCompile Include="..\..\src\render_data.c" />
     <ClCompile Include="..\..\src\sprite.c" />
+    <ClCompile Include="..\..\src\wad.c" />
+    <ClCompile Include="..\..\src\wad_file.c" />
     <ClCompile Include="..\..\src\win_platform.c" />
-    <ClCompile Include="wad_file.c" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

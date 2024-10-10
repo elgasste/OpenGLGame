@@ -49,7 +49,7 @@ typedef struct WadFileTextureHeader_t
 }
 WadFileTextureHeader_t;
 
-typedef struct WadFileTexturePatch_t
+typedef struct WadFileTexturePatchInfo_t
 {
    int16_t originX;  // upper-left origin
    int16_t originY;

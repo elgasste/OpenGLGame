@@ -37,6 +37,12 @@ Bool_t Game_LoadData( GameData_t* gameData )
    player->position.x = -( player->activeSprite->hitBox.x );
    player->position.y = -( player->activeSprite->hitBox.y );
 
+   // MUFFINS: put a wad file in the output folder?
+   if ( !Wad_LoadFromFile( &( gameData->wad ), "C:\\Users\\S.Elgas\\Downloads\\gzdoom-4-10-0-Windows-64bit\\doom.wad" ) )
+   {
+      return False;
+   }
+
    return True;
 }
 
