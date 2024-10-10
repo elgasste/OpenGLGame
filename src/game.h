@@ -25,19 +25,6 @@ typedef struct DiagnosticsData_t
 }
 DiagnosticsData_t;
 
-typedef struct Star_t
-{
-   Vector2f_t position;
-   uint32_t pixelsPerSecond;
-   Bool_t movingLeft;
-   Bool_t isResting;
-   float restSeconds;
-   float restElapsedSeconds;
-   Sprite_t sprite;
-   float scale;
-}
-Star_t;
-
 typedef struct GameData_t
 {
    Clock_t clock;
@@ -55,7 +42,6 @@ typedef struct GameData_t
    GameState_t state;
    void (*stateInputHandlers[GameState_Count])( void* );
 
-   Star_t stars[STAR_COUNT];
    Player_t player;
 }
 GameData_t;

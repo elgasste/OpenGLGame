@@ -27,8 +27,6 @@ void Game_Render( GameData_t* gameData )
 
 internal void Game_RenderWorld( GameData_t* gameData )
 {
-   uint32_t i;
-   Star_t* star;
    Font_t* font = &( gameData->renderData.fonts[FontID_Papyrus] );
 
    Blit_Image( &( gameData->renderData.images[ImageID_Background] ), 0.0f, 0.0f, 1.0f );
@@ -36,12 +34,6 @@ internal void Game_RenderWorld( GameData_t* gameData )
    Font_SetGlyphCollectionForHeight( font, 48.0f );
    Font_SetColor( font, 0xFF3333CC );
    Blit_TextLine( STR_FLYINGWHALES, 65.0f, 240.0f, 1.0f, font, FontJustify_Left );
-
-   for ( i = 0; i < STAR_COUNT; i++ )
-   {
-      star = &( gameData->stars[i] );
-      Blit_Sprite( &( star->sprite ), star->position.x, star->position.y, star->scale );
-   }
 
    // TODO: in a real game we wouldn't be scaling this here
    Blit_Sprite( gameData->player.activeSprite, gameData->player.position.x, gameData->player.position.y, 2.0f );

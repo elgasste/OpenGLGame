@@ -15,7 +15,6 @@ AssetsFileChunkID_t;
 typedef enum
 {
    ImageID_Background = 0,
-   ImageID_StarSprite,
    ImageID_PlayerSpriteIdleLeft,
    ImageID_PlayerSpriteIdleRight,
    ImageID_PlayerSpriteRunLeft,
@@ -34,8 +33,7 @@ ImageID_t;
 
 typedef enum
 {
-   SpriteBaseID_Star,
-   SpriteBaseID_PlayerIdleLeft,
+   SpriteBaseID_PlayerIdleLeft = 0,
    SpriteBaseID_PlayerIdleRight,
    SpriteBaseID_PlayerRunLeft,
    SpriteBaseID_PlayerRunRight,

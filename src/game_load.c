@@ -5,9 +5,6 @@ internal void Game_LoadMenus( GameData_t* gameData );
 
 Bool_t Game_LoadData( GameData_t* gameData )
 {
-   uint32_t i;
-   Star_t* star;
-   SpriteBase_t* starSpriteBase;
    Player_t* player = &( gameData->player );
 
    if ( !AssetsFile_Load( gameData ) )
@@ -16,15 +13,6 @@ Bool_t Game_LoadData( GameData_t* gameData )
    }
 
    Game_LoadMenus( gameData );
-
-   starSpriteBase = &( gameData->renderData.spriteBases[SpriteBaseID_Star] );
-
-   for ( i = 0; i < STAR_COUNT; i++ )
-   {
-      star = &( gameData->stars[i] );
-      Sprite_LoadFromBase( &( star->sprite ), starSpriteBase, 0.1f );
-      star->isResting = True;
-   }
 
    Player_Init( player, &( gameData->renderData ) );
    player->maxVelocity.x = 300.0f;

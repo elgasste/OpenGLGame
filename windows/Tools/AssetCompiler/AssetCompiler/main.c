@@ -19,7 +19,6 @@ global AssetFileToIDMapping_t g_fontIDMap[] = {
 };
 global AssetFileToIDMapping_t g_bitmapIDMap[] = {
    { "background.bmp", (uint32_t)ImageID_Background },
-   { "star_sprite.bmp", (uint32_t)ImageID_StarSprite },
    { "player_sprite_idle_left.bmp", (uint32_t)ImageID_PlayerSpriteIdleLeft },
    { "player_sprite_idle_right.bmp", (uint32_t)ImageID_PlayerSpriteIdleRight },
    { "player_sprite_run_left.bmp", (uint32_t)ImageID_PlayerSpriteRunLeft },
@@ -32,7 +31,6 @@ global AssetFileToIDMapping_t g_bitmapIDMap[] = {
    { "player_sprite_attack_right_2.bmp", (uint32_t)ImageID_PlayerSpriteAttackRight2 }
 };
 global SpriteBaseData_t g_spriteBaseDatas[] = {
-   { (uint32_t)SpriteBaseID_Star, (uint32_t)ImageID_StarSprite, { 6, 6 } },
    { (uint32_t)SpriteBaseID_PlayerIdleLeft, (uint32_t)ImageID_PlayerSpriteIdleLeft, { 93, 112 } },
    { (uint32_t)SpriteBaseID_PlayerIdleRight, (uint32_t)ImageID_PlayerSpriteIdleRight, { 93, 112 } },
    { (uint32_t)SpriteBaseID_PlayerRunLeft, (uint32_t)ImageID_PlayerSpriteRunLeft, { 93, 112 } },
