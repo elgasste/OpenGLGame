@@ -10,13 +10,13 @@
 
 internal Bool_t AssetsFile_LoadFile( AssetsFileData_t* assetsFileData, const char* filePath );
 internal void AssetsFile_ClearData( AssetsFileData_t* assetsFileData );
-internal Bool_t AssetsFile_ReadChunk( AssetsFileChunk_t* chunk, FileData_t* fileData, uint32_t chunkOffset );
+internal Bool_t AssetsFile_ReadLump( AssetsFileLump_t* lump, FileData_t* fileData, uint32_t lumpOffset );
 internal Bool_t AssetsFile_Interpret( AssetsFileData_t* assetsFileData, GameData_t* gameData );
 internal void AssetsFile_ClearOffsetTable( AssetsFileOffsetTable_t* offsetTable, uint32_t numOffsets );
-internal Bool_t AssetsFile_InterpretBitmapsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
-internal Bool_t AssetsFile_InterpretFontsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
-internal Bool_t AssetsFile_InterpretSpriteBasesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
-internal Bool_t AssetsFile_InterpretSpritesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk );
+internal Bool_t AssetsFile_InterpretBitmapsLump( GameData_t* gameData, AssetsFileLump_t* lump );
+internal Bool_t AssetsFile_InterpretFontsLump( GameData_t* gameData, AssetsFileLump_t* lump );
+internal Bool_t AssetsFile_InterpretSpriteBasesLump( GameData_t* gameData, AssetsFileLump_t* lump );
+internal Bool_t AssetsFile_InterpretSpritesLump( GameData_t* gameData, AssetsFileLump_t* lump );
 
 Bool_t AssetsFile_Load( GameData_t* gameData )
 {
@@ -44,66 +44,66 @@ Bool_t AssetsFile_Load( GameData_t* gameData )
 
 internal Bool_t AssetsFile_LoadFile( AssetsFileData_t* assetsFileData, const char* filePath )
 {
-   uint32_t bytesRead, i, chunkOffset;
+   uint32_t bytesRead, i, lumpOffset;
    FileData_t fileData;
    uint32_t* filePos32;
-   AssetsFileChunk_t* chunk;
+   AssetsFileLump_t* lump;
    char errorMsg[STRING_SIZE_DEFAULT];
 
-   assetsFileData->numChunks = 0;
-   assetsFileData->chunks = 0;
+   assetsFileData->numLumps = 0;
+   assetsFileData->lumps = 0;
 
    if ( !Platform_ReadFileData( filePath, &fileData ) )
    {
       return False;
    }
-   else if ( fileData.fileSize < 4 ) // 4 bytes for the number of chunks
+   else if ( fileData.fileSize < 4 ) // 4 bytes for the number of lumps
    {
       ERROR_RETURN_FALSE();
    }
 
-   // first 4 bytes are the number of chunks
+   // first 4 bytes are the number of lumps
    filePos32 = (uint32_t*)fileData.contents;
-   assetsFileData->numChunks = filePos32[0];
+   assetsFileData->numLumps = filePos32[0];
    filePos32++;
    bytesRead = 4;
 
-   // make sure there's enough room to read all the chunk offsets
-   if ( fileData.fileSize < ( bytesRead + ( assetsFileData->numChunks * 4 ) ) )
+   // make sure there's enough room to read all the lump offsets
+   if ( fileData.fileSize < ( bytesRead + ( assetsFileData->numLumps * 4 ) ) )
    {
       ERROR_RETURN_FALSE();
    }
 
-   assetsFileData->chunks = (AssetsFileChunk_t*)Platform_MAlloc( sizeof( AssetsFileChunk_t ) * assetsFileData->numChunks );
-   chunk = assetsFileData->chunks;
+   assetsFileData->lumps = (AssetsFileLump_t*)Platform_MAlloc( sizeof( AssetsFileLump_t ) * assetsFileData->numLumps );
+   lump = assetsFileData->lumps;
 
-   for ( i = 0; i < assetsFileData->numChunks; i++ )
+   for ( i = 0; i < assetsFileData->numLumps; i++ )
    {
-      chunk->entries = 0;
-      chunk->numEntries = 0;
-      chunk++;
+      lump->entries = 0;
+      lump->numEntries = 0;
+      lump++;
    }
 
-   chunk = assetsFileData->chunks;
+   lump = assetsFileData->lumps;
 
-   for ( i = 0; i < assetsFileData->numChunks; i++ )
+   for ( i = 0; i < assetsFileData->numLumps; i++ )
    {
-      chunkOffset = filePos32[0];
+      lumpOffset = filePos32[0];
       filePos32++;
       bytesRead += 4;
 
-      // make sure there's enough room to read at least the chunk ID and entry count
-      if ( fileData.fileSize < ( chunkOffset + 8 ) )
+      // make sure there's enough room to read at least the lump ID and entry count
+      if ( fileData.fileSize < ( lumpOffset + 8 ) )
       {
          ERROR_RETURN_FALSE();
       }
 
-      if ( !AssetsFile_ReadChunk( chunk, &fileData, chunkOffset ) )
+      if ( !AssetsFile_ReadLump( lump, &fileData, lumpOffset ) )
       {
          ERROR_RETURN_FALSE();
       }
 
-      chunk++;
+      lump++;
    }
 
    return True;
@@ -112,18 +112,18 @@ internal Bool_t AssetsFile_LoadFile( AssetsFileData_t* assetsFileData, const cha
 internal void AssetsFile_ClearData( AssetsFileData_t* assetsFileData )
 {
    uint32_t i, j;
-   AssetsFileChunk_t* chunk = assetsFileData->chunks;
+   AssetsFileLump_t* lump = assetsFileData->lumps;
    AssetsFileEntry_t* entry;
 
-   if ( chunk )
+   if ( lump )
    {
-      for ( i = 0; i < assetsFileData->numChunks; i++ )
+      for ( i = 0; i < assetsFileData->numLumps; i++ )
       {
-         entry = chunk->entries;
+         entry = lump->entries;
 
          if ( entry )
          {
-            for ( j = 0; j < chunk->numEntries; j++ )
+            for ( j = 0; j < lump->numEntries; j++ )
             {
                if ( entry->memory )
                {
@@ -134,37 +134,37 @@ internal void AssetsFile_ClearData( AssetsFileData_t* assetsFileData )
             }
          }
 
-         Platform_Free( chunk->entries, sizeof( AssetsFileEntry_t ) * chunk->numEntries );
-         chunk++;
+         Platform_Free( lump->entries, sizeof( AssetsFileEntry_t ) * lump->numEntries );
+         lump++;
       }
 
-      Platform_Free( assetsFileData->chunks, sizeof( AssetsFileChunk_t ) * assetsFileData->numChunks );
-      assetsFileData->numChunks = 0;
-      assetsFileData->chunks = 0;
+      Platform_Free( assetsFileData->lumps, sizeof( AssetsFileLump_t ) * assetsFileData->numLumps );
+      assetsFileData->numLumps = 0;
+      assetsFileData->lumps = 0;
    }
 }
 
-internal Bool_t AssetsFile_ReadChunk( AssetsFileChunk_t* chunk, FileData_t* fileData, uint32_t chunkOffset )
+internal Bool_t AssetsFile_ReadLump( AssetsFileLump_t* lump, FileData_t* fileData, uint32_t lumpOffset )
 {
    uint32_t i, j, bytesRead;
-   uint8_t* filePos = (uint8_t*)( fileData->contents ) + chunkOffset;
+   uint8_t* filePos = (uint8_t*)( fileData->contents ) + lumpOffset;
    AssetsFileEntry_t* entry;
 
-   chunk->ID = ( (uint32_t*)filePos )[0];
-   chunk->numEntries = ( (uint32_t*)filePos )[1];
+   lump->ID = ( (uint32_t*)filePos )[0];
+   lump->numEntries = ( (uint32_t*)filePos )[1];
    filePos += 8;
    bytesRead = 8;
 
    // make sure there's enough room to read at least the ID and size of each entry
-   if ( fileData->fileSize < ( chunkOffset + bytesRead + ( chunk->numEntries * 8 ) ) )
+   if ( fileData->fileSize < ( lumpOffset + bytesRead + ( lump->numEntries * 8 ) ) )
    {
       return False;
    }
 
-   chunk->entries = (AssetsFileEntry_t*)Platform_MAlloc( sizeof( AssetsFileEntry_t ) * chunk->numEntries );
-   entry = chunk->entries;
+   lump->entries = (AssetsFileEntry_t*)Platform_MAlloc( sizeof( AssetsFileEntry_t ) * lump->numEntries );
+   entry = lump->entries;
 
-   for ( i = 0; i < chunk->numEntries; i++ )
+   for ( i = 0; i < lump->numEntries; i++ )
    {
       entry->ID = 0;
       entry->size = 0;
@@ -172,16 +172,16 @@ internal Bool_t AssetsFile_ReadChunk( AssetsFileChunk_t* chunk, FileData_t* file
       entry++;
    }
 
-   entry = chunk->entries;
+   entry = lump->entries;
 
-   for ( i = 0; i < chunk->numEntries; i++ )
+   for ( i = 0; i < lump->numEntries; i++ )
    {
       entry->ID = ( ( uint32_t*)filePos )[0];
       entry->size = ( ( uint32_t*)filePos )[1];
       filePos += 8;
       bytesRead += 8;
 
-      if ( fileData->fileSize < ( chunkOffset + bytesRead + entry->size ) )
+      if ( fileData->fileSize < ( lumpOffset + bytesRead + entry->size ) )
       {
          return False;
       }
@@ -203,75 +203,75 @@ internal Bool_t AssetsFile_ReadChunk( AssetsFileChunk_t* chunk, FileData_t* file
 
 internal Bool_t AssetsFile_Interpret( AssetsFileData_t* assetsFileData, GameData_t* gameData )
 {
-   uint32_t i, j, numOffsets, chunkID;
-   AssetsFileChunk_t* chunk;
-   AssetsFileOffsetTable_t chunkIDOffsets[AssetsFileChunkID_Count];
+   uint32_t i, j, numOffsets, lumpID;
+   AssetsFileLump_t* lump;
+   AssetsFileOffsetTable_t lumpIDOffsets[AssetsFileLumpID_Count];
    char msg[STRING_SIZE_DEFAULT];
-   uint32_t chunkIDOrder[] = {
-      (uint32_t)AssetsFileChunkID_Fonts,
-      (uint32_t)AssetsFileChunkID_Bitmaps,
-      (uint32_t)AssetsFileChunkID_SpriteBases,
-      (uint32_t)AssetsFileChunkID_Sprites
+   uint32_t lumpIDOrder[] = {
+      (uint32_t)AssetsFileLumpID_Fonts,
+      (uint32_t)AssetsFileLumpID_Bitmaps,
+      (uint32_t)AssetsFileLumpID_SpriteBases,
+      (uint32_t)AssetsFileLumpID_Sprites
    };
-   Bool_t ( *chunkLoaders[] )( GameData_t*, AssetsFileChunk_t* ) = {
-      AssetsFile_InterpretFontsChunk,
-      AssetsFile_InterpretBitmapsChunk,
-      AssetsFile_InterpretSpriteBasesChunk,
-      AssetsFile_InterpretSpritesChunk
+   Bool_t ( *lumpLoaders[] )( GameData_t*, AssetsFileLump_t* ) = {
+      AssetsFile_InterpretFontsLump,
+      AssetsFile_InterpretBitmapsLump,
+      AssetsFile_InterpretSpriteBasesLump,
+      AssetsFile_InterpretSpritesLump
    };
 
-   for ( i = 0; i < (uint32_t)AssetsFileChunkID_Count; i++ )
+   for ( i = 0; i < (uint32_t)AssetsFileLumpID_Count; i++ )
    {
-      chunkIDOffsets[i].numOffsets = 0;
-      chunkIDOffsets[i].offsets = 0;
+      lumpIDOffsets[i].numOffsets = 0;
+      lumpIDOffsets[i].offsets = 0;
    }
 
-   chunk = assetsFileData->chunks;
+   lump = assetsFileData->lumps;
 
-   for ( i = 0; i < assetsFileData->numChunks; i++ )
+   for ( i = 0; i < assetsFileData->numLumps; i++ )
    {
-      if ( (AssetsFileChunkID_t)( chunk->ID ) < AssetsFileChunkID_Count )
+      if ( (AssetsFileLumpID_t)( lump->ID ) < AssetsFileLumpID_Count )
       {
-         numOffsets = chunkIDOffsets[chunk->ID].numOffsets;
-         chunkIDOffsets[chunk->ID].offsets = (uint32_t*)Platform_ReAlloc( chunkIDOffsets[chunk->ID].offsets,
+         numOffsets = lumpIDOffsets[lump->ID].numOffsets;
+         lumpIDOffsets[lump->ID].offsets = (uint32_t*)Platform_ReAlloc( lumpIDOffsets[lump->ID].offsets,
                                                                           4 * numOffsets,
                                                                           4 * ( numOffsets + 1 ) );
-         chunkIDOffsets[chunk->ID].offsets[numOffsets] = i;
-         chunkIDOffsets[chunk->ID].numOffsets++;
+         lumpIDOffsets[lump->ID].offsets[numOffsets] = i;
+         lumpIDOffsets[lump->ID].numOffsets++;
       }
       else
       {
-         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNCHUNKID, chunk->ID );
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNLUMPID, lump->ID );
          Platform_Log( msg );
       }
 
-      chunk++;
+      lump++;
    }
 
-   for ( i = 0; i < (uint32_t)AssetsFileChunkID_Count; i++ )
+   for ( i = 0; i < (uint32_t)AssetsFileLumpID_Count; i++ )
    {
-      chunkID = chunkIDOrder[i];
+      lumpID = lumpIDOrder[i];
 
-      if ( chunkIDOffsets[chunkID].numOffsets == 0 )
+      if ( lumpIDOffsets[lumpID].numOffsets == 0 )
       {
-         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_NOCHUNKSFOUNDFORID, i );
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_NOLUMPSFOUNDFORID, i );
          Platform_Log( msg );
-         AssetsFile_ClearOffsetTable( chunkIDOffsets, (uint32_t)AssetsFileChunkID_Count );
+         AssetsFile_ClearOffsetTable( lumpIDOffsets, (uint32_t)AssetsFileLumpID_Count );
          return False;
       }
 
-      for ( j = 0; j < chunkIDOffsets[chunkID].numOffsets; j++ )
+      for ( j = 0; j < lumpIDOffsets[lumpID].numOffsets; j++ )
       {
-         chunk = assetsFileData->chunks + chunkIDOffsets[chunkID].offsets[j];
-         if ( !chunkLoaders[i]( gameData, chunk ) )
+         lump = assetsFileData->lumps + lumpIDOffsets[lumpID].offsets[j];
+         if ( !lumpLoaders[i]( gameData, lump ) )
          {
-            AssetsFile_ClearOffsetTable( chunkIDOffsets, (uint32_t)AssetsFileChunkID_Count );
+            AssetsFile_ClearOffsetTable( lumpIDOffsets, (uint32_t)AssetsFileLumpID_Count );
             return False;
          }
       }
    }
 
-   AssetsFile_ClearOffsetTable( chunkIDOffsets, (uint32_t)AssetsFileChunkID_Count );
+   AssetsFile_ClearOffsetTable( lumpIDOffsets, (uint32_t)AssetsFileLumpID_Count );
    return True;
 }
 
@@ -287,15 +287,15 @@ internal void AssetsFile_ClearOffsetTable( AssetsFileOffsetTable_t* offsetTable,
    }
 }
 
-internal Bool_t AssetsFile_InterpretBitmapsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk )
+internal Bool_t AssetsFile_InterpretBitmapsLump( GameData_t* gameData, AssetsFileLump_t* lump )
 {
    uint32_t i;
    ImageID_t imageID;
-   AssetsFileEntry_t* entry = chunk->entries;
+   AssetsFileEntry_t* entry = lump->entries;
    Image_t* image;
    char msg[STRING_SIZE_DEFAULT];
 
-   for ( i = 0; i < chunk->numEntries; i++ )
+   for ( i = 0; i < lump->numEntries; i++ )
    {
       imageID = (ImageID_t)entry->ID;
 
@@ -321,15 +321,15 @@ internal Bool_t AssetsFile_InterpretBitmapsChunk( GameData_t* gameData, AssetsFi
    return True;
 }
 
-internal Bool_t AssetsFile_InterpretFontsChunk( GameData_t* gameData, AssetsFileChunk_t* chunk )
+internal Bool_t AssetsFile_InterpretFontsLump( GameData_t* gameData, AssetsFileLump_t* lump )
 {
    uint32_t i;
    FontID_t fontID;
-   AssetsFileEntry_t* entry = chunk->entries;
+   AssetsFileEntry_t* entry = lump->entries;
    Font_t* font;
    char msg[STRING_SIZE_DEFAULT];
 
-   for ( i = 0; i < chunk->numEntries; i++ )
+   for ( i = 0; i < lump->numEntries; i++ )
    {
       fontID = (FontID_t)entry->ID;
 
@@ -355,14 +355,14 @@ internal Bool_t AssetsFile_InterpretFontsChunk( GameData_t* gameData, AssetsFile
    return True;
 }
 
-internal Bool_t AssetsFile_InterpretSpriteBasesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk )
+internal Bool_t AssetsFile_InterpretSpriteBasesLump( GameData_t* gameData, AssetsFileLump_t* lump )
 {
    uint32_t i, imageID;
    SpriteBaseID_t baseID;
-   AssetsFileEntry_t* entry = chunk->entries;
+   AssetsFileEntry_t* entry = lump->entries;
    char msg[STRING_SIZE_DEFAULT];
 
-   for ( i = 0; i < chunk->numEntries; i++ )
+   for ( i = 0; i < lump->numEntries; i++ )
    {
       baseID = (SpriteBaseID_t)entry->ID;
 
@@ -404,16 +404,16 @@ internal Bool_t AssetsFile_InterpretSpriteBasesChunk( GameData_t* gameData, Asse
    return True;
 }
 
-internal Bool_t AssetsFile_InterpretSpritesChunk( GameData_t* gameData, AssetsFileChunk_t* chunk )
+internal Bool_t AssetsFile_InterpretSpritesLump( GameData_t* gameData, AssetsFileLump_t* lump )
 {
    uint32_t i, spriteBaseID;
    SpriteID_t spriteID;
-   AssetsFileEntry_t* entry = chunk->entries;
+   AssetsFileEntry_t* entry = lump->entries;
    Sprite_t* sprite;
    float* memF;
    char msg[STRING_SIZE_DEFAULT];
 
-   for ( i = 0; i < chunk->numEntries; i++ )
+   for ( i = 0; i < lump->numEntries; i++ )
    {
       spriteID = (SpriteID_t)entry->ID;
 

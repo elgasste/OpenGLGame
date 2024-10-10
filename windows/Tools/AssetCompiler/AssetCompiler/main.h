@@ -5,7 +5,7 @@
 #define ENDCODEPOINT       126      // tilde
 #define MAX_GLYPHHEIGHTS   10
 
-#define NUM_CHUNKS         4
+#define NUM_LUMPS          4
 
 #include "common.h"
 #include "font.h"

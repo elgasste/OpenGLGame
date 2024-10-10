@@ -19,40 +19,13 @@ global AssetFileToIDMapping_t g_fontIDMap[] = {
 };
 global AssetFileToIDMapping_t g_bitmapIDMap[] = {
    { "background.bmp", (uint32_t)ImageID_Background },
-   { "player_sprite_idle_left.bmp", (uint32_t)ImageID_PlayerSpriteIdleLeft },
-   { "player_sprite_idle_right.bmp", (uint32_t)ImageID_PlayerSpriteIdleRight },
-   { "player_sprite_run_left.bmp", (uint32_t)ImageID_PlayerSpriteRunLeft },
-   { "player_sprite_run_right.bmp", (uint32_t)ImageID_PlayerSpriteRunRight },
-   { "player_sprite_jump_left.bmp", (uint32_t)ImageID_PlayerSpriteJumpLeft },
-   { "player_sprite_jump_right.bmp", (uint32_t)ImageID_PlayerSpriteJumpRight },
-   { "player_sprite_attack_left_1.bmp", (uint32_t)ImageID_PlayerSpriteAttackLeft1 },
-   { "player_sprite_attack_right_1.bmp", (uint32_t)ImageID_PlayerSpriteAttackRight1 },
-   { "player_sprite_attack_left_2.bmp", (uint32_t)ImageID_PlayerSpriteAttackLeft2 },
-   { "player_sprite_attack_right_2.bmp", (uint32_t)ImageID_PlayerSpriteAttackRight2 }
+   { "player_sprite.bmp", (uint32_t)ImageID_Player }
 };
 global SpriteBaseData_t g_spriteBaseDatas[] = {
-   { (uint32_t)SpriteBaseID_PlayerIdleLeft, (uint32_t)ImageID_PlayerSpriteIdleLeft, { 93, 112 } },
-   { (uint32_t)SpriteBaseID_PlayerIdleRight, (uint32_t)ImageID_PlayerSpriteIdleRight, { 93, 112 } },
-   { (uint32_t)SpriteBaseID_PlayerRunLeft, (uint32_t)ImageID_PlayerSpriteRunLeft, { 93, 112 } },
-   { (uint32_t)SpriteBaseID_PlayerRunRight, (uint32_t)ImageID_PlayerSpriteRunRight, { 93, 112 } },
-   { (uint32_t)SpriteBaseID_PlayerJumpLeft, (uint32_t)ImageID_PlayerSpriteJumpLeft, { 93, 112 } },
-   { (uint32_t)SpriteBaseID_PlayerJumpRight, (uint32_t)ImageID_PlayerSpriteJumpRight, { 93, 112 } },
-   { (uint32_t)SpriteBaseID_PlayerAttackLeft1, (uint32_t)ImageID_PlayerSpriteAttackLeft1, { 93, 112 } },
-   { (uint32_t)SpriteBaseID_PlayerAttackRight1, (uint32_t)ImageID_PlayerSpriteAttackRight1, { 93, 112 } },
-   { (uint32_t)SpriteBaseID_PlayerAttackLeft2, (uint32_t)ImageID_PlayerSpriteAttackLeft2, { 93, 112 } },
-   { (uint32_t)SpriteBaseID_PlayerAttackRight2, (uint32_t)ImageID_PlayerSpriteAttackRight2, { 93, 112 } }
+   { (uint32_t)SpriteBaseID_Player, (uint32_t)ImageID_Player, { 16, 16 } }
 };
 global SpriteData_t g_spriteDatas[] = {
-   { (uint32_t)SpriteID_PlayerIdleLeft, (uint32_t)SpriteBaseID_PlayerIdleLeft, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.13f },
-   { (uint32_t)SpriteID_PlayerIdleRight, (uint32_t)SpriteBaseID_PlayerIdleRight, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.13f },
-   { (uint32_t)SpriteID_PlayerRunLeft, (uint32_t)SpriteBaseID_PlayerRunLeft, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.1f },
-   { (uint32_t)SpriteID_PlayerRunRight, (uint32_t)SpriteBaseID_PlayerRunRight, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.1f },
-   { (uint32_t)SpriteID_PlayerJumpLeft, (uint32_t)SpriteBaseID_PlayerJumpLeft, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.0f },
-   { (uint32_t)SpriteID_PlayerJumpRight, (uint32_t)SpriteBaseID_PlayerJumpRight, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.0f },
-   { (uint32_t)SpriteID_PlayerAttackLeft1, (uint32_t)SpriteBaseID_PlayerAttackLeft1, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.07f },
-   { (uint32_t)SpriteID_PlayerAttackRight1, (uint32_t)SpriteBaseID_PlayerAttackRight1, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.07f },
-   { (uint32_t)SpriteID_PlayerAttackLeft2, (uint32_t)SpriteBaseID_PlayerAttackLeft2, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.07f },
-   { (uint32_t)SpriteID_PlayerAttackRight2, (uint32_t)SpriteBaseID_PlayerAttackRight2, { 30.0f, 6.0f, 32.0f, 32.0f }, 0.07f }
+   { (uint32_t)SpriteID_Player, (uint32_t)SpriteBaseID_Player, { 0.0f, 0.0f, 16.0f, 16.0f }, 0.3f }
 };
 
 internal FileInfo_t* GetFiles( const char* dir, const char* filter, uint32_t* numFiles );
@@ -421,15 +394,15 @@ internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
 
    printf( "Writing game data to destination..." );
 
-   // chunk count and first chunk offset
+   // lump count and first lump offset
    filePos32 = (uint32_t*)( fileData.contents );
-   filePos32[0] = NUM_CHUNKS;
-   fileOffset = 4 + ( NUM_CHUNKS * 4 );
+   filePos32[0] = NUM_LUMPS;
+   fileOffset = 4 + ( NUM_LUMPS * 4 );
    filePos32[1] = fileOffset;
 
-   // fonts chunk
+   // fonts lump
    filePos32 = (uint32_t*)( (uint8_t*)fileData.contents + fileOffset );
-   filePos32[0] = (uint32_t)AssetsFileChunkID_Fonts;
+   filePos32[0] = (uint32_t)AssetsFileLumpID_Fonts;
    filePos32[1] = assets->numFonts;
    filePos32 += 2;
    fileOffset += 8;
@@ -451,9 +424,9 @@ internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
       fontData++;
    }
 
-   // bitmaps chunk
-   ( (uint32_t*)( fileData.contents ) )[2] = fileOffset;  // chunk offset
-   filePos32[0] = (uint32_t)AssetsFileChunkID_Bitmaps;
+   // bitmaps lump
+   ( (uint32_t*)( fileData.contents ) )[2] = fileOffset;  // lump offset
+   filePos32[0] = (uint32_t)AssetsFileLumpID_Bitmaps;
    filePos32[1] = assets->numBitmaps;
    filePos32 += 2;
    fileOffset += 8;
@@ -479,10 +452,10 @@ internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
       bitmapData++;
    }
 
-   // sprite bases chunk
+   // sprite bases lump
    numSpriteBases = (uint32_t)( sizeof( g_spriteBaseDatas ) / sizeof( SpriteBaseData_t ) );
-   ( (uint32_t*)( fileData.contents ) )[3] = fileOffset;  // chunk offset
-   filePos32[0] = (uint32_t)AssetsFileChunkID_SpriteBases;
+   ( (uint32_t*)( fileData.contents ) )[3] = fileOffset;  // lump offset
+   filePos32[0] = (uint32_t)AssetsFileLumpID_SpriteBases;
    filePos32[1] = numSpriteBases;
    filePos32 += 2;
    fileOffset += 8;
@@ -502,10 +475,10 @@ internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
       spriteBaseData++;
    }
 
-   // sprites chunk
+   // sprites lump
    numSprites = (uint32_t)( sizeof( g_spriteDatas ) / sizeof( SpriteData_t ) );
-   ( (uint32_t*)( fileData.contents ) )[4] = fileOffset;  // chunk offset
-   filePos32[0] = (uint32_t)AssetsFileChunkID_Sprites;
+   ( (uint32_t*)( fileData.contents ) )[4] = fileOffset;  // lump offset
+   filePos32[0] = (uint32_t)AssetsFileLumpID_Sprites;
    filePos32[1] = numSprites;
    filePos32 += 2;
    fileOffset += 8;
@@ -550,11 +523,11 @@ internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
    FontData_t* fontData;
    BitmapData_t* bitmapData;
 
-   fileSize = 4;                    // chunk count
-   fileSize += ( 4 * NUM_CHUNKS );  // chunk offsets
-   fileSize += ( 8 * NUM_CHUNKS );  // chunk IDs and entry counts
+   fileSize = 4;                   // lump count
+   fileSize += ( 4 * NUM_LUMPS );  // lump offsets
+   fileSize += ( 8 * NUM_LUMPS );  // lump IDs and entry counts
 
-   // fonts chunk
+   // fonts lump
    fontData = assets->fontDatas;
 
    for ( i = 0; i < assets->numFonts; i++ )
@@ -564,7 +537,7 @@ internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
       fontData++;
    }
 
-   // bitmaps chunk
+   // bitmaps lump
    bitmapData = assets->bitmapDatas;
 
    for ( i = 0; i < assets->numBitmaps; i++ )
@@ -574,14 +547,14 @@ internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
       bitmapData++;
    }
 
-   // sprite bases chunk
+   // sprite bases lump
    for ( i = 0; i < (uint32_t)( sizeof( g_spriteBaseDatas ) / sizeof( SpriteBaseData_t ) ); i++ )
    {
       fileSize += 8;    // entry ID and size
       fileSize += 12;   // image ID, frame dimensions
    }
 
-   // sprites chunk
+   // sprites lump
    {
       for ( i = 0; i < (uint32_t)( sizeof( g_spriteDatas ) / sizeof( SpriteData_t ) ); i++ )
       {

@@ -3,29 +3,19 @@
 
 typedef enum
 {
-   AssetsFileChunkID_Bitmaps = 0,
-   AssetsFileChunkID_Fonts,
-   AssetsFileChunkID_SpriteBases,
-   AssetsFileChunkID_Sprites,
+   AssetsFileLumpID_Bitmaps = 0,
+   AssetsFileLumpID_Fonts,
+   AssetsFileLumpID_SpriteBases,
+   AssetsFileLumpID_Sprites,
 
-   AssetsFileChunkID_Count
+   AssetsFileLumpID_Count
 }
-AssetsFileChunkID_t;
+AssetsFileLumpID_t;
 
 typedef enum
 {
    ImageID_Background = 0,
-   ImageID_PlayerSpriteIdleLeft,
-   ImageID_PlayerSpriteIdleRight,
-   ImageID_PlayerSpriteRunLeft,
-   ImageID_PlayerSpriteRunRight,
-   ImageID_PlayerSpriteJumpLeft,
-   ImageID_PlayerSpriteJumpRight,
-   ImageID_PlayerSpriteAttackLeft1,
-   ImageID_PlayerSpriteAttackLeft2,
-   ImageID_PlayerSpriteAttackLeft3,
-   ImageID_PlayerSpriteAttackRight1,
-   ImageID_PlayerSpriteAttackRight2,
+   ImageID_Player,
 
    ImageID_Count
 }
@@ -33,17 +23,7 @@ ImageID_t;
 
 typedef enum
 {
-   SpriteBaseID_PlayerIdleLeft = 0,
-   SpriteBaseID_PlayerIdleRight,
-   SpriteBaseID_PlayerRunLeft,
-   SpriteBaseID_PlayerRunRight,
-   SpriteBaseID_PlayerJumpLeft,
-   SpriteBaseID_PlayerJumpRight,
-   SpriteBaseID_PlayerAttackLeft1,
-   SpriteBaseID_PlayerAttackLeft2,
-   SpriteBaseID_PlayerAttackLeft3,
-   SpriteBaseID_PlayerAttackRight1,
-   SpriteBaseID_PlayerAttackRight2,
+   SpriteBaseID_Player = 0,
 
    SpriteBaseID_Count
 }
@@ -51,17 +31,7 @@ SpriteBaseID_t;
 
 typedef enum
 {
-   SpriteID_PlayerIdleLeft,
-   SpriteID_PlayerIdleRight,
-   SpriteID_PlayerRunLeft,
-   SpriteID_PlayerRunRight,
-   SpriteID_PlayerJumpLeft,
-   SpriteID_PlayerJumpRight,
-   SpriteID_PlayerAttackLeft1,
-   SpriteID_PlayerAttackLeft2,
-   SpriteID_PlayerAttackLeft3,
-   SpriteID_PlayerAttackRight1,
-   SpriteID_PlayerAttackRight2,
+   SpriteID_Player = 0,
 
    SpriteID_Count
 }

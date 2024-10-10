@@ -20,18 +20,18 @@ typedef struct AssetsFileEntry_t
 }
 AssetsFileEntry_t;
 
-typedef struct AssetsFileChunk_t
+typedef struct AssetsFileLump_t
 {
    uint32_t ID;
    uint32_t numEntries;
    AssetsFileEntry_t* entries;
 }
-AssetsFileChunk_t;
+AssetsFileLump_t;
 
 typedef struct AssetsFileData_t
 {
-   uint32_t numChunks;
-   AssetsFileChunk_t* chunks;
+   uint32_t numLumps;
+   AssetsFileLump_t* lumps;
 }
 AssetsFileData_t;
 
