@@ -5,6 +5,7 @@ typedef enum
 {
    AssetsFileLumpID_Bitmaps = 0,
    AssetsFileLumpID_Fonts,
+   AssetsFileLumpID_Text,
    AssetsFileLumpID_SpriteBases,
    AssetsFileLumpID_Sprites,
 

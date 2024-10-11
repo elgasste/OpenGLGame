@@ -8,6 +8,7 @@ typedef struct PixelBuffer_t PixelBuffer_t;
 typedef struct Image_t Image_t;
 typedef struct Sprite_t Sprite_t;
 typedef struct Font_t Font_t;
+typedef struct TextMap_t TextMap_t;
 
 void Blit_ClearScreen();
 void Blit_Rect( float screenX, float screenY, float width, float height, uint32_t color );
@@ -39,7 +40,9 @@ void Blit_ColoredImage( Image_t* image, float screenX, float screenY, float scal
 void Blit_Image( Image_t* image, float screenX, float screenY, float scale );
 void Blit_ColoredSprite( Sprite_t* sprite, float screenX, float screenY, float scale, uint32_t color );
 void Blit_Sprite( Sprite_t* sprite, float screenX, float screenY, float scale );
-void Blit_Char( uint32_t codepoint, float screenX, float screenY, float scale, Font_t* font );
-void Blit_TextLine( const char* text, float screenX, float screenY, float scale, Font_t* font, FontJustify_t justify );
+void Blit_FontChar( uint32_t codepoint, float screenX, float screenY, float scale, Font_t* font );
+void Blit_FontLine( const char* text, float screenX, float screenY, float scale, Font_t* font, FontJustify_t justify );
+void Blit_TextChar( char c, float screenX, float screenY, float scale, TextMap_t* textMap );
+void Blit_TextLine( const char* text, float screenX, float screenY, float scale, TextMap_t* textMap );
 
 #endif

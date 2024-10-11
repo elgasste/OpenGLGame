@@ -20,6 +20,12 @@ global AssetFileToIDMapping_t g_bitmapIDMap[] = {
    { "message_box_borders.bmp", (uint32_t)ImageID_MessageBoxBorders },
    { "player_sprite.bmp", (uint32_t)ImageID_Player }
 };
+global TextData_t g_textData = {
+   (uint32_t)ImageID_Text,
+   { 8, 8 },
+   ' ',
+   'z'
+};
 global SpriteBaseData_t g_spriteBaseDatas[] = {
    { (uint32_t)SpriteBaseID_Player, (uint32_t)ImageID_Player, { 16, 16 } }
 };
@@ -395,8 +401,8 @@ internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
 
    // lump count and first lump offset
    filePos32 = (uint32_t*)( fileData.contents );
-   filePos32[0] = NUM_LUMPS;
-   fileOffset = 4 + ( NUM_LUMPS * 4 );
+   filePos32[0] = (uint32_t)AssetsFileLumpID_Count;
+   fileOffset = 4 + ( (uint32_t)AssetsFileLumpID_Count * 4 );
    filePos32[1] = fileOffset;
 
    // fonts lump
@@ -423,8 +429,32 @@ internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
       fontData++;
    }
 
-   // bitmaps lump
+   // text lump
+   filePos32 = (uint32_t*)( (uint8_t*)fileData.contents + fileOffset );
    ( (uint32_t*)( fileData.contents ) )[2] = fileOffset;  // lump offset
+   filePos32[0] = (uint32_t)AssetsFileLumpID_Text;
+   filePos32[1] = 1;
+   filePos32 += 2;
+   fileOffset += 8;
+
+   filePos32[0] = 0;
+   filePos32[1] = 14;
+   filePos32 += 2;
+   fileOffset += 8;
+
+   filePos32[0] = g_textData.imageID;
+   filePos32[1] = g_textData.charSize.x;
+   filePos32[2] = g_textData.charSize.y;
+   fileOffset += 12;
+
+   filePos8 = (uint8_t*)fileData.contents + fileOffset;
+   filePos8[0] = g_textData.startChar;
+   filePos8[1] = g_textData.endChar;
+   fileOffset += 2;
+
+   // bitmaps lump
+   filePos32 = (uint32_t*)( (uint8_t*)fileData.contents + fileOffset );
+   ( (uint32_t*)( fileData.contents ) )[3] = fileOffset;  // lump offset
    filePos32[0] = (uint32_t)AssetsFileLumpID_Bitmaps;
    filePos32[1] = assets->numBitmaps;
    filePos32 += 2;
@@ -453,7 +483,7 @@ internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
 
    // sprite bases lump
    numSpriteBases = (uint32_t)( sizeof( g_spriteBaseDatas ) / sizeof( SpriteBaseData_t ) );
-   ( (uint32_t*)( fileData.contents ) )[3] = fileOffset;  // lump offset
+   ( (uint32_t*)( fileData.contents ) )[4] = fileOffset;  // lump offset
    filePos32[0] = (uint32_t)AssetsFileLumpID_SpriteBases;
    filePos32[1] = numSpriteBases;
    filePos32 += 2;
@@ -476,7 +506,7 @@ internal void WriteAssetsFile( GameAssets_t* assets, const char* dir )
 
    // sprites lump
    numSprites = (uint32_t)( sizeof( g_spriteDatas ) / sizeof( SpriteData_t ) );
-   ( (uint32_t*)( fileData.contents ) )[4] = fileOffset;  // lump offset
+   ( (uint32_t*)( fileData.contents ) )[5] = fileOffset;  // lump offset
    filePos32[0] = (uint32_t)AssetsFileLumpID_Sprites;
    filePos32[1] = numSprites;
    filePos32 += 2;
@@ -522,9 +552,9 @@ internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
    FontData_t* fontData;
    BitmapData_t* bitmapData;
 
-   fileSize = 4;                   // lump count
-   fileSize += ( 4 * NUM_LUMPS );  // lump offsets
-   fileSize += ( 8 * NUM_LUMPS );  // lump IDs and entry counts
+   fileSize = 4;                                          // lump count
+   fileSize += ( 4 * (uint32_t)AssetsFileLumpID_Count );  // lump offsets
+   fileSize += ( 8 * (uint32_t)AssetsFileLumpID_Count );  // lump IDs and entry counts
 
    // fonts lump
    fontData = assets->fontDatas;
@@ -535,6 +565,9 @@ internal uint32_t GetAssetsFileSize( GameAssets_t* assets )
       fileSize += GetFontDataMemSize( fontData );
       fontData++;
    }
+
+   // text lump (entry ID, size, and size of packed TextData_t)
+   fileSize += 22;
 
    // bitmaps lump
    bitmapData = assets->bitmapDatas;

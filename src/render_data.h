@@ -4,12 +4,14 @@
 #include "common.h"
 #include "image.h"
 #include "font.h"
+#include "text_map.h"
 #include "sprite.h"
 
 typedef struct RenderData_t
 {
    Image_t images[ImageID_Count];
    Font_t fonts[FontID_Count];
+   TextMap_t textMap;
    SpriteBase_t spriteBases[SpriteBaseID_Count];
    Sprite_t sprites[SpriteID_Count];
 }

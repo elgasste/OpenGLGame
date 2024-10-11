@@ -48,11 +48,11 @@ internal void Game_RenderMenu( GameData_t* gameData )
 
    for ( i = 0; i < menu->numItems; i++ )
    {
-      Blit_TextLine( item->text, renderData->position.x, y, textScale, font, FontJustify_Left );
+      Blit_FontLine( item->text, renderData->position.x, y, textScale, font, FontJustify_Left );
 
       if ( menu->selectedItem == i )
       {
-         Blit_Char( renderData->caratCodepoint, renderData->position.x + renderData->caratOffset, y, textScale, font );
+         Blit_FontChar( renderData->caratCodepoint, renderData->position.x + renderData->caratOffset, y, textScale, font );
       }
 
       y -= ( font->curGlyphCollection->height + renderData->lineGap );
@@ -74,16 +74,16 @@ internal void Game_RenderDiagnostics( GameData_t* gameData )
 
    y = (float)SCREEN_HEIGHT - font->curGlyphCollection->height - 10.0f;
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_FRAMETARGETMICRO, gameData->clock.targetFrameDurationMicro );
-   Blit_TextLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
+   Blit_FontLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
    y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_FRAMEDURATIONMICRO, gameData->clock.lastFrameDurationMicro );
-   Blit_TextLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
+   Blit_FontLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
    y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_LAGFRAMES, gameData->clock.lagFrames );
-   Blit_TextLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
+   Blit_FontLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
    y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_THREADCOUNT, threadQueue->numThreads );
-   Blit_TextLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
+   Blit_FontLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
 
    threadCountTextDimensions = Font_GetTextDimensions( font, msg );
    gameData->diagnosticsData.threadJobsToggleArea.pos.x = 10.0f;
@@ -97,7 +97,7 @@ internal void Game_RenderDiagnostics( GameData_t* gameData )
       {
          y -= ( font->curGlyphCollection->height + font->curGlyphCollection->lineGap );
          snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_THREADJOBSDONE, i, Platform_GetJobsDoneByThread( i ) );
-         Blit_TextLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
+         Blit_FontLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
       }
    }
 
@@ -105,5 +105,5 @@ internal void Game_RenderDiagnostics( GameData_t* gameData )
    snprintf( msg, STRING_SIZE_DEFAULT, STR_DIAG_MOUSEPOS,
              gameData->inputState.mouseState.pointerPos.x,
              gameData->inputState.mouseState.pointerPos.y );
-   Blit_TextLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
+   Blit_FontLine( msg, 10.0f, y, 1.0f, font, FontJustify_Left );
 }

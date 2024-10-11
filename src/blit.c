@@ -5,6 +5,7 @@
 #include "image.h"
 #include "sprite.h"
 #include "font.h"
+#include "text_map.h"
 
 internal void Blit_PrepareTextureForDrawing( GLuint textureHandle, PixelBuffer_t* pixelBuffer,
                                              float screenX, float screenY,
@@ -173,7 +174,7 @@ void Blit_Sprite( Sprite_t* sprite, float screenX, float screenY, float scale )
    Blit_ColoredSprite( sprite, screenX, screenY, scale, 0xFFFFFFFF );
 }
 
-void Blit_Char( uint32_t codepoint, float screenX, float screenY, float scale, Font_t* font )
+void Blit_FontChar( uint32_t codepoint, float screenX, float screenY, float scale, Font_t* font )
 {
    FontGlyph_t* glyph;
    PixelBuffer_t* buffer;
@@ -197,7 +198,7 @@ void Blit_Char( uint32_t codepoint, float screenX, float screenY, float scale, F
                                scale, glyph->color );
 }
 
-void Blit_TextLine( const char* text, float screenX, float screenY, float scale, Font_t* font, FontJustify_t justify )
+void Blit_FontLine( const char* text, float screenX, float screenY, float scale, Font_t* font, FontJustify_t justify )
 {
    uint32_t i;
    float textWidth, x = screenX;
@@ -214,9 +215,40 @@ void Blit_TextLine( const char* text, float screenX, float screenY, float scale,
       if ( Font_ContainsChar( font, text[i] ) )
       {
          glyph = font->curGlyphCollection->glyphs + ( (uint32_t)text[i] - font->codepointOffset );
-         Blit_Char( (uint32_t)( text[i] ), x, screenY, scale, font );
+         Blit_FontChar( (uint32_t)( text[i] ), x, screenY, scale, font );
          x += glyph->advance * scale;
       }
+   }
+}
+
+void Blit_TextChar( char c, float screenX, float screenY, float scale, TextMap_t* textMap )
+{
+   int32_t textureX;
+
+   if ( c < textMap->startChar || c > textMap->endChar )
+   {
+      return;
+   }
+
+   textureX = ( c - textMap->startChar ) * textMap->charSize.x;
+
+   Blit_TextureSection( textMap->image->textureHandle,
+                        &( textMap->image->pixelBuffer ),
+                        screenX, screenY,
+                        textureX, 0,
+                        textMap->charSize.x, textMap->charSize.y,
+                        scale );
+}
+
+void Blit_TextLine( const char* text, float screenX, float screenY, float scale, TextMap_t* textMap )
+{
+   uint32_t i;
+   float xPos = screenX;
+
+   for ( i = 0; i < strlen( text ); i++ )
+   {
+      Blit_TextChar( text[i], xPos, screenY, scale, textMap );
+      xPos += textMap->charSize.x * scale;
    }
 }
 

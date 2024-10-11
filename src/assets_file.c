@@ -15,6 +15,7 @@ internal Bool_t AssetsFile_Interpret( AssetsFileData_t* assetsFileData, GameData
 internal void AssetsFile_ClearOffsetTable( AssetsFileOffsetTable_t* offsetTable, uint32_t numOffsets );
 internal Bool_t AssetsFile_InterpretBitmapsLump( GameData_t* gameData, AssetsFileLump_t* lump );
 internal Bool_t AssetsFile_InterpretFontsLump( GameData_t* gameData, AssetsFileLump_t* lump );
+internal Bool_t AssetsFile_InterpretTextLump( GameData_t* gameData, AssetsFileLump_t* lump );
 internal Bool_t AssetsFile_InterpretSpriteBasesLump( GameData_t* gameData, AssetsFileLump_t* lump );
 internal Bool_t AssetsFile_InterpretSpritesLump( GameData_t* gameData, AssetsFileLump_t* lump );
 
@@ -210,12 +211,14 @@ internal Bool_t AssetsFile_Interpret( AssetsFileData_t* assetsFileData, GameData
    uint32_t lumpIDOrder[] = {
       (uint32_t)AssetsFileLumpID_Fonts,
       (uint32_t)AssetsFileLumpID_Bitmaps,
+      (uint32_t)AssetsFileLumpID_Text,
       (uint32_t)AssetsFileLumpID_SpriteBases,
       (uint32_t)AssetsFileLumpID_Sprites
    };
    Bool_t ( *lumpLoaders[] )( GameData_t*, AssetsFileLump_t* ) = {
       AssetsFile_InterpretFontsLump,
       AssetsFile_InterpretBitmapsLump,
+      AssetsFile_InterpretTextLump,
       AssetsFile_InterpretSpriteBasesLump,
       AssetsFile_InterpretSpritesLump
    };
@@ -348,6 +351,37 @@ internal Bool_t AssetsFile_InterpretFontsLump( GameData_t* gameData, AssetsFileL
          snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFWARN_UNKNOWNFONTENTRYID, entry->ID );
          Platform_Log( msg );
       }
+
+      entry++;
+   }
+
+   return True;
+}
+
+internal Bool_t AssetsFile_InterpretTextLump( GameData_t* gameData, AssetsFileLump_t* lump )
+{
+   uint32_t i;
+   AssetsFileEntry_t* entry = lump->entries;
+   uint32_t* memPos32;
+   TextMap_t* textMap = &( gameData->renderData.textMap );
+   char msg[STRING_SIZE_DEFAULT];
+
+   for ( i = 0; i < lump->numEntries; i++ )
+   {
+      memPos32 = (uint32_t*)entry->memory;
+
+      if ( memPos32[0] >= (uint32_t)ImageID_Count )
+      {
+         snprintf( msg, STRING_SIZE_DEFAULT, STR_GDFERR_TEXTLUMPCORRUPT, entry->ID );
+         Platform_Log( msg );
+         return False;
+      }
+
+      textMap->image = &( gameData->renderData.images[memPos32[0]] );
+      textMap->charSize.x = memPos32[1];
+      textMap->charSize.y = memPos32[2];
+      textMap->startChar = (char)entry->memory[12];
+      textMap->endChar = (char)entry->memory[13];
 
       entry++;
    }

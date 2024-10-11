@@ -41,6 +41,7 @@
 #define STR_GDFERR_SPRITEBASEIMAGENOTFOUND      "Game data file error: sprite base image ID not found: %u"
 #define STR_GDFERR_SPRITECORRUPT                "Game data file error: sprite memory is corrupt, sprite ID %u"
 #define STR_GDFERR_SPRITEBASENOTFOUND           "Game data file error: sprite base ID not found: %u"
+#define STR_GDFERR_TEXTLUMPCORRUPT              "Game data file error: text lump memory is corrupt, image ID out of range: %u"
 #define STR_GDFWARN_UNKNOWNLUMPID               "Game data file warning: unknown lump ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNBITMAPENTRYID        "Game data file warning: unknown bitmap entry ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNFONTENTRYID          "Game data file warning: unknown font entry ID encountered: %u"
