@@ -1,6 +1,6 @@
-#include "render_data.h"
+#include "game_render_data.h"
 
-void RenderData_Init( RenderData_t* renderData )
+void GameRenderData_Init( GameRenderData_t* renderData )
 {
    uint32_t i;
 

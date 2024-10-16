@@ -1,5 +1,5 @@
-#if !defined( RENDER_DATA_H )
-#define RENDER_DATA_H
+#if !defined( GAME_RENDER_DATA_H )
+#define GAME_RENDER_DATA_H
 
 #include "common.h"
 #include "image.h"
@@ -7,7 +7,7 @@
 #include "text_map.h"
 #include "sprite.h"
 
-typedef struct RenderData_t
+typedef struct GameRenderData_t
 {
    Image_t images[ImageID_Count];
    Font_t fonts[FontID_Count];
@@ -15,8 +15,8 @@ typedef struct RenderData_t
    SpriteBase_t spriteBases[SpriteBaseID_Count];
    Sprite_t sprites[SpriteID_Count];
 }
-RenderData_t;
+GameRenderData_t;
 
-void RenderData_Init( RenderData_t* renderData );
+void GameRenderData_Init( GameRenderData_t* renderData );
 
 #endif

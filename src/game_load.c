@@ -25,14 +25,11 @@ internal void Game_LoadMenus( GameData_t* gameData )
    snprintf( playingMenu->items[0].text, STRING_SIZE_DEFAULT, STR_MENU_KEEPPLAYING );
    playingMenu->items[1].ID = MenuItemID_Quit;
    snprintf( playingMenu->items[1].text, STRING_SIZE_DEFAULT, STR_MENU_QUIT );
-   playingMenu->renderData.font = &( gameData->renderData.fonts[FontID_Consolas] );
-   playingMenu->renderData.caratCodepoint = (uint32_t)( '>' );
-   playingMenu->renderData.position.x = 200.0f;
-   playingMenu->renderData.position.y = 500.0f;
-   playingMenu->renderData.textHeight = 24.0f;
-   playingMenu->renderData.lineGap = playingMenu->renderData.font->curGlyphCollection->lineGap;
-   playingMenu->renderData.caratOffset = -30.0f;
-   playingMenu->renderData.textColor = 0xFFFF8800;
-   playingMenu->renderData.caratColor = 0xFFFF8800;
-   playingMenu->caratFadeSeconds = 0.25f;
+   DialogBorder_Init( &( playingMenu->border ), &( gameData->renderData.images[ImageID_MessageBoxBorders] ), &( gameData->renderData.textMap ), 10, 10, 1 );
+   playingMenu->caratChar = '>';
+   playingMenu->position.x = 100.0f;
+   playingMenu->position.y = 100.0f;
+   playingMenu->lineGap = 1;
+   playingMenu->caratOffset = 1;
+   playingMenu->caratBlinkSeconds = 0.25f;
 }

@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\blit.h" />
     <ClInclude Include="..\..\src\bmp.h" />
+    <ClInclude Include="..\..\src\dialog_border.h" />
     <ClInclude Include="..\..\src\clock.h" />
     <ClInclude Include="..\..\src\common.h" />
     <ClInclude Include="..\..\src\enums.h" />
@@ -36,7 +37,7 @@
     <ClInclude Include="..\..\src\platform_includes.h" />
     <ClInclude Include="..\..\src\random.h" />
     <ClInclude Include="..\..\src\rect.h" />
-    <ClInclude Include="..\..\src\render_data.h" />
+    <ClInclude Include="..\..\src\game_render_data.h" />
     <ClInclude Include="..\..\src\sprite.h" />
     <ClInclude Include="..\..\src\strings.h" />
     <ClInclude Include="..\..\src\thread.h" />
@@ -47,6 +48,7 @@
     <ClCompile Include="..\..\src\blit.c" />
     <ClCompile Include="..\..\src\bmp.c" />
     <ClCompile Include="..\..\src\clock.c" />
+    <ClCompile Include="..\..\src\dialog_border.c" />
     <ClCompile Include="..\..\src\font.c" />
     <ClCompile Include="..\..\src\game.c" />
     <ClCompile Include="..\..\src\assets_file.c" />
@@ -57,7 +59,7 @@
     <ClCompile Include="..\..\src\menu.c" />
     <ClCompile Include="..\..\src\pixel_buffer.c" />
     <ClCompile Include="..\..\src\random.c" />
-    <ClCompile Include="..\..\src\render_data.c" />
+    <ClCompile Include="..\..\src\game_render_data.c" />
     <ClCompile Include="..\..\src\sprite.c" />
     <ClCompile Include="..\..\src\win_platform.c" />
   </ItemGroup>

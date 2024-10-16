@@ -12,7 +12,7 @@ internal void Game_Tick( GameData_t* gameData );
 
 Bool_t Game_Init( GameData_t* gameData )
 {
-   RenderData_Init( &( gameData->renderData ) );
+   GameRenderData_Init( &( gameData->renderData ) );
 
    if ( !Game_LoadData( gameData ) )
    {

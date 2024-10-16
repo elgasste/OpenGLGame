@@ -74,6 +74,19 @@ MenuItemID_t;
 
 typedef enum
 {
+   MenuBorderSide_Left = 0,
+   MenuBorderSide_Top,
+   MenuBorderSide_Right,
+   MenuBorderSide_Bottom,
+   MenuBorderSide_TopLeft,
+   MenuBorderSide_TopRight,
+   MenuBorderSide_BottomRight,
+   MenuBorderSide_BottomLeft
+}
+MenuBorderSide_t;
+
+typedef enum
+{
    GameState_Playing = 0,
    GameState_Menu,
 
