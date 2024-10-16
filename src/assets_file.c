@@ -304,7 +304,7 @@ internal Bool_t AssetsFile_InterpretBitmapsLump( GameData_t* gameData, AssetsFil
 
       if ( imageID < ImageID_Count )
       {
-         image = &( gameData->renderData.images[entry->ID] );
+         image = &( gameData->assets.images[entry->ID] );
          Image_ClearData( image );
 
          if ( !Image_LoadFromBitmapMemory( image, entry->memory, entry->size ) )
@@ -338,7 +338,7 @@ internal Bool_t AssetsFile_InterpretFontsLump( GameData_t* gameData, AssetsFileL
 
       if ( fontID < FontID_Count )
       {
-         font = &( gameData->renderData.fonts[entry->ID] );
+         font = &( gameData->assets.fonts[entry->ID] );
          Font_ClearData( font );
 
          if ( !Font_LoadFromMemory( font, entry->memory, entry->size ) )
@@ -363,7 +363,7 @@ internal Bool_t AssetsFile_InterpretTextLump( GameData_t* gameData, AssetsFileLu
    uint32_t i;
    AssetsFileEntry_t* entry = lump->entries;
    uint32_t* memPos32;
-   TextMap_t* textMap = &( gameData->renderData.textMap );
+   TextMap_t* textMap = &( gameData->assets.textMap );
    char msg[STRING_SIZE_DEFAULT];
 
    for ( i = 0; i < lump->numEntries; i++ )
@@ -377,7 +377,7 @@ internal Bool_t AssetsFile_InterpretTextLump( GameData_t* gameData, AssetsFileLu
          return False;
       }
 
-      textMap->image = &( gameData->renderData.images[memPos32[0]] );
+      textMap->image = &( gameData->assets.images[memPos32[0]] );
       textMap->charSize.x = memPos32[1];
       textMap->charSize.y = memPos32[2];
       textMap->startChar = (char)entry->memory[12];
@@ -418,8 +418,8 @@ internal Bool_t AssetsFile_InterpretSpriteBasesLump( GameData_t* gameData, Asset
 
       if ( baseID < SpriteBaseID_Count )
       {
-         if ( !Sprite_LoadBaseFromMemory( &( gameData->renderData.spriteBases[entry->ID] ),
-                                          &( gameData->renderData.images[imageID] ),
+         if ( !Sprite_LoadBaseFromMemory( &( gameData->assets.spriteBases[entry->ID] ),
+                                          &( gameData->assets.images[imageID] ),
                                           entry->memory,
                                           entry->size ) )
          {
@@ -469,9 +469,9 @@ internal Bool_t AssetsFile_InterpretSpritesLump( GameData_t* gameData, AssetsFil
 
       if ( spriteID < SpriteID_Count )
       {
-         sprite = &( gameData->renderData.sprites[entry->ID] );
+         sprite = &( gameData->assets.sprites[entry->ID] );
          memF = (float*)( entry->memory );
-         Sprite_LoadFromBase( sprite, &( gameData->renderData.spriteBases[spriteBaseID] ), memF[5] );
+         Sprite_LoadFromBase( sprite, &( gameData->assets.spriteBases[spriteBaseID] ), memF[5] );
          sprite->hitBox.x = memF[1];
          sprite->hitBox.y = memF[2];
          sprite->hitBox.w = memF[3];

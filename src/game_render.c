@@ -1,10 +1,8 @@
 #include "game.h"
 #include "blit.h"
 #include "thread.h"
-#include "dialog_border.h"
 
 internal void Game_RenderWorld( GameData_t* gameData );
-internal void Game_RenderMenu( GameData_t* gameData );
 internal void Game_RenderDiagnostics( GameData_t* gameData );
 
 void Game_Render( GameData_t* gameData )
@@ -14,7 +12,8 @@ void Game_Render( GameData_t* gameData )
 
    if ( gameData->state == GameState_Menu )
    {
-      Game_RenderMenu( gameData );
+      // MUFFINS: figure out how the hell we're gonna do scaling
+      Menu_Render( &( gameData->menus[gameData->curMenuID] ), 1.0f );
    }
 
    if ( gameData->diagnosticsData.showDiagnostics )
@@ -30,17 +29,10 @@ internal void Game_RenderWorld( GameData_t* gameData )
    UNUSED_PARAM( gameData );
 }
 
-internal void Game_RenderMenu( GameData_t* gameData )
-{
-   Menu_t* menu = &( gameData->menus[gameData->curMenuID] );
-
-   DialogBorder_Render( &( menu->border ), menu->position.x, menu->position.y, 1.0f );
-}
-
 internal void Game_RenderDiagnostics( GameData_t* gameData )
 {
    float y;
-   Font_t* font = &( gameData->renderData.fonts[FontID_Consolas] );
+   Font_t* font = &( gameData->assets.fonts[FontID_Consolas] );
    ThreadQueue_t* threadQueue = Platform_GetThreadQueue();
    Vector2f_t threadCountTextDimensions;
 

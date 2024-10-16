@@ -12,7 +12,7 @@ internal void Game_Tick( GameData_t* gameData );
 
 Bool_t Game_Init( GameData_t* gameData )
 {
-   GameRenderData_Init( &( gameData->renderData ) );
+   Assets_Init( &( gameData->assets ) );
 
    if ( !Game_LoadData( gameData ) )
    {
@@ -41,8 +41,8 @@ Bool_t Game_Init( GameData_t* gameData )
 void Game_ClearData( GameData_t* gameData )
 {
    uint32_t i;
-   Image_t* image = gameData->renderData.images;
-   Font_t* font = gameData->renderData.fonts;
+   Image_t* image = gameData->assets.images;
+   Font_t* font = gameData->assets.fonts;
    Menu_t* menu = gameData->menus;
 
    for ( i = 0; i < (uint32_t)ImageID_Count; i++ )

@@ -74,7 +74,7 @@
     <ClInclude Include="..\..\src\assets_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\game_render_data.h">
+    <ClInclude Include="..\..\src\assets.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\text_map.h">
@@ -130,7 +130,7 @@
     <ClCompile Include="..\..\src\pixel_buffer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\game_render_data.c">
+    <ClCompile Include="..\..\src\assets.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\dialog_border.c">

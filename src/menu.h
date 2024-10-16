@@ -5,6 +5,7 @@
 #include "dialog_border.h"
 
 typedef struct Clock_t Clock_t;
+typedef struct TextMap_t TextMapt_t;
 
 typedef struct MenuItem_t
 {
@@ -21,6 +22,8 @@ typedef struct Menu_t
 
    Vector2f_t position;
    DialogBorder_t border;
+   TextMap_t* textMap;
+
    uint32_t lineGap;
    uint32_t caratOffset;
    char caratChar;
@@ -36,5 +39,6 @@ void Menu_Reset( Menu_t* menu );
 void Menu_IncrementSelectedItem( Menu_t* menu );
 void Menu_DecrementSelectedItem( Menu_t* menu );
 void Menu_Tick( Menu_t* menu, Clock_t* clock );
+void Menu_Render( Menu_t* menu, float scale );
 
 #endif
