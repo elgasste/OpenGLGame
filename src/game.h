@@ -11,10 +11,9 @@
 #include "common.h"
 #include "clock.h"
 #include "input.h"
-#include "render_data.h"
+#include "assets.h"
 #include "menu.h"
 #include "rect.h"
-#include "player.h"
 
 typedef struct DiagnosticsData_t
 {
@@ -25,25 +24,12 @@ typedef struct DiagnosticsData_t
 }
 DiagnosticsData_t;
 
-typedef struct Star_t
-{
-   Vector2f_t position;
-   uint32_t pixelsPerSecond;
-   Bool_t movingLeft;
-   Bool_t isResting;
-   float restSeconds;
-   float restElapsedSeconds;
-   Sprite_t sprite;
-   float scale;
-}
-Star_t;
-
 typedef struct GameData_t
 {
    Clock_t clock;
    InputState_t inputState;
    DiagnosticsData_t diagnosticsData;
-   RenderData_t renderData;
+   Assets_t assets;
 
    Menu_t menus[MenuID_Count];
    MenuID_t curMenuID;
@@ -54,9 +40,6 @@ typedef struct GameData_t
 
    GameState_t state;
    void (*stateInputHandlers[GameState_Count])( void* );
-
-   Star_t stars[STAR_COUNT];
-   Player_t player;
 }
 GameData_t;
 

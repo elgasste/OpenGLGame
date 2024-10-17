@@ -2,23 +2,10 @@
 #define MENU_H
 
 #include "common.h"
-#include "vector.h"
+#include "dialog_border.h"
 
-typedef struct Font_t Font_t;
 typedef struct Clock_t Clock_t;
-
-typedef struct MenuRenderData_t
-{
-   Font_t* font;
-   uint32_t caratCodepoint;
-   Vector2f_t position;
-   float textHeight;
-   float lineGap;
-   float caratOffset;
-   uint32_t textColor;
-   uint32_t caratColor;
-}
-MenuRenderData_t;
+typedef struct TextMap_t TextMapt_t;
 
 typedef struct MenuItem_t
 {
@@ -32,10 +19,18 @@ typedef struct Menu_t
    MenuItem_t* items;
    uint32_t numItems;
    uint32_t selectedItem;
-   MenuRenderData_t renderData;
-   Bool_t caratFadingOut;
-   float caratElapsedSeconds;
-   float caratFadeSeconds;
+
+   Vector2f_t position;
+   DialogBorder_t border;
+   TextMap_t* textMap;
+
+   uint32_t lineGap;
+   uint32_t caratOffset;
+   char caratChar;
+
+   Bool_t showCarat;
+   float caratBlinkSeconds;
+   float elapsedSeconds;
 }
 Menu_t;
 
@@ -44,5 +39,6 @@ void Menu_Reset( Menu_t* menu );
 void Menu_IncrementSelectedItem( Menu_t* menu );
 void Menu_DecrementSelectedItem( Menu_t* menu );
 void Menu_Tick( Menu_t* menu, Clock_t* clock );
+void Menu_Render( Menu_t* menu, float scale );
 
 #endif

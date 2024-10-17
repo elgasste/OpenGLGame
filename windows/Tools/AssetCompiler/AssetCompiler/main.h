@@ -5,9 +5,8 @@
 #define ENDCODEPOINT       126      // tilde
 #define MAX_GLYPHHEIGHTS   10
 
-#define NUM_CHUNKS         4
-
 #include "common.h"
+#include "vector.h"
 #include "font.h"
 
 typedef struct FileInfo_t
@@ -39,6 +38,15 @@ typedef struct FontData_t
    Font_t font;
 }
 FontData_t;
+
+typedef struct TextData_t
+{
+   uint32_t imageID;
+   Vector2ui32_t charSize;
+   char startChar;
+   char endChar;
+}
+TextData_t;
 
 typedef struct BitmapData_t
 {

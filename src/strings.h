@@ -36,12 +36,13 @@
 #define STR_BMPERR_INVALIDCOLORINDEXING         "BMP error: color indexing is not currently supported, image ID %u"
 
 #define STR_GDFERR_FILECORRUPT                  "Game data file error: file is corrupt: %s"
-#define STR_GDFERR_NOCHUNKSFOUNDFORID           "Game data file error: no chunks found for chunk ID: %u"
+#define STR_GDFERR_NOLUMPSFOUNDFORID            "Game data file error: no lumps found for lump ID: %u"
 #define STR_GDFERR_SPRITEBASECORRUPT            "Game data file error: sprite base memory is corrupt, sprite base ID %u"
 #define STR_GDFERR_SPRITEBASEIMAGENOTFOUND      "Game data file error: sprite base image ID not found: %u"
 #define STR_GDFERR_SPRITECORRUPT                "Game data file error: sprite memory is corrupt, sprite ID %u"
 #define STR_GDFERR_SPRITEBASENOTFOUND           "Game data file error: sprite base ID not found: %u"
-#define STR_GDFWARN_UNKNOWNCHUNKID              "Game data file warning: unknown chunk ID encountered: %u"
+#define STR_GDFERR_TEXTLUMPCORRUPT              "Game data file error: text lump memory is corrupt, image ID out of range: %u"
+#define STR_GDFWARN_UNKNOWNLUMPID               "Game data file warning: unknown lump ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNBITMAPENTRYID        "Game data file warning: unknown bitmap entry ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNFONTENTRYID          "Game data file warning: unknown font entry ID encountered: %u"
 #define STR_GDFWARN_UNKNOWNSPRITEBASEID         "Game data file warning: unknown sprite base ID encountered: %u"
@@ -58,8 +59,6 @@
 #define STR_DIAG_THREADCOUNT                    "Threads: %u (click for details)"
 #define STR_DIAG_THREADJOBSDONE                 "   Jobs done by thread %u: %lld"
 #define STR_DIAG_MOUSEPOS                       "Mouse position: %d, %d"
-
-#define STR_FLYINGWHALES                        "(...and watch out for flying whales)"
 
 #define STR_MENU_KEEPPLAYING                    "Keep Playing"
 #define STR_MENU_QUIT                           "Quit"
