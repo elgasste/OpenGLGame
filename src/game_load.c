@@ -25,12 +25,12 @@ internal void Game_LoadMenus( GameData_t* gameData )
    snprintf( playingMenu->items[0].text, STRING_SIZE_DEFAULT, STR_MENU_KEEPPLAYING );
    playingMenu->items[1].ID = MenuItemID_Quit;
    snprintf( playingMenu->items[1].text, STRING_SIZE_DEFAULT, STR_MENU_QUIT );
-   DialogBorder_Init( &( playingMenu->border ), &( gameData->assets.images[ImageID_MessageBoxBorders] ), &( gameData->assets.textMap ), 20, 20, 3 );
+   DialogBorder_Init( &( playingMenu->border ), &( gameData->assets.images[ImageID_MessageBoxBorders] ), &( gameData->assets.textMap ), 20, 5, 0 );
    playingMenu->textMap = &( gameData->assets.textMap );
    playingMenu->caratChar = '>';
    playingMenu->position.x = 100.0f;
    playingMenu->position.y = 100.0f;
-   playingMenu->lineGap = 4;
+   playingMenu->lineGap = 1;
    playingMenu->caratOffset = 1;
    playingMenu->caratBlinkSeconds = 0.25f;
 }

@@ -56,8 +56,9 @@ void Menu_Tick( Menu_t* menu, Clock_t* clock )
 
 void Menu_Render( Menu_t* menu, float scale )
 {
-   uint32_t x, y, indexBase;
-   Bool_t drawCarat;
+   uint32_t x, y, indexBase, charIndex;
+   char c;
+   Bool_t drawText, drawCarat;
    TextMap_t* textMap = menu->textMap;
    float fx = menu->position.x;
    float fy = menu->position.y + ( textMap->charSize.y * ( menu->border.numChars.y - 1 ) );
@@ -67,8 +68,9 @@ void Menu_Render( Menu_t* menu, float scale )
    for ( y = 1 + menu->border.padding; y < menu->border.numChars.y - menu->border.padding - 1; y++ )
    {
       indexBase = y - menu->border.padding - 1;
-      uint32_t currentIndex = indexBase / menu->lineGap;
-      drawCarat = ( ( currentIndex == menu->selectedItem ) && ( indexBase % menu->lineGap ) == 0 ) ? True : False;
+      uint32_t currentIndex = indexBase / ( menu->lineGap + 1 );
+      drawText = currentIndex < menu->numItems && ( indexBase % ( menu->lineGap + 1 ) ) == 0 ? True: False;
+      drawCarat = drawText && ( currentIndex == menu->selectedItem ) ? True : False;
 
       for ( x = 0; x <= menu->caratOffset; x++ )
       {
@@ -81,7 +83,21 @@ void Menu_Render( Menu_t* menu, float scale )
             Blit_TextChar( ' ', fx + ( ( menu->border.padding + 1 + x ) * textMap->charSize.x ), fy - ( y * textMap->charSize.y ), scale, textMap );
          }
       }
-   }
 
-   // MUFFINS: draw the menu options
+      if ( drawText )
+      {
+         for ( charIndex = 0, x = 2 + menu->border.padding + menu->caratOffset; x < menu->border.numChars.x - menu->border.padding - 1; x++, charIndex++ )
+         {
+            c = charIndex < (uint32_t)strlen( menu->items[currentIndex].text ) ? menu->items[currentIndex].text[charIndex] : ' ';
+            Blit_TextChar( c, fx + ( x * textMap->charSize.x ), fy - ( y * textMap->charSize.y ), scale, textMap );
+         }
+      }
+      else
+      {
+         for ( x = 2 + menu->border.padding + menu->caratOffset; x < menu->border.numChars.x - menu->border.padding - 1; x++ )
+         {
+            Blit_TextChar( ' ', fx + ( x * textMap->charSize.x ), fy - ( y * textMap->charSize.y ), scale, textMap );
+         }
+      }
+   }
 }

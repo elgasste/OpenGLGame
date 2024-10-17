@@ -12,7 +12,6 @@ void Game_Render( GameData_t* gameData )
 
    if ( gameData->state == GameState_Menu )
    {
-      // MUFFINS: figure out how the hell we're gonna do scaling
       Menu_Render( &( gameData->menus[gameData->curMenuID] ), 1.0f );
    }
 
