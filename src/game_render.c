@@ -3,7 +3,6 @@
 #include "thread.h"
 
 internal void Game_RenderWorld( GameData_t* gameData );
-internal void Game_RenderMenu( GameData_t* gameData );
 internal void Game_RenderDiagnostics( GameData_t* gameData );
 
 void Game_Render( GameData_t* gameData )
@@ -13,8 +12,7 @@ void Game_Render( GameData_t* gameData )
 
    if ( gameData->state == GameState_Menu )
    {
-      Blit_Rect( 0.0f, 0.0f, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT, 0x99000000 );
-      Game_RenderMenu( gameData );
+      Menu_Render( &( gameData->menus[gameData->curMenuID] ), 1.0f );
    }
 
    if ( gameData->diagnosticsData.showDiagnostics )
@@ -30,40 +28,10 @@ internal void Game_RenderWorld( GameData_t* gameData )
    UNUSED_PARAM( gameData );
 }
 
-internal void Game_RenderMenu( GameData_t* gameData )
-{
-   uint32_t i;
-   Menu_t* menu = &( gameData->menus[gameData->curMenuID] );
-   float y = menu->renderData.position.y;
-   float textScale;
-   MenuItem_t* item = menu->items;
-   MenuRenderData_t* renderData = &( menu->renderData );
-   Font_t* font = renderData->font;
-
-   Font_SetGlyphCollectionForHeight( font, menu->renderData.textHeight );
-   Font_SetColor( font, menu->renderData.textColor );
-   Font_SetCharColor( font, menu->renderData.caratCodepoint, menu->renderData.caratColor );
-
-   textScale = menu->renderData.textHeight / font->curGlyphCollection->height;
-
-   for ( i = 0; i < menu->numItems; i++ )
-   {
-      Blit_FontLine( item->text, renderData->position.x, y, textScale, font, FontJustify_Left );
-
-      if ( menu->selectedItem == i )
-      {
-         Blit_FontChar( renderData->caratCodepoint, renderData->position.x + renderData->caratOffset, y, textScale, font );
-      }
-
-      y -= ( font->curGlyphCollection->height + renderData->lineGap );
-      item++;
-   }
-}
-
 internal void Game_RenderDiagnostics( GameData_t* gameData )
 {
    float y;
-   Font_t* font = &( gameData->renderData.fonts[FontID_Consolas] );
+   Font_t* font = &( gameData->assets.fonts[FontID_Consolas] );
    ThreadQueue_t* threadQueue = Platform_GetThreadQueue();
    Vector2f_t threadCountTextDimensions;
 

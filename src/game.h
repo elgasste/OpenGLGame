@@ -11,7 +11,7 @@
 #include "common.h"
 #include "clock.h"
 #include "input.h"
-#include "render_data.h"
+#include "assets.h"
 #include "menu.h"
 #include "rect.h"
 
@@ -29,7 +29,7 @@ typedef struct GameData_t
    Clock_t clock;
    InputState_t inputState;
    DiagnosticsData_t diagnosticsData;
-   RenderData_t renderData;
+   Assets_t assets;
 
    Menu_t menus[MenuID_Count];
    MenuID_t curMenuID;
