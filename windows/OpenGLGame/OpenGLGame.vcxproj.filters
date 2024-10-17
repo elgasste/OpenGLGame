@@ -74,13 +74,10 @@
     <ClInclude Include="..\..\src\assets_file.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\assets.h">
+    <ClInclude Include="..\..\src\player.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\text_map.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\dialog_border.h">
+    <ClInclude Include="..\..\src\render_data.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -130,10 +127,10 @@
     <ClCompile Include="..\..\src\pixel_buffer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\assets.c">
+    <ClCompile Include="..\..\src\player.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\dialog_border.c">
+    <ClCompile Include="..\..\src\render_data.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
